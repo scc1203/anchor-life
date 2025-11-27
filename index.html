@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Anchor | 锚点 v2.7</title>
+    <title>Anchor</title>
+    
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024' style='background:%23FFC1CC'%3E%3Ctext x='50%25' y='50%25' dy='.35em' fill='white' font-size='600' text-anchor='middle' style='font-family: sans-serif'%3E⚓️%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E⚓️%3C/text%3E%3C/svg%3E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <style>
-        /* --- 🎨 Anchor v2.7 精准识别版 --- */
+        /* --- 🎨 Anchor v3.1 完全体 --- */
         :root {
             --bg-blue: #D4F1F4;
             --bg-wood: #FDF6E3;
@@ -27,6 +33,7 @@
             margin: 0; padding: 0; background-color: #f0f2f5;
             color: var(--text-main); display: flex; justify-content: center;
             min-height: 100vh;
+            overscroll-behavior-y: none; 
         }
 
         .container {
@@ -34,15 +41,17 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             display: flex; flex-direction: column;
             position: relative;
+            min-height: 100vh;
         }
 
         /* Header */
         .header {
             padding: 15px 20px; background: #fff; display: flex;
             justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;
+            padding-top: max(15px, env(safe-area-inset-top));
         }
         .app-title { font-weight: bold; font-size: 1.1rem; color: #444; }
-        .version-badge { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .version-badge { background: #FF9AA2; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
         .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
 
         /* Stats Bar */
@@ -135,15 +144,11 @@
         .tag.active { background: #C7CEEA; border-color: #989ec2; color: #333; }
         .tag[data-v="sport"].active { background: var(--sport-green); border-color: #99cbb9; }
 
-        /* Switches */
-        .switch-container { display: flex; gap: 8px; }
-        .switch-btn {
+        .cycle-switch {
             font-size: 0.75rem; color: #666; display: flex; align-items: center; gap: 5px; cursor: pointer;
-            background: rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 10px; border: 1px solid transparent;
-            transition: all 0.2s;
+            background: rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 10px;
         }
-        .switch-btn.active-cycle { background: var(--cycle-purple); color: #fff; font-weight: bold; border-color: var(--cycle-purple); }
-        .switch-btn.active-flash { background: var(--flash-yellow); color: #555; font-weight: bold; border-color: #FBC02D; }
+        .cycle-switch.active { background: var(--cycle-purple); color: #fff; font-weight: bold; }
 
         .time-select-small {
             font-size: 16px; padding: 4px; border-radius: 8px; border: 1px solid #ddd; color: #666;
@@ -184,6 +189,16 @@
         textarea { width: 100%; height: 80px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; color:#555; padding: 8px; font-family: monospace; }
         .btn-danger { width: 100%; padding: 10px; background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; }
 
+        /* 🆕 Manual (Accordion) */
+        .section-manual { background-color: #fff; padding: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; line-height: 1.6; }
+        details { background: #f9f9f9; border-radius: 8px; overflow: hidden; }
+        summary { padding: 15px; font-weight: bold; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #444; }
+        summary::after { content: '+'; font-size: 1.2rem; font-weight: normal; color: #999; }
+        details[open] summary::after { content: '-'; }
+        .manual-content { padding: 0 15px 20px 15px; border-top: 1px solid #eee; font-size: 0.85rem; }
+        .manual-h3 { font-weight: bold; color: #333; margin: 15px 0 5px 0; }
+        .manual-tag { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 0 2px; }
+
         /* Modal & Toast */
         .custom-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -193,12 +208,12 @@
         .custom-modal {
             background: white; width: 80%; max-width: 320px; padding: 20px;
             border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            text-align: center; animation: popIn 0.2s ease-out;
+            text-align: left; animation: popIn 0.2s ease-out; max-height: 80vh; overflow-y: auto;
         }
         @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
-        .modal-text { margin-bottom: 20px; font-size: 1rem; color: #333; line-height: 1.5; }
-        .modal-btns { display: flex; gap: 10px; justify-content: center; }
-        .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; flex: 1; }
+        .modal-text { margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; flex: 1; text-align: center;}
         .modal-btn.cancel { background: #f0f0f0; color: #666; }
         .modal-btn.confirm { background: var(--bg-blue); color: #006064; }
         .modal-btn.danger { background: var(--danger-red); color: white; }
@@ -219,14 +234,14 @@
 
 <div id="modalOverlay" class="custom-overlay">
     <div class="custom-modal">
-        <div id="modalMsg" class="modal-text">确定要执行吗？</div>
+        <div id="modalMsg" class="modal-text"></div>
         <div class="modal-btns" id="modalBtnContainer"></div>
     </div>
 </div>
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v2.7</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v3.1</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -339,6 +354,44 @@
         <button class="btn-danger" onclick="tryResetAll()">🗑️ 格式化/重置所有数据</button>
         <input type="file" id="fileInput" style="display:none" onchange="importFromFile(this)">
     </div>
+
+    <div class="section-manual">
+        <details>
+            <summary>📖 用户手册 & 逻辑词典</summary>
+            <div class="manual-content">
+                <div class="manual-h3">💡 核心概念</div>
+                <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让“命运”帮你做决定。</p>
+                
+                <div class="manual-h3">⌨️ 智能输入</div>
+                <p>支持“说人话”和批量粘贴。每行一个任务。</p>
+                <ul>
+                    <li><b>自动书影：</b> 输入 <span class="manual-tag">看/读/书/影</span> 开头，自动归类为文化，并加书名号。</li>
+                    <li><b>闪电速办：</b> 输入 <span class="manual-tag">洗/刷/理/拆/扔/喝</span> 等，自动标记为 <span class="manual-tag">⚡️速办</span> (5min)。</li>
+                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*</span> (星号) 开头，标记为困难重要的 <span class="manual-tag">🐸青蛙</span>。</li>
+                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
+                </ul>
+
+                <div class="manual-h3">🎲 抽取逻辑</div>
+                <ul>
+                    <li><b>混合模式：</b> 根据当下时间、地点，从所有库中随机抽取。</li>
+                    <li><b>青蛙优先：</b> 在书桌前且时间充足时，大概率优先推“青蛙”。</li>
+                    <li><b>防重复：</b> 最近刚抽过的任务，短时间内不会再出现。</li>
+                </ul>
+
+                <div class="manual-h3">📊 计数器与归档</div>
+                <ul>
+                    <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时，点一下。</li>
+                    <li><b>✨ 小确幸：</b> 遇到开心的小事时，点一下。</li>
+                    <li><b>👣 今日足迹：</b> 记录今天的日常流水，次日自动清空。</li>
+                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影。</li>
+                </ul>
+
+                <div class="manual-h3">🆘 SOS 模式</div>
+                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态。</p>
+            </div>
+        </details>
+    </div>
+
 </div>
 
 <script>
@@ -352,15 +405,22 @@
         { title: "吃一颗水果", icon: "🍊", desc: "慢慢吃，感受香气。" }
     ];
 
+    // Storage Keys
+    const KEY_DB = 'anchor_live_db';
+    const KEY_ARCHIVE = 'anchor_live_archive';
+    const KEY_LOG = 'anchor_live_log';
+    const KEY_STATS = 'anchor_live_stats';
+    const KEY_VISITED = 'anchor_has_visited'; // 🆕 First visit flag
+
     const defaultDB = [
         { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
         { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
     ];
 
-    let db = JSON.parse(localStorage.getItem('anchor_v2_7_db')) || defaultDB;
-    let archive = JSON.parse(localStorage.getItem('anchor_v2_7_archive')) || [];
-    let dailyLog = JSON.parse(localStorage.getItem('anchor_v2_7_log')) || [];
-    let userStats = JSON.parse(localStorage.getItem('anchor_v2_7_stats')) || { willpower: 0, joy: 0 };
+    let db = JSON.parse(localStorage.getItem(KEY_DB)) || [];
+    let archive = JSON.parse(localStorage.getItem(KEY_ARCHIVE)) || [];
+    let dailyLog = JSON.parse(localStorage.getItem(KEY_LOG)) || [];
+    let userStats = JSON.parse(localStorage.getItem(KEY_STATS)) || { willpower: 0, joy: 0 };
     
     let recentHistory = []; 
     let mode = 'normal';
@@ -368,13 +428,59 @@
     let switchState = { cycle: false, flash: false };
 
     function init() {
-        fixLegacyData();
+        migrateOldData();
+        if(db.length === 0 && archive.length === 0) db = defaultDB;
+
         checkLogExpiry();
         renderList();
         renderArchive();
         renderLog();
         updateStatsUI(); 
         setMode('normal');
+        
+        checkFirstVisit(); // 🆕 检查是否首次访问
+    }
+
+    // --- 🆕 首次访问逻辑 ---
+    function checkFirstVisit() {
+        if (!localStorage.getItem(KEY_VISITED)) {
+            const welcomeMsg = `
+                <b>👋 欢迎来到 Anchor！</b><br><br>
+                这是一个帮你找回生活秩序的“随机行动盲盒”。<br><br>
+                1. 在下方输入框写下你想做的事。<br>
+                2. 点击粉色按钮，把决定权交给命运。<br>
+                3. <b>详细玩法</b> 请查看页面最底部的<br>“📖 用户手册”。<br><br>
+                祝你拥有平静而充实的一天。⚓️
+            `;
+            showModal(welcomeMsg, 'confirm', () => {
+                localStorage.setItem(KEY_VISITED, 'true');
+            });
+        }
+    }
+
+    // --- Migration ---
+    function migrateOldData() {
+        if (localStorage.getItem(KEY_DB)) return; 
+        const oldKeys = [
+            'anchor_v2_7_db', 'anchor_v2_6_db', 'anchor_v2_5_db', 'anchor_v2_4_db', 
+            'anchor_v2_3_db', 'anchor_v2_2_db', 'anchor_v2_1_db', 'anchor_v1_9_1_db'
+        ];
+        for (let key of oldKeys) {
+            const oldData = localStorage.getItem(key);
+            if (oldData) {
+                try {
+                    db = JSON.parse(oldData);
+                    const ver = key.replace('_db', '');
+                    const oldArc = localStorage.getItem(ver + '_archive');
+                    const oldLog = localStorage.getItem(ver + '_log');
+                    const oldStats = localStorage.getItem(ver + '_stats');
+                    if (oldArc) archive = JSON.parse(oldArc);
+                    if (oldLog) dailyLog = JSON.parse(oldLog);
+                    if (oldStats) userStats = JSON.parse(oldStats);
+                    save(); break;
+                } catch(e) {}
+            }
+        }
     }
 
     function checkLogExpiry() {
@@ -384,22 +490,6 @@
             dailyLog = validLogs;
             save();
         }
-    }
-
-    function fixLegacyData() {
-        let fixedCount = 0;
-        db.forEach(item => {
-            if ((item.type === 'vinyl' || item.type === 'culture') && (item.time === undefined || item.time === null)) {
-                item.time = 0; fixedCount++;
-            } else if (item.time === undefined || item.time === null) {
-                item.time = 30; fixedCount++;
-            }
-            if (item.recurrence === undefined) item.recurrence = 'none';
-            if (item.desc === "自定义" || item.desc === "自定义任务") item.desc = "";
-            if (item.isFrog === undefined) item.isFrog = false;
-            if (item.isQuick === undefined) item.isQuick = false;
-        });
-        if(fixedCount > 0) save();
     }
 
     function incrementStat(type) {
@@ -430,20 +520,30 @@
         const overlay = document.getElementById('modalOverlay');
         const msgDiv = document.getElementById('modalMsg');
         const btnContainer = document.getElementById('modalBtnContainer');
-        msgDiv.innerText = msg;
+        
+        // 支持 HTML 内容
+        msgDiv.innerHTML = msg; 
         btnContainer.innerHTML = "";
         
-        const btnCancel = document.createElement('button');
-        btnCancel.className = 'modal-btn cancel';
-        btnCancel.innerText = "取消";
-        btnCancel.onclick = () => { overlay.style.display = 'none'; };
-        btnContainer.appendChild(btnCancel);
+        if (type === 'confirm') { // 单个确认按钮 (用于欢迎页)
+             const btnConfirm = document.createElement('button');
+             btnConfirm.className = 'modal-btn confirm';
+             btnConfirm.innerText = "开始探索";
+             btnConfirm.onclick = () => { onConfirm(); overlay.style.display = 'none'; };
+             btnContainer.appendChild(btnConfirm);
+        } else {
+            const btnCancel = document.createElement('button');
+            btnCancel.className = 'modal-btn cancel';
+            btnCancel.innerText = "取消";
+            btnCancel.onclick = () => { overlay.style.display = 'none'; };
+            btnContainer.appendChild(btnCancel);
 
-        const btnConfirm = document.createElement('button');
-        btnConfirm.className = type === 'danger' ? 'modal-btn danger' : 'modal-btn confirm';
-        btnConfirm.innerText = type === 'danger' ? "确认" : "确定";
-        btnConfirm.onclick = () => { onConfirm(); overlay.style.display = 'none'; };
-        btnContainer.appendChild(btnConfirm);
+            const btnConfirm = document.createElement('button');
+            btnConfirm.className = type === 'danger' ? 'modal-btn danger' : 'modal-btn confirm';
+            btnConfirm.innerText = type === 'danger' ? "确认" : "确定";
+            btnConfirm.onclick = () => { onConfirm(); overlay.style.display = 'none'; };
+            btnContainer.appendChild(btnConfirm);
+        }
 
         overlay.style.display = 'flex';
     }
@@ -451,7 +551,6 @@
     function getSmartIcon(item) {
         if (item.subtype === 'book') return '📚';
         if (item.subtype === 'movie') return '🎬';
-        
         if (item.type === 'culture') {
             const t = (item.title || "").toLowerCase();
             if (t.includes('书') || t.includes('读') || t.includes('阅') || t.includes('杂志') || t.includes('周刊') || t.includes('册')) return '📚';
@@ -526,7 +625,6 @@
         return { time: detectedTime, title: cleanStr };
     }
 
-    // 🔥 v2.2 核心算法
     function draw() {
         const card = document.getElementById('resultCard');
         card.style.display = 'none';
@@ -543,10 +641,8 @@
 
                 let validPool = db.filter(item => {
                     if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
-                    
                     const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
                     const isFlexible = (tTime === 0);
-                    
                     if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
 
                     if (mode === 'vinyl') return item.type === 'vinyl';
@@ -605,7 +701,6 @@
             currentTask = result;
             if (result) {
                 document.getElementById('rTitle').innerText = result.title;
-                
                 let badgesHtml = "";
                 if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
                 if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
@@ -694,7 +789,6 @@
         }
     }
 
-    // 🔥 v2.6 自动标签 + 半自动纠偏
     function autoTag() {
         const raw = document.getElementById('inpTitle').value;
         const lines = raw.split('\n');
@@ -705,9 +799,8 @@
         if (parsed.time) feedback.innerText = `💡 识别: ${parsed.time} min`;
         else feedback.innerText = "";
 
-        // Cycle Detection
-        if ((targetLine.includes("每天") || targetLine.includes("每日")) && !switchState.cycle) {
-            toggleSwitch('cycle', true); // Force ON
+        if (targetLine.includes("每天") || targetLine.includes("每日")) {
+            if(!isCycleActive) toggleCycle();
         }
 
         const v = targetLine;
@@ -716,7 +809,6 @@
         let t = null;
         let detectQuick = false;
 
-        // Flash/Quick Detection - UPDATED LIST
         if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(v)) {
             t = 'indoor';
             detectQuick = true;
@@ -734,10 +826,9 @@
             toggleTimeInput(t);
         }
 
-        // Apply Quick Mode Suggestion
         if (detectQuick && !switchState.flash) {
-            toggleSwitch('flash', true); // Force ON
-            document.getElementById('inpTime').value = "5"; // Auto set to 5m
+            toggleSwitch('flash', true); 
+            document.getElementById('inpTime').value = "5"; 
         }
     }
 
@@ -764,7 +855,6 @@
         else sw.classList.remove(activeClass);
     }
 
-    // 🔥 v2.7 修复领头羊Bug
     function addNew() {
         const rawInput = document.getElementById('inpTitle').value;
         if(!rawInput || rawInput.trim() === "") return;
@@ -776,27 +866,21 @@
 
         if (lines.length > 0) {
             const first = lines[0].toLowerCase();
-            // 🚨 修复Bug核心：如果是家务动作，不要被当成书单指令吃掉！
             const isCleaning = /(理|整理|收拾|擦|扫|拖|洗|换|叠|铺|挂|扔|拆|装|喝)/.test(first);
-
             if (!isCleaning) {
                 if (['看', '影', '视', '剧', '片', 'movie'].some(k => first.includes(k))) {
                     batchSubtype = 'movie';
                 } else if (['读', '书', '阅', 'book', 'read', '杂志'].some(k => first.includes(k))) {
                     batchSubtype = 'book';
                 }
-                
-                // 🚨 修复核心：只有多行且首行极短时，才当作纯指令吃掉
-                if (batchSubtype && lines.length > 1 && first.length <= 2) {
-                    lines.shift();
-                }
+                if (batchSubtype && first.length <= 4) lines.shift();
             }
         }
 
         lines.forEach(line => {
             const parsed = parseTimeFromInput(line);
             let title = parsed.title;
-            let timeVal = parsed.time; // NLP Detected time
+            let timeVal = parsed.time;
             let subtype = batchSubtype;
 
             let isFrog = false;
@@ -805,13 +889,16 @@
                 title = title.substring(1).trim();
             }
 
-            // 1. Check Quick Switch State FIRST
             let isQuick = switchState.flash;
+            if (!isQuick) {
+                if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(title)) {
+                    isQuick = true;
+                }
+                if (timeVal && timeVal <= 5) isQuick = true;
+            }
 
-            // 2. Determine Time
             if (!timeVal) {
                 timeVal = parseInt(document.getElementById('inpTime').value);
-                
                 if (type === 'vinyl' && !isQuick) timeVal = 0;
                 else if (type === 'culture' && !isQuick) {
                     if (subtype === 'movie') timeVal = 120;
@@ -819,10 +906,8 @@
                 }
             }
             
-            // Double check logic: if marked quick, ensure time is reasonable
             if (isQuick && (!timeVal || timeVal > 15)) timeVal = 5;
 
-            // Subtype logic
             if (!isQuick && !subtype && type === 'culture') {
                 if (title.includes('影') || title.includes('视') || title.includes('剧') || title.includes('片') || title.includes('看')) subtype = 'movie';
                 else if (title.includes('书') || title.includes('读') || title.includes('阅') || title.includes('杂志') || title.includes('周刊')) subtype = 'book';
@@ -830,7 +915,6 @@
 
             title = title.replace(/^(去|看|读|听|写|做)\s*/, '').trim();
 
-            // Book Title Logic
             if (!isQuick && (type === 'culture' || type === 'vinyl')) {
                 if (!title.startsWith('《') && !title.endsWith('》')) {
                     title = `《${title}》`;
@@ -842,7 +926,6 @@
                 if (title.includes('杂志') || title.includes('周刊') || title.includes('系列') || title.includes('全集')) isSeries = true;
             }
 
-            // 3. Check Cycle Switch State
             let recurrence = switchState.cycle ? 'daily' : 'none';
             if (recurrence === 'daily') title = title.replace(/每天|每日/g, '').trim();
 
@@ -863,7 +946,6 @@
         input.placeholder = "✅ 存入成功！";
         document.getElementById('timeFeedback').innerText = "";
         
-        // Reset switches for next input
         if(switchState.cycle) toggleSwitch('cycle', false);
         if(switchState.flash) toggleSwitch('flash', false);
         
@@ -883,6 +965,7 @@
         showModal("⚠️ 确定清空所有数据？不可恢复！", 'danger', () => {
             db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 };
             save(); renderList(); renderArchive(); renderLog(); updateStatsUI();
+            localStorage.removeItem(KEY_VISITED); // Reset tutorial flag
             showToast("已格式化");
         });
     }
@@ -914,9 +997,10 @@
             else if (item.time) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">${item.time}m</span>`;
 
             li.innerHTML = `
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="width:25px;text-align:center;">${getSmartIcon(item)}</span>
-                    <span style="font-size:0.9rem;color:#555;">${item.title} ${seriesBadge} ${cycleBadge} ${extraBadges} ${tDisplay}</span>
+                <div style="display:flex;align-items:center;gap:5px;">
+                    <span style="width:20px;text-align:center;">${getSmartIcon(item)}</span>
+                    <span style="font-size:0.9rem;color:#555;">${item.title}</span>
+                    ${seriesBadge}${cycleBadge}${extraBadges}${tDisplay}
                 </div>
                 <div class="task-del" onclick="tryDeleteItem(${item.id})">🗑️</div>
             `;
@@ -940,6 +1024,23 @@
         });
     }
 
+    function renderLog() {
+        const list = document.getElementById('logList');
+        list.innerHTML = "";
+        document.getElementById('logCount').innerText = dailyLog.length;
+        dailyLog.forEach(log => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            li.innerHTML = `
+                <div style="display:flex;align-items:center;">
+                    <span class="footprint-time">${log.timeStr}</span>
+                    <span class="footprint-item">${log.icon} ${log.title}</span>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
     function toggleList(id) {
         const el = document.getElementById(id);
         if(el.classList.contains('open')) el.classList.remove('open');
@@ -951,10 +1052,10 @@
         return map[t] || '✨';
     }
     function save() {
-        localStorage.setItem('anchor_v2_7_db', JSON.stringify(db));
-        localStorage.setItem('anchor_v2_7_archive', JSON.stringify(archive));
-        localStorage.setItem('anchor_v2_7_log', JSON.stringify(dailyLog));
-        localStorage.setItem('anchor_v2_7_stats', JSON.stringify(userStats));
+        localStorage.setItem(KEY_DB, JSON.stringify(db));
+        localStorage.setItem(KEY_ARCHIVE, JSON.stringify(archive));
+        localStorage.setItem(KEY_LOG, JSON.stringify(dailyLog));
+        localStorage.setItem(KEY_STATS, JSON.stringify(userStats));
     }
     function scrollToSettings() { document.getElementById('settingSec').scrollIntoView({behavior:"smooth"}); }
 
