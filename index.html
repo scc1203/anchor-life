@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anchor</title>
     
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFC8D1'/%3E%3Cg fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='50' cy='22' r='7'/%3E%3Cline x1='33' y1='35' x2='67' y2='35'/%3E%3Cline x1='50' y1='29' x2='50' y2='87'/%3E%3Cpath d='M20 52 Q 20 82 50 82 Q 80 82 80 52'/%3E%3Cpath d='M20 52 L 13 60'/%3E%3Cpath d='M20 52 L 29 58'/%3E%3Cpath d='M80 52 L 71 58'/%3E%3Cpath d='M80 52 L 87 60'/%3E%3Cpath d='M44 81 L 50 87 L 56 81'/%3E%3C/g%3E%3C/svg%3E">
-    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFC8D1'/%3E%3Cg fill='none' stroke='white' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='50' cy='22' r='7'/%3E%3Cline x1='33' y1='35' x2='67' y2='35'/%3E%3Cline x1='50' y1='29' x2='50' y2='87'/%3E%3Cpath d='M20 52 Q 20 82 50 82 Q 80 82 80 52'/%3E%3Cpath d='M20 52 L 13 60'/%3E%3Cpath d='M20 52 L 29 58'/%3E%3Cpath d='M80 52 L 71 58'/%3E%3Cpath d='M80 52 L 87 60'/%3E%3Cpath d='M44 81 L 50 87 L 56 81'/%3E%3C/g%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFC8D1'/%3E%3Cpath fill='white' d='M50 20c-3 0-6 3-6 6 0 3 3 6 6 6 3 0 6-3 6-6 0-3-3-6-6-6zm-2 13v47c-15-2-26-14-28-29h-5c2 17 16 31 33 31s31-14 33-31h-5c-2 15-13 27-28 29V33h-8v4h8v1h-8v-5h8z'/%3E%3Cpath fill='white' d='M44 81l6 6 6-6h-12z'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23FFC8D1'/%3E%3Cpath fill='white' d='M50 20c-3 0-6 3-6 6 0 3 3 6 6 6 3 0 6-3 6-6 0-3-3-6-6-6zm-2 13v47c-15-2-26-14-28-29h-5c2 17 16 31 33 31s31-14 33-31h-5c-2 15-13 27-28 29V33h-8v4h8v1h-8v-5h8z'/%3E%3Cpath fill='white' d='M44 81l6 6 6-6h-12z'/%3E%3C/svg%3E">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        /* --- 🎨 Anchor v3.6 最终定稿版 --- */
+        /* --- 🎨 Anchor v3.7 急救修复版 --- */
         :root {
             --bg-blue: #D4F1F4;
             --bg-wood: #FDF6E3;
@@ -203,7 +203,7 @@
         .custom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; display: none; justify-content: center; align-items: center; }
         .custom-modal { background: white; width: 80%; max-width: 320px; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; animation: popIn 0.2s ease-out; max-height: 80vh; overflow-y: auto; }
         @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
-        .modal-text { margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .modal-text { margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.6; word-break: break-all; }
         .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
         .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; flex: 1; text-align: center;}
         .modal-btn.cancel { background: #f0f0f0; color: #666; }
@@ -227,7 +227,7 @@
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v3.6</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v3.7</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -960,169 +960,61 @@
         });
     }
 
-    function renderList() {
-        const dailyList = document.getElementById('dailyList');
-        const mediaList = document.getElementById('mediaList');
-        dailyList.innerHTML = ""; mediaList.innerHTML = "";
-        let dCount = 0, mCount = 0;
-        const todayStr = new Date().toDateString();
-        const sortedDB = [...db].sort((a,b) => b.id - a.id);
-
-        sortedDB.forEach(item => {
-            const li = document.createElement('li');
-            li.className = 'task-item';
-            const isDoneToday = (item.recurrence === 'daily' && item.lastDone === todayStr);
-            if (isDoneToday) li.classList.add('task-status-done');
-
-            const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
-            const cycleBadge = item.recurrence === 'daily' ? 
-                (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`) : '';
-            
-            let extraBadges = "";
-            if(item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
-            if(item.isQuick) extraBadges += `<span class="list-badge lb-flash">⚡️</span>`;
-
-            let tDisplay = "";
-            if (item.time === 0) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">任意</span>`;
-            else if (item.time) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">${item.time}m</span>`;
-
-            li.innerHTML = `
-                <div style="display:flex;align-items:center;gap:5px;">
-                    <span style="width:20px;text-align:center;">${getSmartIcon(item)}</span>
-                    <span style="font-size:0.9rem;color:#555;">${item.title}</span>
-                    ${seriesBadge}${cycleBadge}${extraBadges}${tDisplay}
-                </div>
-                <div class="task-del" onclick="tryDeleteItem(${item.id})">🗑️</div>
-            `;
-
-            if (item.type === 'culture' || item.type === 'vinyl') { mediaList.appendChild(li); mCount++; } 
-            else { dailyList.appendChild(li); dCount++; }
-        });
-        document.getElementById('dailyCount').innerText = dCount;
-        document.getElementById('mediaCount').innerText = mCount;
-    }
-
-    function renderArchive() {
-        const list = document.getElementById('archiveList');
-        list.innerHTML = "";
-        document.getElementById('arcCount').innerText = archive.length;
-        archive.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'archive-item';
-            div.innerHTML = `<span class="archive-date">[${item.finishDate}]</span><span>${item.title}</span>`;
-            list.appendChild(div);
-        });
-    }
-
-    function renderLog() {
-        const list = document.getElementById('logList');
-        list.innerHTML = "";
-        document.getElementById('logCount').innerText = dailyLog.length;
-        dailyLog.forEach(log => {
-            const li = document.createElement('li');
-            li.className = 'task-item';
-            li.innerHTML = `
-                <div style="display:flex;align-items:center;">
-                    <span class="footprint-time">${log.timeStr}</span>
-                    <span class="footprint-item">${log.icon} ${log.title}</span>
-                </div>
-            `;
-            list.appendChild(li);
-        });
-    }
-
-    function toggleList(id) {
-        const el = document.getElementById(id);
-        if(el.classList.contains('open')) el.classList.remove('open');
-        else el.classList.add('open');
-    }
-    
-    function getIcon(t) {
-        const map = { 'indoor':'🏠', 'desktop':'💻', 'outdoor':'🌳', 'sport':'🏃', 'culture':'🎬', 'vinyl':'🎵', 'sos':'🚑' };
-        return map[t] || '✨';
-    }
-    function save() {
-        localStorage.setItem(KEY_DB, JSON.stringify(db));
-        localStorage.setItem(KEY_ARCHIVE, JSON.stringify(archive));
-        localStorage.setItem(KEY_LOG, JSON.stringify(dailyLog));
-        localStorage.setItem(KEY_STATS, JSON.stringify(userStats));
-    }
-    function scrollToSettings() { document.getElementById('settingSec').scrollIntoView({behavior:"smooth"}); }
-
-    // --- 导入导出 (兼容) ---
-    function exportToFile() {
-        const allData = { db, archive, dailyLog, userStats };
-        const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json";
-        a.click();
-    }
-    function triggerImport() { document.getElementById('fileInput').click(); }
-    function importFromFile(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) { parseData(e.target.result); };
-        reader.readAsText(file);
-    }
-    function copyToClip() {
-        const str = JSON.stringify({ db, archive, dailyLog, userStats });
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(str)
-                .then(()=> showToast("✅ 已复制文本码"))
-                .catch(()=>{ document.getElementById('dataArea').value=str; showToast("⚠️ 请手动全选复制"); });
-        } else {
-            document.getElementById('dataArea').value=str; 
-            showToast("⚠️ 请手动全选复制"); 
-        }
-    }
-
+    // 🔥 v3.7 Robust Import Logic
     function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) {
-            showToast("⚠️ 文本框是空的！");
+            showModal("⚠️ 文本框是空的！请先长按粘贴代码。", 'normal', () => {});
             return;
         }
-        parseData(str);
-    }
-
-    function parseData(str) {
+        
         try {
             const json = JSON.parse(str);
-            let incomingDB = [], incomingArchive = [];
-            if(json.db && Array.isArray(json.db)) {
-                incomingDB = json.db; incomingArchive = json.archive || [];
-                // 导入时也尝试合并统计数据
-                if (json.userStats) {
-                    userStats.willpower = Math.max(userStats.willpower, json.userStats.willpower || 0);
-                    userStats.joy = Math.max(userStats.joy, json.userStats.joy || 0);
-                }
-            } else if(Array.isArray(json)) {
-                incomingDB = json;
-            } else { return showToast("❌ 格式错误"); }
+            // Try to rescue data even if structure is partial
+            let incomingDB = json.db || (Array.isArray(json) ? json : []);
+            let incomingArchive = json.archive || [];
+            let incomingStats = json.userStats || {};
 
-            let addCount = 0;
-            incomingDB.forEach(newItem => {
-                const exists = db.some(existItem => existItem.title === newItem.title && existItem.type === newItem.type);
-                if (!exists) {
-                    if (newItem.time === undefined) newItem.time = 30;
-                    if (newItem.recurrence === undefined) newItem.recurrence = 'none';
-                    newItem.id = Date.now() + Math.floor(Math.random()*10000); 
-                    db.push(newItem);
-                    addCount++;
-                }
-            });
-            incomingArchive.forEach(newArc => {
-                const arcExists = archive.some(a => a.title === newArc.title && a.finishDate === newArc.finishDate);
-                if(!arcExists) archive.unshift(newArc);
+            if (!Array.isArray(incomingDB)) throw new Error("Invalid DB");
+
+            showModal(`📡 找到 ${incomingDB.length} 个任务。<br>确定要合并吗？`, 'confirm', () => {
+                 let addCount = 0;
+                 incomingDB.forEach(newItem => {
+                    const exists = db.some(existItem => existItem.title === newItem.title && existItem.type === newItem.type);
+                    if (!exists) {
+                        // Sanitize missing fields
+                        newItem.id = Date.now() + Math.floor(Math.random()*10000);
+                        if (newItem.time === undefined) newItem.time = 30;
+                        db.push(newItem);
+                        addCount++;
+                    }
+                 });
+                 
+                 // Merge Archive
+                 incomingArchive.forEach(newArc => {
+                     const arcExists = archive.some(a => a.title === newArc.title);
+                     if(!arcExists) archive.unshift(newArc);
+                 });
+
+                 // Merge Stats (Max)
+                 if (incomingStats.willpower) userStats.willpower = Math.max(userStats.willpower, incomingStats.willpower);
+                 if (incomingStats.joy) userStats.joy = Math.max(userStats.joy, incomingStats.joy);
+
+                 fixLegacyData();
+                 save(); renderList(); renderArchive(); updateStatsUI();
+                 showToast(`✅ 成功导入 ${addCount} 个新任务`);
+                 document.getElementById('dataArea').value = "";
             });
 
-            fixLegacyData();
-            save(); renderList(); renderArchive(); updateStatsUI();
-            showToast(`✅ 成功合并 ${addCount} 个新任务`);
-            document.getElementById('dataArea').value = "";
-        } catch(e) { showToast("❌ 数据无效"); }
+        } catch(e) {
+            showModal(`❌ <b>数据格式错误</b><br><br>请确保你复制了完整的代码（以 { 或 [ 开头，以 } 或 ] 结尾）。<br><br>错误详情: ${e.message}`, 'danger', ()=>{});
+        }
+    }
+
+    // Only used for file import
+    function parseData(str) {
+        document.getElementById('dataArea').value = str;
+        executeImport();
     }
 
     init();
