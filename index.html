@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Anchor | 锚点 v2.7</title>
+    <style>
+        /* --- 🎨 Anchor v2.7 精准识别版 --- */
+        :root {
+            --bg-blue: #D4F1F4;
+            --bg-wood: #FDF6E3;
+            --bg-pink: #FFE2E2;
+            --bg-sos:  #E8DFF5;
+            --bg-setting: #F0F4F8;
+            --text-main: #5D5C61;
+            --gold: #D4AF37;
+            --sport-green: #B5EAD7;
+            --cycle-purple: #C7CEEA;
+            --frog-green: #9CCC65;
+            --flash-yellow: #FFD54F;
+            --danger-red: #ff6b6b;
+            --footprint-grey: #90A4AE;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+            margin: 0; padding: 0; background-color: #f0f2f5;
+            color: var(--text-main); display: flex; justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%; max-width: 450px; background-color: #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            padding: 15px 20px; background: #fff; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #eee;
+        }
+        .app-title { font-weight: bold; font-size: 1.1rem; color: #444; }
+        .version-badge { background: #333; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex; justify-content: space-around; padding: 10px 15px; background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .stat-btn {
+            flex: 1; margin: 0 5px; padding: 8px; border-radius: 12px; cursor: pointer;
+            background: #fafafa; border: 1px solid #eee; text-align: center;
+            transition: all 0.1s; user-select: none;
+        }
+        .stat-btn:active { transform: scale(0.96); background: #f0f0f0; }
+        .stat-label { font-size: 0.8rem; color: #666; margin-right: 5px; }
+        .stat-count { font-weight: bold; font-size: 1rem; color: #333; font-family: monospace; }
+        .stat-btn.willpower { color: #5C6BC0; }
+        .stat-btn.joy { color: #FFA726; }
+
+        /* Filter */
+        .section-filter {
+            background-color: var(--bg-blue); padding: 20px; text-align: center;
+            border-bottom-left-radius: 25px; border-bottom-right-radius: 25px;
+            transition: background 0.4s; position: relative; z-index: 10;
+        }
+        .mode-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .mode-tab {
+            padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;
+            background: rgba(255,255,255,0.5); transition: all 0.2s;
+        }
+        .mode-tab.active { background: #fff; font-weight: bold; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .control-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        select { padding: 8px 12px; border: none; border-radius: 10px; background: rgba(255,255,255,0.9); font-size: 16px; }
+        
+        .btn-main {
+            background-color: #FF9AA2; color: white; font-weight: bold; font-size: 1.1rem;
+            padding: 12px 40px; border: none; border-radius: 30px;
+            box-shadow: 0 4px 12px rgba(255, 154, 162, 0.4); cursor: pointer; transition: transform 0.1s;
+        }
+        .btn-main:active { transform: scale(0.95); }
+
+        /* Display */
+        .section-display {
+            flex-grow: 1; background-color: var(--bg-pink); display: flex;
+            flex-direction: column; align-items: center; justify-content: center;
+            padding: 20px; min-height: 220px; transition: background 0.4s;
+        }
+        .card {
+            background: white; padding: 25px; border-radius: 20px; text-align: center; width: 85%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: none;
+            animation: slideUp 0.4s ease-out forwards;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .card-icon { font-size: 3.5rem; display: block; margin-bottom: 10px; }
+        .card-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .card-desc { font-size: 0.9rem; color: #777; line-height: 1.6; margin-bottom: 15px; }
+        .card-time { 
+            display: inline-block; background: #f0f0f0; color: #888; padding: 2px 8px; 
+            border-radius: 8px; font-size: 0.75rem; margin-top: 5px; 
+        }
+        
+        .card-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; vertical-align: middle; margin-left: 5px; color: #fff; }
+        .bg-cycle { background: var(--cycle-purple); }
+        .bg-frog { background: var(--frog-green); }
+        .bg-flash { background: var(--flash-yellow); color: #555; }
+
+        .btn-card-action {
+            background: #f0f0f0; padding: 8px 18px; border-radius: 15px; font-size: 0.85rem; 
+            border: none; cursor: pointer; color: #555; margin: 0 5px;
+        }
+
+        /* Input */
+        .section-input { background-color: var(--bg-wood); padding: 20px; }
+        .input-box {
+            background: #fff; padding: 5px; border-radius: 15px; display: flex; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px;
+        }
+        textarea#inpTitle { 
+            border: none; padding: 10px; flex: 1; border-radius: 10px; outline: none; 
+            font-size: 16px; font-family: inherit; resize: none; height: 24px; line-height: 24px;
+        }
+        .btn-add { background: #B5EAD7; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; color: #555; cursor: pointer; }
+        
+        .input-options { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .tags-row { display: flex; gap: 6px; flex-wrap: wrap; }
+        .tag {
+            padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; background: rgba(0,0,0,0.05); 
+            cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
+        }
+        .tag.active { background: #C7CEEA; border-color: #989ec2; color: #333; }
+        .tag[data-v="sport"].active { background: var(--sport-green); border-color: #99cbb9; }
+
+        /* Switches */
+        .switch-container { display: flex; gap: 8px; }
+        .switch-btn {
+            font-size: 0.75rem; color: #666; display: flex; align-items: center; gap: 5px; cursor: pointer;
+            background: rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 10px; border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .switch-btn.active-cycle { background: var(--cycle-purple); color: #fff; font-weight: bold; border-color: var(--cycle-purple); }
+        .switch-btn.active-flash { background: var(--flash-yellow); color: #555; font-weight: bold; border-color: #FBC02D; }
+
+        .time-select-small {
+            font-size: 16px; padding: 4px; border-radius: 8px; border: 1px solid #ddd; color: #666;
+            transition: opacity 0.3s;
+        }
+        .time-select-small.disabled { opacity: 0.3; pointer-events: none; }
+
+        /* Lists */
+        .section-list { background-color: #fff; padding: 20px; }
+        .list-section-header {
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 10px 0; border-bottom: 1px solid #eee; cursor: pointer; margin-top: 10px;
+        }
+        .list-title { font-size: 0.95rem; font-weight: bold; color: #555; }
+        .task-list { list-style: none; padding: 0; margin: 0; max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+        .task-list.open { max-height: 400px; overflow-y: auto; }
+        
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #f9f9f9; }
+        .task-status-done { opacity: 0.4; text-decoration: line-through; }
+        .list-badge { font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 5px; border: 1px solid #eee; color: #888;}
+        .lb-frog { color: var(--frog-green); border-color: var(--frog-green); font-weight:bold; }
+        .lb-flash { color: #FBC02D; border-color: #FBC02D; }
+
+        .footprint-time { font-size: 0.7rem; color: #aaa; margin-right: 10px; font-family: monospace;}
+        .footprint-item { color: #666; font-size: 0.85rem; }
+
+        .archive-section { margin-top: 20px; border-top: 4px solid #f0f2f5; padding-top: 15px; }
+        .archive-list { display: none; margin-top: 10px; color: #999; font-size: 0.85rem; }
+        .archive-item { padding: 5px 0; display: flex; gap: 10px; }
+        .archive-date { font-family: monospace; color: #ccc; }
+
+        /* Settings */
+        .section-settings { background-color: var(--bg-setting); padding: 20px; border-top: 1px solid #eee; padding-bottom: 50px;}
+        .settings-title { font-size: 0.9rem; font-weight: bold; color: #666; margin-bottom: 10px; }
+        .backup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom:10px;}
+        .btn-outline { background: #fff; border: 1px solid #bbb; color: #555; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+        .btn-file { background: #e1eefd; border: 1px solid #bbd4f0; color: #1565C0; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+        textarea { width: 100%; height: 80px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; color:#555; padding: 8px; font-family: monospace; }
+        .btn-danger { width: 100%; padding: 10px; background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; }
+
+        /* Modal & Toast */
+        .custom-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4); z-index: 1000; display: none;
+            justify-content: center; align-items: center;
+        }
+        .custom-modal {
+            background: white; width: 80%; max-width: 320px; padding: 20px;
+            border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center; animation: popIn 0.2s ease-out;
+        }
+        @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
+        .modal-text { margin-bottom: 20px; font-size: 1rem; color: #333; line-height: 1.5; }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+        .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; flex: 1; }
+        .modal-btn.cancel { background: #f0f0f0; color: #666; }
+        .modal-btn.confirm { background: var(--bg-blue); color: #006064; }
+        .modal-btn.danger { background: var(--danger-red); color: white; }
+
+        .toast-notification {
+            position: fixed; top: -60px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 12px 24px; border-radius: 30px;
+            font-size: 0.9rem; z-index: 2000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .toast-notification.show { top: 20px; }
+
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast-notification">✅ 操作成功</div>
+
+<div id="modalOverlay" class="custom-overlay">
+    <div class="custom-modal">
+        <div id="modalMsg" class="modal-text">确定要执行吗？</div>
+        <div class="modal-btns" id="modalBtnContainer"></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v2.7</span></div>
+        <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-btn willpower" onclick="incrementStat('willpower')">
+            <span class="stat-label">🛡️ 意志力</span>
+            <span class="stat-count" id="stat-willpower">0</span>
+        </div>
+        <div class="stat-btn joy" onclick="incrementStat('joy')">
+            <span class="stat-label">✨ 小确幸</span>
+            <span class="stat-count" id="stat-joy">0</span>
+        </div>
+    </div>
+
+    <div class="section-filter" id="filterSec">
+        <div class="mode-tabs">
+            <div class="mode-tab active" onclick="setMode('normal')">🔮 混合/全域</div>
+            <div class="mode-tab" onclick="setMode('culture')">📚 只看书影</div>
+            <div class="mode-tab" onclick="setMode('vinyl')">🎵 只听唱片</div>
+            <div class="mode-tab" onclick="setMode('sos')" style="color:#d9534f">🆘 SOS</div>
+        </div>
+        <div id="controls-normal" class="control-group">
+            <select id="selContext"><option value="desktop">💻 书桌前</option><option value="indoor">🏠 室内/家</option><option value="outdoor">🌳 户外</option></select>
+            <select id="selTime"><option value="30">⏳ 有30分钟</option><option value="60">⏳ 有1小时</option><option value="120">⏳ 有2小时+</option></select>
+        </div>
+        <div id="controls-sos" class="control-group" style="display:none; color: #555; font-size:0.9rem;"><span>🍃 允许自己暂时停下来...</span></div>
+        <button class="btn-main" onclick="draw()" id="mainBtn">抽取任务</button>
+    </div>
+
+    <div class="section-display" id="displaySec">
+        <div id="placeholder" style="color:#aaa; font-weight:bold; opacity:0.5;">...</div>
+        <div id="resultCard" class="card">
+            <span class="card-icon" id="rIcon">🎁</span>
+            <div class="card-title"><span id="rTitle"></span><span id="rBadge"></span></div>
+            <div class="card-desc" id="rDesc"></div>
+            <div class="card-time" id="rTime"></div> 
+            <div style="margin-top:15px;">
+                <button class="btn-card-action" onclick="draw()">换一个</button>
+                <button class="btn-card-action" onclick="finishTask()" id="btnFinish">去完成</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-input">
+        <div class="input-box">
+            <textarea id="inpTitle" rows="1" placeholder="输入事项... (*开头标记重要/青蛙)" oninput="autoTag()" onkeypress="handleEnter(event)"></textarea>
+            <button class="btn-add" onclick="addNew()">＋</button>
+        </div>
+        <div class="input-options">
+            <div class="tags-row">
+                <div class="tag active" data-v="indoor" onclick="pickTag(this)">🏠 室内</div>
+                <div class="tag" data-v="desktop" onclick="pickTag(this)">💻 桌前</div>
+                <div class="tag" data-v="outdoor" onclick="pickTag(this)">🌳 户外</div>
+                <div class="tag" data-v="sport" onclick="pickTag(this)">🏃 运动</div>
+                <div class="tag" data-v="culture" onclick="pickTag(this)">📚 书/影</div>
+                <div class="tag" data-v="vinyl" onclick="pickTag(this)">🎵 听碟</div>
+            </div>
+        </div>
+        <div class="input-options" style="margin-top:8px;">
+            <div class="switch-container">
+                <div class="switch-btn" id="cycleSwitch" onclick="toggleSwitch('cycle')"><span>🔄 每日循环</span></div>
+                <div class="switch-btn" id="flashSwitch" onclick="toggleSwitch('flash')"><span>⚡️ 速办模式</span></div>
+            </div>
+            
+            <select id="inpTime" class="time-select-small">
+                <option value="5">5m (速办)</option>
+                <option value="15">15m</option>
+                <option value="30" selected>30m</option>
+                <option value="60">1h</option>
+                <option value="120">2h+</option>
+            </select>
+        </div>
+        <div id="timeFeedback" style="font-size:0.7rem; color:#75B79E; margin-top:5px; margin-left:5px; height:1rem;"></div>
+    </div>
+
+    <div class="section-list">
+        <div class="list-section-header" onclick="toggleList('dailyList')"><span class="list-title">📋 日常 & 运动 (<span id="dailyCount">0</span>)</span><span style="font-size:0.8rem; color:#ccc">▼</span></div>
+        <ul id="dailyList" class="task-list open"></ul>
+        
+        <div class="list-section-header" onclick="toggleList('mediaList')"><span class="list-title">🎬 媒体库房 (<span id="mediaCount">0</span>)</span><span style="font-size:0.8rem; color:#ccc">▼</span></div>
+        <ul id="mediaList" class="task-list"></ul>
+
+        <div class="list-section-header" onclick="toggleList('logList')">
+            <span class="list-title" style="color:var(--footprint-grey)">👣 今日足迹 (<span id="logCount">0</span>)</span>
+            <span style="font-size:0.8rem; color:#ccc">▼</span>
+        </div>
+        <ul id="logList" class="task-list"></ul>
+
+        <div class="archive-section">
+            <div class="list-section-header" onclick="toggleList('archiveList')"><span class="list-title" style="color:var(--gold)">🏆 荣誉殿堂 (<span id="arcCount">0</span>)</span><span style="font-size:0.8rem; color:#ccc">▼</span></div>
+            <div id="archiveList" class="task-list"></div>
+        </div>
+    </div>
+
+    <div class="section-settings" id="settingSec">
+        <div class="settings-title">📡 数据方舟</div>
+        <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (电脑端推荐)</div>
+        <div class="backup-grid">
+            <button class="btn-file" onclick="exportToFile()">📥 导出文件</button>
+            <button class="btn-file" onclick="triggerImport()">📤 导入文件 (Merge)</button>
+        </div>
+        <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
+        <div style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:bold;">📝 文本操作 (手机端)</div>
+        <div class="backup-grid">
+            <button class="btn-outline" onclick="copyToClip()">📋 复制文本码</button>
+            <button class="btn-outline" onclick="document.getElementById('dataArea').value=''">🗑️ 清空</button>
+        </div>
+        <textarea id="dataArea" placeholder="在此长按粘贴数据代码..."></textarea>
+        <button class="btn-file" style="width:100%; background:#E8F5E9; border-color:#A5D6A7; color:#2E7D32;" onclick="executeImport()">✅ 确认导入 (Merge)</button>
+        <button class="btn-danger" onclick="tryResetAll()">🗑️ 格式化/重置所有数据</button>
+        <input type="file" id="fileInput" style="display:none" onchange="importFromFile(this)">
+    </div>
+</div>
+
+<script>
+    const sosLibrary = [
+        { title: "大口喝水", icon: "💧", desc: "感受水流经过食道。" },
+        { title: "看窗外远方", icon: "👀", desc: "寻找视野里最远的一棵树。" },
+        { title: "4-7-8 呼吸", icon: "🌬️", desc: "吸气4秒，憋气7秒，呼气8秒。" },
+        { title: "压腿拉伸", icon: "🦵", desc: "拉伸大腿后侧。" },
+        { title: "五感着陆", icon: "🖐️", desc: "5样看到的，4样听到的。" },
+        { title: "洗把脸", icon: "🚿", desc: "冷水泼脸，物理降温。" },
+        { title: "吃一颗水果", icon: "🍊", desc: "慢慢吃，感受香气。" }
+    ];
+
+    const defaultDB = [
+        { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
+        { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
+    ];
+
+    let db = JSON.parse(localStorage.getItem('anchor_v2_7_db')) || defaultDB;
+    let archive = JSON.parse(localStorage.getItem('anchor_v2_7_archive')) || [];
+    let dailyLog = JSON.parse(localStorage.getItem('anchor_v2_7_log')) || [];
+    let userStats = JSON.parse(localStorage.getItem('anchor_v2_7_stats')) || { willpower: 0, joy: 0 };
+    
+    let recentHistory = []; 
+    let mode = 'normal';
+    let currentTask = null;
+    let switchState = { cycle: false, flash: false };
+
+    function init() {
+        fixLegacyData();
+        checkLogExpiry();
+        renderList();
+        renderArchive();
+        renderLog();
+        updateStatsUI(); 
+        setMode('normal');
+    }
+
+    function checkLogExpiry() {
+        const today = new Date().toDateString();
+        const validLogs = dailyLog.filter(log => log.date === today);
+        if (validLogs.length !== dailyLog.length) {
+            dailyLog = validLogs;
+            save();
+        }
+    }
+
+    function fixLegacyData() {
+        let fixedCount = 0;
+        db.forEach(item => {
+            if ((item.type === 'vinyl' || item.type === 'culture') && (item.time === undefined || item.time === null)) {
+                item.time = 0; fixedCount++;
+            } else if (item.time === undefined || item.time === null) {
+                item.time = 30; fixedCount++;
+            }
+            if (item.recurrence === undefined) item.recurrence = 'none';
+            if (item.desc === "自定义" || item.desc === "自定义任务") item.desc = "";
+            if (item.isFrog === undefined) item.isFrog = false;
+            if (item.isQuick === undefined) item.isQuick = false;
+        });
+        if(fixedCount > 0) save();
+    }
+
+    function incrementStat(type) {
+        if (type === 'willpower') {
+            userStats.willpower++;
+            showToast("💪 战胜了冲动！意志力+1");
+        } else if (type === 'joy') {
+            userStats.joy++;
+            showToast("✨ 捕捉到美好！小确幸+1");
+        }
+        updateStatsUI();
+        save();
+    }
+
+    function updateStatsUI() {
+        document.getElementById('stat-willpower').innerText = userStats.willpower;
+        document.getElementById('stat-joy').innerText = userStats.joy;
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function showModal(msg, type, onConfirm) {
+        const overlay = document.getElementById('modalOverlay');
+        const msgDiv = document.getElementById('modalMsg');
+        const btnContainer = document.getElementById('modalBtnContainer');
+        msgDiv.innerText = msg;
+        btnContainer.innerHTML = "";
+        
+        const btnCancel = document.createElement('button');
+        btnCancel.className = 'modal-btn cancel';
+        btnCancel.innerText = "取消";
+        btnCancel.onclick = () => { overlay.style.display = 'none'; };
+        btnContainer.appendChild(btnCancel);
+
+        const btnConfirm = document.createElement('button');
+        btnConfirm.className = type === 'danger' ? 'modal-btn danger' : 'modal-btn confirm';
+        btnConfirm.innerText = type === 'danger' ? "确认" : "确定";
+        btnConfirm.onclick = () => { onConfirm(); overlay.style.display = 'none'; };
+        btnContainer.appendChild(btnConfirm);
+
+        overlay.style.display = 'flex';
+    }
+
+    function getSmartIcon(item) {
+        if (item.subtype === 'book') return '📚';
+        if (item.subtype === 'movie') return '🎬';
+        
+        if (item.type === 'culture') {
+            const t = (item.title || "").toLowerCase();
+            if (t.includes('书') || t.includes('读') || t.includes('阅') || t.includes('杂志') || t.includes('周刊') || t.includes('册')) return '📚';
+            if (t.includes('影') || t.includes('视') || t.includes('剧') || t.includes('片') || t.includes('看')) return '🎬';
+            return '🖼️'; 
+        }
+        return getIcon(item.type);
+    }
+
+    function getDescByType(t) {
+        if(t==='vinyl') return "享受这段音乐时光。";
+        if(t==='culture') return "沉浸在故事里。";
+        if(t==='sport') return "动起来！";
+        return "去行动吧！";
+    }
+
+    function handleEnter(e) { 
+        if(e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            addNew(); 
+        }
+    }
+
+    function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        const map = { 'normal':0, 'culture':1, 'vinyl':2, 'sos':3 };
+        if(map[m] !== undefined) document.querySelectorAll('.mode-tab')[map[m]].classList.add('active');
+        
+        const filter = document.getElementById('filterSec');
+        const display = document.getElementById('displaySec');
+        const normCtl = document.getElementById('controls-normal');
+        const sosCtl = document.getElementById('controls-sos');
+        const btn = document.getElementById('mainBtn');
+
+        if(m === 'sos') {
+            filter.style.background = 'var(--bg-sos)';
+            display.style.background = '#F3E5F5';
+            normCtl.style.display = 'none';
+            sosCtl.style.display = 'flex';
+            btn.innerText = "🚑 救救我";
+            btn.style.background = "#957DAD";
+        } else {
+            filter.style.background = 'var(--bg-blue)';
+            display.style.background = 'var(--bg-pink)';
+            normCtl.style.display = 'flex';
+            sosCtl.style.display = 'none';
+            btn.style.background = "#FF9AA2";
+            if(m === 'vinyl') btn.innerText = "🎵 挑唱片";
+            else if(m === 'culture') btn.innerText = "🎬 精神食粮";
+            else btn.innerText = "🔮 帮我选 (混合)";
+        }
+    }
+
+    function parseTimeFromInput(str) {
+        let detectedTime = null;
+        let cleanStr = str;
+        const regexH = /(\d+(?:\.\d+)?)\s*(h|hr|hour|hours|小时)/i;
+        let matchH = str.match(regexH);
+        if (matchH) {
+            detectedTime = parseFloat(matchH[1]) * 60;
+            cleanStr = cleanStr.replace(matchH[0], '').trim();
+        }
+        if (!detectedTime) {
+            const regexM = /(\d+)\s*(m|min|mins|分|分钟)/i;
+            let matchM = str.match(regexM);
+            if (matchM) {
+                detectedTime = parseInt(matchM[1]);
+                cleanStr = cleanStr.replace(matchM[0], '').trim();
+            }
+        }
+        return { time: detectedTime, title: cleanStr };
+    }
+
+    // 🔥 v2.2 核心算法
+    function draw() {
+        const card = document.getElementById('resultCard');
+        card.style.display = 'none';
+        
+        setTimeout(() => {
+            let result = null;
+            if (mode === 'sos') {
+                const r = Math.floor(Math.random() * sosLibrary.length);
+                result = { ...sosLibrary[r], type: 'sos', time: 0 };
+            } else {
+                const ctx = document.getElementById('selContext').value;
+                const limitTime = parseInt(document.getElementById('selTime').value);
+                const todayStr = new Date().toDateString();
+
+                let validPool = db.filter(item => {
+                    if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
+                    
+                    const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
+                    const isFlexible = (tTime === 0);
+                    
+                    if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
+
+                    if (mode === 'vinyl') return item.type === 'vinyl';
+                    if (mode === 'culture') return item.type === 'culture';
+                    
+                    if (item.type === 'culture' || item.type === 'vinyl') {
+                        if (ctx === 'outdoor') return false; 
+                    } else if (item.type === 'sport') {
+                        return true; 
+                    } else {
+                        if (ctx === 'desktop') return item.type !== 'outdoor';
+                        if (ctx === 'indoor') return item.type === 'indoor';
+                        if (ctx === 'outdoor') return item.type === 'outdoor';
+                    }
+                    return true;
+                });
+
+                if (validPool.length > 0) {
+                    let nonRecentPool = validPool.filter(item => !recentHistory.includes(item.id));
+                    let finalPool = (nonRecentPool.length > 0) ? nonRecentPool : validPool;
+
+                    const isFrogTime = (mode === 'normal' && (ctx === 'desktop' || ctx === 'indoor') && limitTime >= 60);
+                    const frogs = finalPool.filter(t => t.isFrog);
+                    
+                    if (isFrogTime && frogs.length > 0 && Math.random() < 0.7) {
+                        result = frogs[Math.floor(Math.random() * frogs.length)];
+                    } else {
+                        let groups = { 'daily': [], 'culture': [], 'vinyl': [], 'sport': [] };
+                        finalPool.forEach(item => {
+                            if (item.type === 'culture') groups.culture.push(item);
+                            else if (item.type === 'vinyl') groups.vinyl.push(item);
+                            else if (item.type === 'sport') groups.sport.push(item);
+                            else groups.daily.push(item);
+                        });
+
+                        let activeCategories = [];
+                        if (groups.daily.length > 0) activeCategories.push('daily');
+                        if (groups.culture.length > 0) activeCategories.push('culture');
+                        if (groups.vinyl.length > 0) activeCategories.push('vinyl');
+                        if (groups.sport.length > 0) activeCategories.push('sport');
+
+                        if(activeCategories.length > 0) {
+                            const luckyCategory = activeCategories[Math.floor(Math.random() * activeCategories.length)];
+                            const targetList = groups[luckyCategory];
+                            result = targetList[Math.floor(Math.random() * targetList.length)];
+                        }
+                    }
+                }
+            }
+
+            if (result && result.type !== 'sos') {
+                recentHistory.push(result.id);
+                if (recentHistory.length > 2) recentHistory.shift(); 
+            }
+
+            currentTask = result;
+            if (result) {
+                document.getElementById('rTitle').innerText = result.title;
+                
+                let badgesHtml = "";
+                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
+                if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
+                if (result.recurrence === 'daily') badgesHtml += `<span class='card-badge bg-cycle'>🔄 每日</span>`;
+                document.getElementById('rBadge').innerHTML = badgesHtml;
+                
+                let displayDesc = result.desc;
+                if (!displayDesc || displayDesc === "自定义" || displayDesc === "自定义任务") {
+                    displayDesc = getDescByType(result.type);
+                }
+                document.getElementById('rDesc').innerText = displayDesc;
+                document.getElementById('rIcon').innerText = result.icon || getSmartIcon(result);
+                
+                let timeStr = "";
+                if (result.type === 'sos') timeStr = "⚡️ 即时";
+                else if (result.isQuick) timeStr = "⚡️ 速战速决";
+                else if(result.time === 0) timeStr = "⏳ 丰俭由人";
+                else if(result.time) timeStr = `⏱️ ${result.time} min`;
+                else timeStr = "⏱️ 30 min";
+                document.getElementById('rTime').innerText = timeStr;
+            } else {
+                currentTask = null;
+                document.getElementById('rTitle').innerText = "暂无任务";
+                document.getElementById('rBadge').innerHTML = "";
+                document.getElementById('rDesc').innerText = "休息一下？";
+                document.getElementById('rIcon').innerText = "🌙";
+                document.getElementById('rTime').innerText = "";
+            }
+            card.style.display = 'block';
+        }, 300);
+    }
+
+    function finishTask() {
+        if (!currentTask) return;
+        if (currentTask.type === 'sos') {
+             showToast("状态重启！🌱");
+             document.getElementById('resultCard').style.display = 'none';
+             return;
+        }
+
+        const recordLog = () => {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            dailyLog.unshift({
+                title: currentTask.title,
+                icon: currentTask.icon || getSmartIcon(currentTask),
+                timeStr: timeStr,
+                date: now.toDateString()
+            });
+            renderLog();
+        };
+
+        if (currentTask.recurrence === 'daily') {
+            const taskIndex = db.findIndex(t => t.id === currentTask.id);
+            if (taskIndex > -1) {
+                db[taskIndex].lastDone = new Date().toDateString();
+            }
+            recordLog();
+            save(); renderList();
+            showToast("✅ 今日打卡成功！");
+            document.getElementById('resultCard').style.display = 'none';
+            return;
+        }
+
+        if (currentTask.type === 'culture') {
+            if (currentTask.isSeries) {
+                showToast("🎉 记录完成！");
+                document.getElementById('resultCard').style.display = 'none';
+                return;
+            }
+            showModal(`《${currentTask.title}》彻底看完了吗？`, 'normal', () => {
+                db = db.filter(i => i.id !== currentTask.id);
+                const doneItem = { ...currentTask, finishDate: new Date().toLocaleDateString() };
+                archive.unshift(doneItem);
+                save(); renderList(); renderArchive();
+                showToast("🏆 已载入荣誉殿堂！");
+                document.getElementById('resultCard').style.display = 'none';
+            });
+        } 
+        else {
+            db = db.filter(i => i.id !== currentTask.id);
+            recordLog();
+            save(); renderList(); 
+            showToast("✨ 完成！已记入今日足迹");
+            document.getElementById('resultCard').style.display = 'none';
+        }
+    }
+
+    // 🔥 v2.6 自动标签 + 半自动纠偏
+    function autoTag() {
+        const raw = document.getElementById('inpTitle').value;
+        const lines = raw.split('\n');
+        let targetLine = lines[0] || ""; 
+        const parsed = parseTimeFromInput(targetLine);
+        const feedback = document.getElementById('timeFeedback');
+        
+        if (parsed.time) feedback.innerText = `💡 识别: ${parsed.time} min`;
+        else feedback.innerText = "";
+
+        // Cycle Detection
+        if ((targetLine.includes("每天") || targetLine.includes("每日")) && !switchState.cycle) {
+            toggleSwitch('cycle', true); // Force ON
+        }
+
+        const v = targetLine;
+        const tags = document.querySelectorAll('.tag');
+        
+        let t = null;
+        let detectQuick = false;
+
+        // Flash/Quick Detection - UPDATED LIST
+        if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(v)) {
+            t = 'indoor';
+            detectQuick = true;
+        } 
+        else if(v.includes('唱') || v.includes('听')) t = 'vinyl';
+        else if(v.includes('书') || v.includes('影') || v.includes('读') || v.includes('看') || v.includes('杂志')) t = 'culture';
+        else if(v.includes('动') || v.includes('跑') || v.includes('练') || v.includes('跳') || v.includes('球') || v.includes('舞') || v.includes('操')) t = 'sport';
+        else if(v.includes('买') || v.includes('外') || v.includes('取') || v.includes('拿')) t = 'outdoor';
+        else if(v.includes('脑') || v.includes('写') || v.includes('研究') || v.includes('作') || v.includes('编辑')) t = 'desktop';
+        
+        if (t) {
+            tags.forEach(tag => tag.classList.remove('active'));
+            const activeTag = document.querySelector(`.tag[data-v="${t}"]`);
+            activeTag.classList.add('active');
+            toggleTimeInput(t);
+        }
+
+        // Apply Quick Mode Suggestion
+        if (detectQuick && !switchState.flash) {
+            toggleSwitch('flash', true); // Force ON
+            document.getElementById('inpTime').value = "5"; // Auto set to 5m
+        }
+    }
+
+    function pickTag(el) {
+        document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        toggleTimeInput(el.dataset.v);
+    }
+    
+    function toggleTimeInput(type) {
+        const sel = document.getElementById('inpTime');
+        if (type === 'vinyl' || type === 'culture') sel.classList.add('disabled');
+        else sel.classList.remove('disabled');
+    }
+
+    function toggleSwitch(type, forceState) {
+        const newState = (forceState !== undefined) ? forceState : !switchState[type];
+        switchState[type] = newState;
+        
+        const sw = document.getElementById(type + 'Switch');
+        const activeClass = (type === 'cycle') ? 'active-cycle' : 'active-flash';
+        
+        if (newState) sw.classList.add(activeClass);
+        else sw.classList.remove(activeClass);
+    }
+
+    // 🔥 v2.7 修复领头羊Bug
+    function addNew() {
+        const rawInput = document.getElementById('inpTitle').value;
+        if(!rawInput || rawInput.trim() === "") return;
+        
+        let lines = rawInput.split('\n').filter(line => line.trim() !== "");
+        const type = document.querySelector('.tag.active').dataset.v;
+        let addedCount = 0;
+        let batchSubtype = ''; 
+
+        if (lines.length > 0) {
+            const first = lines[0].toLowerCase();
+            // 🚨 修复Bug核心：如果是家务动作，不要被当成书单指令吃掉！
+            const isCleaning = /(理|整理|收拾|擦|扫|拖|洗|换|叠|铺|挂|扔|拆|装|喝)/.test(first);
+
+            if (!isCleaning) {
+                if (['看', '影', '视', '剧', '片', 'movie'].some(k => first.includes(k))) {
+                    batchSubtype = 'movie';
+                } else if (['读', '书', '阅', 'book', 'read', '杂志'].some(k => first.includes(k))) {
+                    batchSubtype = 'book';
+                }
+                
+                // 🚨 修复核心：只有多行且首行极短时，才当作纯指令吃掉
+                if (batchSubtype && lines.length > 1 && first.length <= 2) {
+                    lines.shift();
+                }
+            }
+        }
+
+        lines.forEach(line => {
+            const parsed = parseTimeFromInput(line);
+            let title = parsed.title;
+            let timeVal = parsed.time; // NLP Detected time
+            let subtype = batchSubtype;
+
+            let isFrog = false;
+            if (title.startsWith('*') || title.startsWith('＊')) {
+                isFrog = true;
+                title = title.substring(1).trim();
+            }
+
+            // 1. Check Quick Switch State FIRST
+            let isQuick = switchState.flash;
+
+            // 2. Determine Time
+            if (!timeVal) {
+                timeVal = parseInt(document.getElementById('inpTime').value);
+                
+                if (type === 'vinyl' && !isQuick) timeVal = 0;
+                else if (type === 'culture' && !isQuick) {
+                    if (subtype === 'movie') timeVal = 120;
+                    else timeVal = 0;
+                }
+            }
+            
+            // Double check logic: if marked quick, ensure time is reasonable
+            if (isQuick && (!timeVal || timeVal > 15)) timeVal = 5;
+
+            // Subtype logic
+            if (!isQuick && !subtype && type === 'culture') {
+                if (title.includes('影') || title.includes('视') || title.includes('剧') || title.includes('片') || title.includes('看')) subtype = 'movie';
+                else if (title.includes('书') || title.includes('读') || title.includes('阅') || title.includes('杂志') || title.includes('周刊')) subtype = 'book';
+            }
+
+            title = title.replace(/^(去|看|读|听|写|做)\s*/, '').trim();
+
+            // Book Title Logic
+            if (!isQuick && (type === 'culture' || type === 'vinyl')) {
+                if (!title.startsWith('《') && !title.endsWith('》')) {
+                    title = `《${title}》`;
+                }
+            }
+
+            let isSeries = false;
+            if (type === 'culture') {
+                if (title.includes('杂志') || title.includes('周刊') || title.includes('系列') || title.includes('全集')) isSeries = true;
+            }
+
+            // 3. Check Cycle Switch State
+            let recurrence = switchState.cycle ? 'daily' : 'none';
+            if (recurrence === 'daily') title = title.replace(/每天|每日/g, '').trim();
+
+            db.push({ 
+                id: Date.now() + Math.floor(Math.random() * 10000), 
+                title: title, type: type, subtype: subtype, 
+                desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""), 
+                isSeries: isSeries, time: timeVal, recurrence: recurrence,
+                isFrog: isFrog, isQuick: isQuick, lastDone: '' 
+            });
+            addedCount++;
+        });
+
+        save(); renderList();
+        
+        const input = document.getElementById('inpTitle');
+        input.value = '';
+        input.placeholder = "✅ 存入成功！";
+        document.getElementById('timeFeedback').innerText = "";
+        
+        // Reset switches for next input
+        if(switchState.cycle) toggleSwitch('cycle', false);
+        if(switchState.flash) toggleSwitch('flash', false);
+        
+        showToast(`🎉 存入 ${addedCount} 个任务！`);
+        setTimeout(() => input.placeholder = "输入事项... (*开头标记重要/青蛙)", 1500);
+    }
+
+    function tryDeleteItem(id) {
+        showModal("确定删除吗？", 'danger', () => {
+            db = db.filter(item => item.id !== id);
+            save(); renderList();
+            showToast("🗑️ 已删除");
+        });
+    }
+
+    function tryResetAll() {
+        showModal("⚠️ 确定清空所有数据？不可恢复！", 'danger', () => {
+            db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 };
+            save(); renderList(); renderArchive(); renderLog(); updateStatsUI();
+            showToast("已格式化");
+        });
+    }
+
+    function renderList() {
+        const dailyList = document.getElementById('dailyList');
+        const mediaList = document.getElementById('mediaList');
+        dailyList.innerHTML = ""; mediaList.innerHTML = "";
+        let dCount = 0, mCount = 0;
+        const todayStr = new Date().toDateString();
+        const sortedDB = [...db].sort((a,b) => b.id - a.id);
+
+        sortedDB.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            const isDoneToday = (item.recurrence === 'daily' && item.lastDone === todayStr);
+            if (isDoneToday) li.classList.add('task-status-done');
+
+            const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
+            const cycleBadge = item.recurrence === 'daily' ? 
+                (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`) : '';
+            
+            let extraBadges = "";
+            if(item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
+            if(item.isQuick) extraBadges += `<span class="list-badge lb-flash">⚡️</span>`;
+
+            let tDisplay = "";
+            if (item.time === 0) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">任意</span>`;
+            else if (item.time) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">${item.time}m</span>`;
+
+            li.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="width:25px;text-align:center;">${getSmartIcon(item)}</span>
+                    <span style="font-size:0.9rem;color:#555;">${item.title} ${seriesBadge} ${cycleBadge} ${extraBadges} ${tDisplay}</span>
+                </div>
+                <div class="task-del" onclick="tryDeleteItem(${item.id})">🗑️</div>
+            `;
+
+            if (item.type === 'culture' || item.type === 'vinyl') { mediaList.appendChild(li); mCount++; } 
+            else { dailyList.appendChild(li); dCount++; }
+        });
+        document.getElementById('dailyCount').innerText = dCount;
+        document.getElementById('mediaCount').innerText = mCount;
+    }
+
+    function renderArchive() {
+        const list = document.getElementById('archiveList');
+        list.innerHTML = "";
+        document.getElementById('arcCount').innerText = archive.length;
+        archive.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'archive-item';
+            div.innerHTML = `<span class="archive-date">[${item.finishDate}]</span><span>${item.title}</span>`;
+            list.appendChild(div);
+        });
+    }
+
+    function toggleList(id) {
+        const el = document.getElementById(id);
+        if(el.classList.contains('open')) el.classList.remove('open');
+        else el.classList.add('open');
+    }
+    
+    function getIcon(t) {
+        const map = { 'indoor':'🏠', 'desktop':'💻', 'outdoor':'🌳', 'sport':'🏃', 'culture':'🎬', 'vinyl':'🎵', 'sos':'🚑' };
+        return map[t] || '✨';
+    }
+    function save() {
+        localStorage.setItem('anchor_v2_7_db', JSON.stringify(db));
+        localStorage.setItem('anchor_v2_7_archive', JSON.stringify(archive));
+        localStorage.setItem('anchor_v2_7_log', JSON.stringify(dailyLog));
+        localStorage.setItem('anchor_v2_7_stats', JSON.stringify(userStats));
+    }
+    function scrollToSettings() { document.getElementById('settingSec').scrollIntoView({behavior:"smooth"}); }
+
+    // --- 导入导出 (兼容) ---
+    function exportToFile() {
+        const allData = { db, archive, dailyLog, userStats };
+        const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json";
+        a.click();
+    }
+    function triggerImport() { document.getElementById('fileInput').click(); }
+    function importFromFile(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) { parseData(e.target.result); };
+        reader.readAsText(file);
+    }
+    function copyToClip() {
+        const str = JSON.stringify({ db, archive, dailyLog, userStats });
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(str)
+                .then(()=> showToast("✅ 已复制文本码"))
+                .catch(()=>{ document.getElementById('dataArea').value=str; showToast("⚠️ 请手动全选复制"); });
+        } else {
+            document.getElementById('dataArea').value=str; 
+            showToast("⚠️ 请手动全选复制"); 
+        }
+    }
+
+    function executeImport() {
+        const str = document.getElementById('dataArea').value;
+        if (!str || str.trim().length === 0) {
+            showToast("⚠️ 文本框是空的！");
+            return;
+        }
+        parseData(str);
+    }
+
+    function parseData(str) {
+        try {
+            const json = JSON.parse(str);
+            let incomingDB = [], incomingArchive = [];
+            if(json.db && Array.isArray(json.db)) {
+                incomingDB = json.db; incomingArchive = json.archive || [];
+                if (json.userStats) {
+                    userStats.willpower = Math.max(userStats.willpower, json.userStats.willpower || 0);
+                    userStats.joy = Math.max(userStats.joy, json.userStats.joy || 0);
+                }
+            } else if(Array.isArray(json)) {
+                incomingDB = json;
+            } else { return showToast("❌ 格式错误"); }
+
+            let addCount = 0;
+            incomingDB.forEach(newItem => {
+                const exists = db.some(existItem => existItem.title === newItem.title && existItem.type === newItem.type);
+                if (!exists) {
+                    if (newItem.time === undefined) newItem.time = 30;
+                    if (newItem.recurrence === undefined) newItem.recurrence = 'none';
+                    newItem.id = Date.now() + Math.floor(Math.random()*10000); 
+                    db.push(newItem);
+                    addCount++;
+                }
+            });
+            incomingArchive.forEach(newArc => {
+                const arcExists = archive.some(a => a.title === newArc.title && a.finishDate === newArc.finishDate);
+                if(!arcExists) archive.unshift(newArc);
+            });
+
+            fixLegacyData();
+            save(); renderList(); renderArchive(); updateStatsUI();
+            showToast(`✅ 成功合并 ${addCount} 个新任务`);
+            document.getElementById('dataArea').value = "";
+        } catch(e) { showToast("❌ 数据无效"); }
+    }
+
+    init();
+</script>
+</body>
+</html>
