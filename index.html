@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anchor</title>
     
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIyIiBmaWxsPSIjRkZDOEQxIi8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5ZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjIyIiByPSI3Ii8+PGxpbmUgeDE9IjMzIiB5MT0iMzUiIHgyPSI2NyIgeTI9IjM1Ii8+PGxpbmUgeDE9IjUwIiB5MT0iMjkiIHgyPSI1MCIgeTI9Ijg3Ii8+PHBhdGggZD0iTTIwIDUyIFEgMjAgODIgNTAgODIgU2EgODAgODIgODAgNTIiLz48cGF0aCBkPSJNMjAgNTIgTCAxMyA2MCIvPjxwYXRoIGQ9Ik0yMCA1MiBMIDI5IDU4Ii8+PHBhdGggZD0iTTgwIDUyIEwgNzEgNTgiLz48cGF0aCBkPSJNODAgNTIgTCA4NyA2MCIvPjxwYXRoIGQ9Ik00NCA4MSBMIDUwIDg3IEwgNTYgODEiLz48L2c+PC9zdmc+">
-    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIyIiBmaWxsPSIjRkZDOEQxIi8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5ZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjIyIiByPSI3Ii8+PGxpbmUgeDE9IjMzIiB5MT0iMzUiIHgyPSI2NyIgeTI9IjM1Ii8+PGxpbmUgeDE9IjUwIiB5MT0iMjkiIHgyPSI1MCIgeTI9Ijg3Ii8+PHBhdGggZD0iTTIwIDUyIFEgMjAgODIgNTAgODIgU2EgODAgODIgODAgNTIiLz48cGF0aCBkPSJNMjAgNTIgTCAxMyA2MCIvPjxwYXRoIGQ9Ik0yMCA1MiBMIDI5IDU4Ii8+PHBhdGggZD0iTTgwIDUyIEwgNzEgNTgiLz48cGF0aCBkPSJNODAgNTIgTCA4NyA2MCIvPjxwYXRoIGQ9Ik00NCA4MSBMIDUwIDg3IEwgNTYgODEiLz48L2c+PC9zdmc+">
+    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.6&rounded=true&bold=true">
+    <link rel="icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.6&rounded=true&bold=true">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        /* --- 🎨 Anchor v4.3 结构修复版 --- */
+        /* --- 🎨 Anchor v4.4 样式表 --- */
         :root {
             --bg-blue: #D4F1F4;
             --bg-wood: #FDF6E3;
@@ -52,7 +52,7 @@
             padding-top: max(15px, env(safe-area-inset-top));
         }
         .app-title { font-weight: bold; font-size: 1.1rem; color: #444; }
-        .version-badge { background: #FFC8D1; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .version-badge { background: #607D8B; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
         .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
 
         /* Stats Bar */
@@ -199,7 +199,16 @@
         textarea { width: 100%; height: 80px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; color:#555; padding: 8px; font-family: monospace; }
         .btn-danger { width: 100%; padding: 10px; background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; }
 
-        /* Toast Only - No Modals */
+        /* Modal & Toast */
+        .custom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; display: none; justify-content: center; align-items: center; }
+        .custom-modal { background: white; width: 80%; max-width: 320px; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; animation: popIn 0.2s ease-out; max-height: 80vh; overflow-y: auto; }
+        @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
+        .modal-text { margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.6; }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; flex: 1; text-align: center;}
+        .modal-btn.cancel { background: #f0f0f0; color: #666; }
+        .modal-btn.confirm { background: var(--bg-blue); color: #006064; }
+        .modal-btn.danger { background: var(--danger-red); color: white; }
         .toast-notification { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; z-index: 2000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast-notification.show { top: 20px; }
 
@@ -209,9 +218,16 @@
 
 <div id="toast" class="toast-notification">✅ 操作成功</div>
 
+<div id="modalOverlay" class="custom-overlay">
+    <div class="custom-modal">
+        <div id="modalMsg" class="modal-text"></div>
+        <div class="modal-btns" id="modalBtnContainer"></div>
+    </div>
+</div>
+
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v4.3</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v4.4</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -312,6 +328,7 @@
             <div class="manual-content">
                 <div class="manual-h3">💡 核心概念</div>
                 <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让“命运”帮你做决定。</p>
+                
                 <div class="manual-h3">⌨️ 智能输入</div>
                 <p>支持“说人话”和批量粘贴。每行一个任务。</p>
                 <ul>
@@ -320,12 +337,27 @@
                     <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*</span> (星号) 开头，标记为困难重要的 <span class="manual-tag">🐸青蛙</span>。</li>
                     <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
                 </ul>
+                <div class="manual-h3">🎲 抽取逻辑</div>
+                <ul>
+                    <li><b>混合模式：</b> 根据当下时间、地点，从所有库中随机抽取。</li>
+                    <li><b>青蛙优先：</b> 在书桌前且时间充足时，大概率优先推“青蛙”。</li>
+                    <li><b>防重复：</b> 最近刚抽过的任务，短时间内不会再出现。</li>
+                </ul>
+                <div class="manual-h3">📊 计数器与归档</div>
+                <ul>
+                    <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时，点一下。</li>
+                    <li><b>✨ 小确幸：</b> 遇到开心的小事时，点一下。</li>
+                    <li><b>👣 今日足迹：</b> 记录今天的日常流水，次日自动清空。</li>
+                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影。</li>
+                </ul>
+                <div class="manual-h3">🆘 SOS 模式</div>
+                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态。</p>
             </div>
         </details>
     </div>
 
     <div class="section-settings" id="settingSec">
-        <div class="settings-title">📡 数据方舟 (Stable)</div>
+        <div class="settings-title">📡 数据方舟 (Final)</div>
         <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (电脑端推荐)</div>
         <div class="backup-grid">
             <button class="btn-file" onclick="exportToFile()">📥 导出文件</button>
@@ -345,7 +377,7 @@
 </div>
 
 <script>
-    // --- 🔐 核心数据与键名 (全局变量区) ---
+    // --- 核心变量 ---
     const KEY_DB = 'anchor_live_db';
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
@@ -372,12 +404,86 @@
     let currentTask = null;
     let switchState = { cycle: false, flash: false };
 
-    // --- 🛠️ 核心函数 (必须在 init 前定义) ---
+    // --- 基础工具函数 (移到前面) ---
     function save() {
         localStorage.setItem(KEY_DB, JSON.stringify(db));
         localStorage.setItem(KEY_ARCHIVE, JSON.stringify(archive));
         localStorage.setItem(KEY_LOG, JSON.stringify(dailyLog));
         localStorage.setItem(KEY_STATS, JSON.stringify(userStats));
+    }
+
+    function fixLegacyData() {
+        let fixedCount = 0;
+        db.forEach(item => {
+            if ((item.type === 'vinyl' || item.type === 'culture') && (item.time === undefined || item.time === null)) {
+                item.time = 0; fixedCount++;
+            } else if (item.time === undefined || item.time === null) {
+                item.time = 30; fixedCount++;
+            }
+            if (item.recurrence === undefined) item.recurrence = 'none';
+            if (item.desc === "自定义" || item.desc === "自定义任务") item.desc = "";
+            if (item.isFrog === undefined) item.isFrog = false;
+            if (item.isQuick === undefined) item.isQuick = false;
+        });
+        if(fixedCount > 0) save();
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+    }
+
+    function showModal(msg, type, onConfirm) {
+        const overlay = document.getElementById('modalOverlay');
+        const msgDiv = document.getElementById('modalMsg');
+        const btnContainer = document.getElementById('modalBtnContainer');
+        msgDiv.innerHTML = msg; 
+        btnContainer.innerHTML = "";
+        
+        const btnCancel = document.createElement('button');
+        btnCancel.className = 'modal-btn cancel';
+        btnCancel.innerText = "取消";
+        btnCancel.onclick = () => { overlay.style.display = 'none'; };
+        btnContainer.appendChild(btnCancel);
+
+        const btnConfirm = document.createElement('button');
+        btnConfirm.className = type === 'danger' ? 'modal-btn danger' : 'modal-btn confirm';
+        btnConfirm.innerText = type === 'danger' ? "确认" : "确定";
+        btnConfirm.onclick = () => { onConfirm(); overlay.style.display = 'none'; };
+        btnContainer.appendChild(btnConfirm);
+
+        overlay.style.display = 'flex';
+    }
+
+    function updateStatsUI() {
+        document.getElementById('stat-willpower').innerText = userStats.willpower;
+        document.getElementById('stat-joy').innerText = userStats.joy;
+    }
+
+    function getSmartIcon(item) {
+        if (item.subtype === 'book') return '📚';
+        if (item.subtype === 'movie') return '🎬';
+        if (item.type === 'culture') {
+            const t = (item.title || "").toLowerCase();
+            if (t.includes('书') || t.includes('读') || t.includes('阅') || t.includes('杂志') || t.includes('周刊') || t.includes('册')) return '📚';
+            if (t.includes('影') || t.includes('视') || t.includes('剧') || t.includes('片') || t.includes('看')) return '🎬';
+            return '🖼️'; 
+        }
+        return getIcon(item.type);
+    }
+
+    function getDescByType(t) {
+        if(t==='vinyl') return "享受这段音乐时光。";
+        if(t==='culture') return "沉浸在故事里。";
+        if(t==='sport') return "动起来！";
+        return "去行动吧！";
+    }
+
+    function getIcon(t) {
+        const map = { 'indoor':'🏠', 'desktop':'💻', 'outdoor':'🌳', 'sport':'🏃', 'culture':'🎬', 'vinyl':'🎵', 'sos':'🚑' };
+        return map[t] || '✨';
     }
 
     function renderList() {
@@ -451,97 +557,17 @@
         });
     }
 
-    function updateStatsUI() {
-        document.getElementById('stat-willpower').innerText = userStats.willpower;
-        document.getElementById('stat-joy').innerText = userStats.joy;
-    }
-
-    // --- 🚀 初始化 (放在函数定义之后) ---
-    function init() {
-        migrateOldData();
-        if(db.length === 0 && archive.length === 0) db = defaultDB; 
-        checkLogExpiry();
-        renderList();
-        renderArchive();
-        renderLog();
-        updateStatsUI(); 
-        setMode('normal');
-        if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v4.3！\n\n一切已准备就绪，请查看底部说明书。");
-            localStorage.setItem(KEY_VISITED, 'true');
-        }
-    }
-
-    // --- Helper Functions ---
-    function migrateOldData() {
-        if (localStorage.getItem(KEY_DB)) return; 
-        const oldKeys = [
-            'anchor_v4_db', 'anchor_v2_7_db', 'anchor_v2_6_db', 'anchor_v2_5_db', 'anchor_v2_4_db', 
-            'anchor_v2_3_db', 'anchor_v2_2_db', 'anchor_v2_1_db', 'anchor_v1_9_1_db'
-        ];
-        for (let key of oldKeys) {
-            const oldData = localStorage.getItem(key);
-            if (oldData) {
-                try {
-                    db = JSON.parse(oldData);
-                    const ver = key.replace('_db', '');
-                    const oldArc = localStorage.getItem(ver + '_archive');
-                    const oldLog = localStorage.getItem(ver + '_log');
-                    const oldStats = localStorage.getItem(ver + '_stats');
-                    if (oldArc) archive = JSON.parse(oldArc);
-                    if (oldLog) dailyLog = JSON.parse(oldLog);
-                    if (oldStats) userStats = JSON.parse(oldStats);
-                    save(); break;
-                } catch(e) {}
-            }
-        }
-    }
-
-    function checkLogExpiry() {
-        const today = new Date().toDateString();
-        const validLogs = dailyLog.filter(log => log.date === today);
-        if (validLogs.length !== dailyLog.length) {
-            dailyLog = validLogs;
-            save();
-        }
-    }
-
+    // --- 交互逻辑 ---
     function incrementStat(type) {
         if (type === 'willpower') {
             userStats.willpower++;
-            alert("💪 战胜了冲动！意志力+1");
+            showToast("💪 战胜了冲动！意志力+1");
         } else if (type === 'joy') {
             userStats.joy++;
-            alert("✨ 捕捉到美好！小确幸+1");
+            showToast("✨ 捕捉到美好！小确幸+1");
         }
         updateStatsUI();
         save();
-    }
-
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    function getSmartIcon(item) {
-        if (item.subtype === 'book') return '📚';
-        if (item.subtype === 'movie') return '🎬';
-        if (item.type === 'culture') {
-            const t = (item.title || "").toLowerCase();
-            if (t.includes('书') || t.includes('读') || t.includes('阅') || t.includes('杂志') || t.includes('周刊') || t.includes('册')) return '📚';
-            if (t.includes('影') || t.includes('视') || t.includes('剧') || t.includes('片') || t.includes('看')) return '🎬';
-            return '🖼️'; 
-        }
-        return getIcon(item.type);
-    }
-
-    function getDescByType(t) {
-        if(t==='vinyl') return "享受这段音乐时光。";
-        if(t==='culture') return "沉浸在故事里。";
-        if(t==='sport') return "动起来！";
-        return "去行动吧！";
     }
 
     function handleEnter(e) { 
@@ -716,7 +742,7 @@
     function finishTask() {
         if (!currentTask) return;
         if (currentTask.type === 'sos') {
-             alert("状态重启！🌱");
+             showToast("状态重启！🌱");
              document.getElementById('resultCard').style.display = 'none';
              return;
         }
@@ -740,31 +766,31 @@
             }
             recordLog();
             save(); renderList();
-            alert("✅ 今日打卡成功！");
+            showToast("✅ 今日打卡成功！");
             document.getElementById('resultCard').style.display = 'none';
             return;
         }
 
         if (currentTask.type === 'culture') {
             if (currentTask.isSeries) {
-                alert("🎉 记录完成！");
+                showToast("🎉 记录完成！");
                 document.getElementById('resultCard').style.display = 'none';
                 return;
             }
-            if(confirm(`《${currentTask.title}》彻底看完了吗？\n\n[确定] = 移入荣誉殿堂 🏆\n[取消] = 稍后继续`)) {
+            showModal(`《${currentTask.title}》彻底看完了吗？`, 'normal', () => {
                 db = db.filter(i => i.id !== currentTask.id);
                 const doneItem = { ...currentTask, finishDate: new Date().toLocaleDateString() };
                 archive.unshift(doneItem);
                 save(); renderList(); renderArchive();
-                alert("🏆 已载入荣誉殿堂！");
+                showToast("🏆 已载入荣誉殿堂！");
                 document.getElementById('resultCard').style.display = 'none';
-            }
+            });
         } 
         else {
             db = db.filter(i => i.id !== currentTask.id);
             recordLog();
             save(); renderList(); 
-            alert("✨ 完成！已记入今日足迹");
+            showToast("✨ 完成！已记入今日足迹");
             document.getElementById('resultCard').style.display = 'none';
         }
     }
@@ -929,24 +955,25 @@
         if(switchState.cycle) toggleSwitch('cycle', false);
         if(switchState.flash) toggleSwitch('flash', false);
         
-        alert(`🎉 存入 ${addedCount} 个任务！`);
+        showToast(`🎉 存入 ${addedCount} 个任务！`);
         setTimeout(() => input.placeholder = "输入事项... (*开头标记重要/青蛙)", 1500);
     }
 
     function tryDeleteItem(id) {
-        if(confirm("确定删除吗？")) {
+        showModal("确定删除吗？", 'danger', () => {
             db = db.filter(item => item.id !== id);
             save(); renderList();
             showToast("🗑️ 已删除");
-        }
+        });
     }
 
     function tryResetAll() {
-        if(confirm("⚠️ 确定清空所有数据？不可恢复！")) {
+        showModal("⚠️ 确定清空所有数据？不可恢复！", 'danger', () => {
             db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 };
             save(); renderList(); renderArchive(); renderLog(); updateStatsUI();
-            alert("已格式化");
-        }
+            localStorage.removeItem(KEY_VISITED); 
+            showToast("已格式化");
+        });
     }
 
     function toggleList(id) {
@@ -954,18 +981,12 @@
         if(el.classList.contains('open')) el.classList.remove('open');
         else el.classList.add('open');
     }
-    
-    function getIcon(t) {
-        const map = { 'indoor':'🏠', 'desktop':'💻', 'outdoor':'🌳', 'sport':'🏃', 'culture':'🎬', 'vinyl':'🎵', 'sos':'🚑' };
-        return map[t] || '✨';
-    }
-    function scrollToSettings() { document.getElementById('settingSec').scrollIntoView({behavior:"smooth"}); }
 
-    // --- 📡 核心修复：导入逻辑 ---
+    // --- 导入逻辑 ---
     function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) {
-            alert("⚠️ 文本框是空的！请先长按粘贴代码。");
+            showModal("⚠️ 文本框是空的！请先长按粘贴代码。", 'normal', () => {});
             return;
         }
         
@@ -977,7 +998,7 @@
 
             if (!Array.isArray(incomingDB)) throw new Error("数据格式错误");
 
-            if(confirm(`📡 找到 ${incomingDB.length} 个任务。\n\n点击【确定】= 合并数据\n点击【取消】= 放弃`)) {
+            showModal(`📡 找到 ${incomingDB.length} 个任务。<br>确定要合并吗？`, 'confirm', () => {
                  let addCount = 0;
                  incomingDB.forEach(newItem => {
                     const exists = db.some(e => e.title === newItem.title && e.type === newItem.type);
@@ -999,12 +1020,12 @@
 
                  fixLegacyData();
                  save(); renderList(); renderArchive(); updateStatsUI();
-                 alert(`✅ 成功合并 ${addCount} 个新任务！`);
+                 showToast(`✅ 成功合并 ${addCount} 个新任务`);
                  document.getElementById('dataArea').value = "";
-            }
+            });
 
         } catch(e) {
-            alert(`❌ 导入失败：\n${e.message}\n\n请确保复制了完整代码（以 { 或 [ 开头）。`);
+            showModal(`❌ <b>数据格式错误</b><br><br>请确保你复制了完整的代码（以 { 或 [ 开头，以 } 或 ] 结尾）。<br><br>错误详情: ${e.message}`, 'danger', ()=>{});
         }
     }
 
@@ -1033,15 +1054,15 @@
         const str = JSON.stringify({ db, archive, dailyLog, userStats });
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(str)
-                .then(()=> alert("✅ 已复制文本码"))
-                .catch(()=>{ document.getElementById('dataArea').value=str; alert("⚠️ 自动复制失败，请全选下方文本框复制"); });
+                .then(()=> showToast("✅ 已复制文本码"))
+                .catch(()=>{ document.getElementById('dataArea').value=str; showToast("⚠️ 请手动全选复制"); });
         } else {
             document.getElementById('dataArea').value=str; 
-            alert("⚠️ 请全选下方文本框复制"); 
+            showToast("⚠️ 请手动全选复制"); 
         }
     }
 
-    init();
+    init(); // 启动
 </script>
 </body>
 </html>
