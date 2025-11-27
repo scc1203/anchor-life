@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anchor</title>
     
-    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.6&rounded=true&bold=true">
-    <link rel="icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.6&rounded=true&bold=true">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIyIiBmaWxsPSIjRkZDOEQxIi8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5ZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjIyIiByPSI3Ii8+PGxpbmUgeDE9IjMzIiB5MT0iMzUiIHgyPSI2NyIgeTI9IjM1Ii8+PGxpbmUgeDE9IjUwIiB5MT0iMjkiIHgyPSI1MCIgeTI9Ijg3Ii8+PHBhdGggZD0iTTIwIDUyIFEgMjAgODIgNTAgODIgU2EgODAgODIgODAgNTIiLz48cGF0aCBkPSJNMjAgNTIgTCAxMyA2MCIvPjxwYXRoIGQ9Ik0yMCA1MiBMIDI5IDU4Ii8+PHBhdGggZD0iTTgwIDUyIEwgNzEgNTgiLz48cGF0aCBkPSJNODAgNTIgTCA4NyA2MCIvPjxwYXRoIGQ9Ik00NCA4MSBMIDUwIDg3IEwgNTYgODEiLz48L2c+PC9zdmc+">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIyIiBmaWxsPSIjRkZDOEQxIi8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5ZWpvaW49InJvdW5kIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjIyIiByPSI3Ii8+PGxpbmUgeDE9IjMzIiB5MT0iMzUiIHgyPSI2NyIgeTI9IjM1Ii8+PGxpbmUgeDE9IjUwIiB5MT0iMjkiIHgyPSI1MCIgeTI9Ijg3Ii8+PHBhdGggZD0iTTIwIDUyIFEgMjAgODIgNTAgODIgU2EgODAgODIgODAgNTIiLz48cGF0aCBkPSJNMjAgNTIgTCAxMyA2MCIvPjxwYXRoIGQ9Ik0yMCA1MiBMIDI5IDU4Ii8+PHBhdGggZD0iTTgwIDUyIEwgNzEgNTgiLz48cGF0aCBkPSJNODAgNTIgTCA4NyA2MCIvPjxwYXRoIGQ9Ik00NCA4MSBMIDUwIDg3IEwgNTYgODEiLz48L2c+PC9zdmc+">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        /* --- 🎨 Anchor v4.2 样式表 --- */
+        /* --- 🎨 Anchor v4.3 结构修复版 --- */
         :root {
             --bg-blue: #D4F1F4;
             --bg-wood: #FDF6E3;
@@ -52,7 +52,7 @@
             padding-top: max(15px, env(safe-area-inset-top));
         }
         .app-title { font-weight: bold; font-size: 1.1rem; color: #444; }
-        .version-badge { background: #607D8B; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .version-badge { background: #FFC8D1; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
         .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
 
         /* Stats Bar */
@@ -199,7 +199,7 @@
         textarea { width: 100%; height: 80px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; color:#555; padding: 8px; font-family: monospace; }
         .btn-danger { width: 100%; padding: 10px; background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; }
 
-        /* Toast */
+        /* Toast Only - No Modals */
         .toast-notification { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; z-index: 2000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast-notification.show { top: 20px; }
 
@@ -211,7 +211,7 @@
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v4.2</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v4.3</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -345,48 +345,156 @@
 </div>
 
 <script>
-    // --- 🛠️ 核心工具函数 (Global) ---
-    function save() {
-        localStorage.setItem('anchor_v4_db', JSON.stringify(db));
-        localStorage.setItem('anchor_v4_archive', JSON.stringify(archive));
-        localStorage.setItem('anchor_v4_log', JSON.stringify(dailyLog));
-        localStorage.setItem('anchor_v4_stats', JSON.stringify(userStats));
-    }
+    // --- 🔐 核心数据与键名 (全局变量区) ---
+    const KEY_DB = 'anchor_live_db';
+    const KEY_ARCHIVE = 'anchor_live_archive';
+    const KEY_LOG = 'anchor_live_log';
+    const KEY_STATS = 'anchor_live_stats';
+    const KEY_VISITED = 'anchor_has_visited';
 
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    // --- 🔐 变量初始化 ---
+    const defaultDB = [
+        { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
+        { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
+    ];
     const sosLibrary = [
         { title: "大口喝水", icon: "💧" }, { title: "看窗外远方", icon: "👀" }, { title: "4-7-8 呼吸", icon: "🌬️" },
         { title: "压腿拉伸", icon: "🦵" }, { title: "五感着陆", icon: "🖐️" }, { title: "洗把脸", icon: "🚿" },
         { title: "吃一颗水果", icon: "🍊" }
     ];
 
-    const defaultDB = [
-        { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
-        { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
-    ];
-
-    let db = JSON.parse(localStorage.getItem('anchor_v4_db')) || [];
-    let archive = JSON.parse(localStorage.getItem('anchor_v4_archive')) || [];
-    let dailyLog = JSON.parse(localStorage.getItem('anchor_v4_log')) || [];
-    let userStats = JSON.parse(localStorage.getItem('anchor_v4_stats')) || { willpower: 0, joy: 0 };
+    let db = JSON.parse(localStorage.getItem(KEY_DB)) || [];
+    let archive = JSON.parse(localStorage.getItem(KEY_ARCHIVE)) || [];
+    let dailyLog = JSON.parse(localStorage.getItem(KEY_LOG)) || [];
+    let userStats = JSON.parse(localStorage.getItem(KEY_STATS)) || { willpower: 0, joy: 0 };
+    
     let recentHistory = []; 
     let mode = 'normal';
     let currentTask = null;
     let switchState = { cycle: false, flash: false };
 
-    // --- 🚀 初始化逻辑 ---
+    // --- 🛠️ 核心函数 (必须在 init 前定义) ---
+    function save() {
+        localStorage.setItem(KEY_DB, JSON.stringify(db));
+        localStorage.setItem(KEY_ARCHIVE, JSON.stringify(archive));
+        localStorage.setItem(KEY_LOG, JSON.stringify(dailyLog));
+        localStorage.setItem(KEY_STATS, JSON.stringify(userStats));
+    }
+
+    function renderList() {
+        const dailyList = document.getElementById('dailyList');
+        const mediaList = document.getElementById('mediaList');
+        dailyList.innerHTML = ""; mediaList.innerHTML = "";
+        let dCount = 0, mCount = 0;
+        const todayStr = new Date().toDateString();
+        const sortedDB = [...db].sort((a,b) => b.id - a.id);
+
+        sortedDB.forEach(item => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            const isDoneToday = (item.recurrence === 'daily' && item.lastDone === todayStr);
+            if (isDoneToday) li.classList.add('task-status-done');
+
+            const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
+            const cycleBadge = item.recurrence === 'daily' ? 
+                (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`) : '';
+            
+            let extraBadges = "";
+            if(item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
+            if(item.isQuick) extraBadges += `<span class="list-badge lb-flash">⚡️</span>`;
+
+            let tDisplay = "";
+            if (item.time === 0) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">任意</span>`;
+            else if (item.time) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">${item.time}m</span>`;
+
+            li.innerHTML = `
+                <div style="display:flex;align-items:center;gap:5px;">
+                    <span style="width:20px;text-align:center;">${getSmartIcon(item)}</span>
+                    <span style="font-size:0.9rem;color:#555;">${item.title}</span>
+                    ${seriesBadge}${cycleBadge}${extraBadges}${tDisplay}
+                </div>
+                <div class="task-del" onclick="tryDeleteItem(${item.id})">🗑️</div>
+            `;
+
+            if (item.type === 'culture' || item.type === 'vinyl') { mediaList.appendChild(li); mCount++; } 
+            else { dailyList.appendChild(li); dCount++; }
+        });
+        document.getElementById('dailyCount').innerText = dCount;
+        document.getElementById('mediaCount').innerText = mCount;
+    }
+
+    function renderArchive() {
+        const list = document.getElementById('archiveList');
+        list.innerHTML = "";
+        document.getElementById('arcCount').innerText = archive.length;
+        archive.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'archive-item';
+            div.innerHTML = `<span class="archive-date">[${item.finishDate}]</span><span>${item.title}</span>`;
+            list.appendChild(div);
+        });
+    }
+
+    function renderLog() {
+        const list = document.getElementById('logList');
+        list.innerHTML = "";
+        document.getElementById('logCount').innerText = dailyLog.length;
+        dailyLog.forEach(log => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            li.innerHTML = `
+                <div style="display:flex;align-items:center;">
+                    <span class="footprint-time">${log.timeStr}</span>
+                    <span class="footprint-item">${log.icon} ${log.title}</span>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function updateStatsUI() {
+        document.getElementById('stat-willpower').innerText = userStats.willpower;
+        document.getElementById('stat-joy').innerText = userStats.joy;
+    }
+
+    // --- 🚀 初始化 (放在函数定义之后) ---
     function init() {
+        migrateOldData();
         if(db.length === 0 && archive.length === 0) db = defaultDB; 
         checkLogExpiry();
-        renderList(); renderArchive(); renderLog(); updateStatsUI(); 
+        renderList();
+        renderArchive();
+        renderLog();
+        updateStatsUI(); 
         setMode('normal');
+        if (!localStorage.getItem(KEY_VISITED)) {
+            alert("👋 欢迎来到 Anchor v4.3！\n\n一切已准备就绪，请查看底部说明书。");
+            localStorage.setItem(KEY_VISITED, 'true');
+        }
+    }
+
+    // --- Helper Functions ---
+    function migrateOldData() {
+        if (localStorage.getItem(KEY_DB)) return; 
+        const oldKeys = [
+            'anchor_v4_db', 'anchor_v2_7_db', 'anchor_v2_6_db', 'anchor_v2_5_db', 'anchor_v2_4_db', 
+            'anchor_v2_3_db', 'anchor_v2_2_db', 'anchor_v2_1_db', 'anchor_v1_9_1_db'
+        ];
+        for (let key of oldKeys) {
+            const oldData = localStorage.getItem(key);
+            if (oldData) {
+                try {
+                    db = JSON.parse(oldData);
+                    const ver = key.replace('_db', '');
+                    const oldArc = localStorage.getItem(ver + '_archive');
+                    const oldLog = localStorage.getItem(ver + '_log');
+                    const oldStats = localStorage.getItem(ver + '_stats');
+                    if (oldArc) archive = JSON.parse(oldArc);
+                    if (oldLog) dailyLog = JSON.parse(oldLog);
+                    if (oldStats) userStats = JSON.parse(oldStats);
+                    save(); break;
+                } catch(e) {}
+            }
+        }
     }
 
     function checkLogExpiry() {
@@ -401,21 +509,22 @@
     function incrementStat(type) {
         if (type === 'willpower') {
             userStats.willpower++;
-            showToast("💪 意志力+1");
+            alert("💪 战胜了冲动！意志力+1");
         } else if (type === 'joy') {
             userStats.joy++;
-            showToast("✨ 小确幸+1");
+            alert("✨ 捕捉到美好！小确幸+1");
         }
         updateStatsUI();
         save();
     }
 
-    function updateStatsUI() {
-        document.getElementById('stat-willpower').innerText = userStats.willpower;
-        document.getElementById('stat-joy').innerText = userStats.joy;
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
     }
 
-    // --- 🎨 渲染辅助 ---
     function getSmartIcon(item) {
         if (item.subtype === 'book') return '📚';
         if (item.subtype === 'movie') return '🎬';
@@ -435,12 +544,6 @@
         return "去行动吧！";
     }
 
-    function getIcon(t) {
-        const map = { 'indoor':'🏠', 'desktop':'💻', 'outdoor':'🌳', 'sport':'🏃', 'culture':'🎬', 'vinyl':'🎵', 'sos':'🚑' };
-        return map[t] || '✨';
-    }
-
-    // --- 🎮 核心交互逻辑 ---
     function handleEnter(e) { 
         if(e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -613,7 +716,7 @@
     function finishTask() {
         if (!currentTask) return;
         if (currentTask.type === 'sos') {
-             showToast("状态重启！🌱");
+             alert("状态重启！🌱");
              document.getElementById('resultCard').style.display = 'none';
              return;
         }
@@ -637,14 +740,14 @@
             }
             recordLog();
             save(); renderList();
-            showToast("✅ 今日打卡成功！");
+            alert("✅ 今日打卡成功！");
             document.getElementById('resultCard').style.display = 'none';
             return;
         }
 
         if (currentTask.type === 'culture') {
             if (currentTask.isSeries) {
-                showToast("🎉 记录完成！");
+                alert("🎉 记录完成！");
                 document.getElementById('resultCard').style.display = 'none';
                 return;
             }
@@ -653,7 +756,7 @@
                 const doneItem = { ...currentTask, finishDate: new Date().toLocaleDateString() };
                 archive.unshift(doneItem);
                 save(); renderList(); renderArchive();
-                showToast("🏆 已载入荣誉殿堂！");
+                alert("🏆 已载入荣誉殿堂！");
                 document.getElementById('resultCard').style.display = 'none';
             }
         } 
@@ -661,7 +764,7 @@
             db = db.filter(i => i.id !== currentTask.id);
             recordLog();
             save(); renderList(); 
-            showToast("✨ 完成！已记入今日足迹");
+            alert("✨ 完成！已记入今日足迹");
             document.getElementById('resultCard').style.display = 'none';
         }
     }
@@ -826,7 +929,7 @@
         if(switchState.cycle) toggleSwitch('cycle', false);
         if(switchState.flash) toggleSwitch('flash', false);
         
-        showToast(`🎉 存入 ${addedCount} 个任务！`);
+        alert(`🎉 存入 ${addedCount} 个任务！`);
         setTimeout(() => input.placeholder = "输入事项... (*开头标记重要/青蛙)", 1500);
     }
 
@@ -842,11 +945,23 @@
         if(confirm("⚠️ 确定清空所有数据？不可恢复！")) {
             db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 };
             save(); renderList(); renderArchive(); renderLog(); updateStatsUI();
-            showToast("已格式化");
+            alert("已格式化");
         }
     }
 
-    // 🔥 v4.2 修复后的导入逻辑
+    function toggleList(id) {
+        const el = document.getElementById(id);
+        if(el.classList.contains('open')) el.classList.remove('open');
+        else el.classList.add('open');
+    }
+    
+    function getIcon(t) {
+        const map = { 'indoor':'🏠', 'desktop':'💻', 'outdoor':'🌳', 'sport':'🏃', 'culture':'🎬', 'vinyl':'🎵', 'sos':'🚑' };
+        return map[t] || '✨';
+    }
+    function scrollToSettings() { document.getElementById('settingSec').scrollIntoView({behavior:"smooth"}); }
+
+    // --- 📡 核心修复：导入逻辑 ---
     function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) {
@@ -856,12 +971,11 @@
         
         try {
             const json = JSON.parse(str);
-            // 兼容性处理：如果只有数组，默认它是 db
             let incomingDB = json.db || (Array.isArray(json) ? json : []);
             let incomingArchive = json.archive || [];
             let incomingStats = json.userStats || {};
 
-            if (!Array.isArray(incomingDB)) throw new Error("无法识别数据格式");
+            if (!Array.isArray(incomingDB)) throw new Error("数据格式错误");
 
             if(confirm(`📡 找到 ${incomingDB.length} 个任务。\n\n点击【确定】= 合并数据\n点击【取消】= 放弃`)) {
                  let addCount = 0;
@@ -883,17 +997,17 @@
                  if (incomingStats.willpower) userStats.willpower = Math.max(userStats.willpower, incomingStats.willpower);
                  if (incomingStats.joy) userStats.joy = Math.max(userStats.joy, incomingStats.joy);
 
+                 fixLegacyData();
                  save(); renderList(); renderArchive(); updateStatsUI();
                  alert(`✅ 成功合并 ${addCount} 个新任务！`);
                  document.getElementById('dataArea').value = "";
             }
 
         } catch(e) {
-            alert(`❌ 导入失败：\n${e.message}`);
+            alert(`❌ 导入失败：\n${e.message}\n\n请确保复制了完整代码（以 { 或 [ 开头）。`);
         }
     }
 
-    // 兼容文件导入
     function triggerImport() { document.getElementById('fileInput').click(); }
     function importFromFile(input) {
         const file = input.files[0];
@@ -901,7 +1015,7 @@
         const reader = new FileReader();
         reader.onload = function(e) { 
             document.getElementById('dataArea').value = e.target.result;
-            executeImport(); // 自动触发逻辑
+            executeImport(); 
         };
         reader.readAsText(file);
     }
