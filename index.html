@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Anchor</title>
     
-    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.6&rounded=true&bold=true">
-    <link rel="icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.6&rounded=true&bold=true">
+    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.5&rounded=true&bold=true">
+    <link rel="icon" href="https://ui-avatars.com/api/?name=⚓&background=FFC8D1&color=FFFFFF&size=512&length=1&font-size=0.5&rounded=true&bold=true">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        /* --- 🎨 Anchor v4.4 样式表 --- */
+        /* --- 🎨 Anchor v5.0 样式表 --- */
         :root {
             --bg-blue: #D4F1F4;
             --bg-wood: #FDF6E3;
@@ -52,7 +52,7 @@
             padding-top: max(15px, env(safe-area-inset-top));
         }
         .app-title { font-weight: bold; font-size: 1.1rem; color: #444; }
-        .version-badge { background: #607D8B; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
+        .version-badge { background: #FFC8D1; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
         .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
 
         /* Stats Bar */
@@ -199,16 +199,7 @@
         textarea { width: 100%; height: 80px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; color:#555; padding: 8px; font-family: monospace; }
         .btn-danger { width: 100%; padding: 10px; background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; }
 
-        /* Modal & Toast */
-        .custom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; display: none; justify-content: center; align-items: center; }
-        .custom-modal { background: white; width: 80%; max-width: 320px; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; animation: popIn 0.2s ease-out; max-height: 80vh; overflow-y: auto; }
-        @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
-        .modal-text { margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.6; }
-        .modal-btns { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
-        .modal-btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; flex: 1; text-align: center;}
-        .modal-btn.cancel { background: #f0f0f0; color: #666; }
-        .modal-btn.confirm { background: var(--bg-blue); color: #006064; }
-        .modal-btn.danger { background: var(--danger-red); color: white; }
+        /* Toast (Notification) */
         .toast-notification { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; z-index: 2000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
         .toast-notification.show { top: 20px; }
 
@@ -218,16 +209,9 @@
 
 <div id="toast" class="toast-notification">✅ 操作成功</div>
 
-<div id="modalOverlay" class="custom-overlay">
-    <div class="custom-modal">
-        <div id="modalMsg" class="modal-text"></div>
-        <div class="modal-btns" id="modalBtnContainer"></div>
-    </div>
-</div>
-
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v4.4</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.0</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -357,14 +341,14 @@
     </div>
 
     <div class="section-settings" id="settingSec">
-        <div class="settings-title">📡 数据方舟 (Final)</div>
-        <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (电脑端推荐)</div>
+        <div class="settings-title">📡 数据方舟 (v5.0 Stable)</div>
+        <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (推荐)</div>
         <div class="backup-grid">
             <button class="btn-file" onclick="exportToFile()">📥 导出文件</button>
             <button class="btn-file" onclick="triggerImport()">📤 导入文件 (Merge)</button>
         </div>
         <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
-        <div style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:bold;">📝 文本操作 (手机端)</div>
+        <div style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:bold;">📝 文本操作 (手机端备用)</div>
         <div class="backup-grid">
             <button class="btn-outline" onclick="copyToClip()">📋 复制文本码</button>
             <button class="btn-outline" onclick="document.getElementById('dataArea').value=''">🗑️ 清空</button>
@@ -377,22 +361,12 @@
 </div>
 
 <script>
-    // --- 核心变量 ---
+    // --- 🔐 核心存储逻辑 (最优先执行) ---
     const KEY_DB = 'anchor_live_db';
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
     const KEY_STATS = 'anchor_live_stats';
     const KEY_VISITED = 'anchor_has_visited';
-
-    const defaultDB = [
-        { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
-        { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
-    ];
-    const sosLibrary = [
-        { title: "大口喝水", icon: "💧" }, { title: "看窗外远方", icon: "👀" }, { title: "4-7-8 呼吸", icon: "🌬️" },
-        { title: "压腿拉伸", icon: "🦵" }, { title: "五感着陆", icon: "🖐️" }, { title: "洗把脸", icon: "🚿" },
-        { title: "吃一颗水果", icon: "🍊" }
-    ];
 
     let db = JSON.parse(localStorage.getItem(KEY_DB)) || [];
     let archive = JSON.parse(localStorage.getItem(KEY_ARCHIVE)) || [];
@@ -404,7 +378,13 @@
     let currentTask = null;
     let switchState = { cycle: false, flash: false };
 
-    // --- 基础工具函数 (移到前面) ---
+    const sosLibrary = [
+        { title: "大口喝水", icon: "💧" }, { title: "看窗外远方", icon: "👀" }, { title: "4-7-8 呼吸", icon: "🌬️" },
+        { title: "压腿拉伸", icon: "🦵" }, { title: "五感着陆", icon: "🖐️" }, { title: "洗把脸", icon: "🚿" },
+        { title: "吃一颗水果", icon: "🍊" }
+    ];
+
+    // --- 🛠️ 核心工具函数 (确保提前定义) ---
     function save() {
         localStorage.setItem(KEY_DB, JSON.stringify(db));
         localStorage.setItem(KEY_ARCHIVE, JSON.stringify(archive));
@@ -430,36 +410,13 @@
 
     function showToast(msg) {
         const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-    }
-
-    function showModal(msg, type, onConfirm) {
-        const overlay = document.getElementById('modalOverlay');
-        const msgDiv = document.getElementById('modalMsg');
-        const btnContainer = document.getElementById('modalBtnContainer');
-        msgDiv.innerHTML = msg; 
-        btnContainer.innerHTML = "";
-        
-        const btnCancel = document.createElement('button');
-        btnCancel.className = 'modal-btn cancel';
-        btnCancel.innerText = "取消";
-        btnCancel.onclick = () => { overlay.style.display = 'none'; };
-        btnContainer.appendChild(btnCancel);
-
-        const btnConfirm = document.createElement('button');
-        btnConfirm.className = type === 'danger' ? 'modal-btn danger' : 'modal-btn confirm';
-        btnConfirm.innerText = type === 'danger' ? "确认" : "确定";
-        btnConfirm.onclick = () => { onConfirm(); overlay.style.display = 'none'; };
-        btnContainer.appendChild(btnConfirm);
-
-        overlay.style.display = 'flex';
-    }
-
-    function updateStatsUI() {
-        document.getElementById('stat-willpower').innerText = userStats.willpower;
-        document.getElementById('stat-joy').innerText = userStats.joy;
+        if(t) {
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        } else {
+            alert(msg); // Fallback
+        }
     }
 
     function getSmartIcon(item) {
@@ -486,9 +443,12 @@
         return map[t] || '✨';
     }
 
+    // --- 🎨 UI 渲染 ---
     function renderList() {
         const dailyList = document.getElementById('dailyList');
         const mediaList = document.getElementById('mediaList');
+        if(!dailyList || !mediaList) return;
+        
         dailyList.innerHTML = ""; mediaList.innerHTML = "";
         let dCount = 0, mCount = 0;
         const todayStr = new Date().toDateString();
@@ -530,6 +490,7 @@
 
     function renderArchive() {
         const list = document.getElementById('archiveList');
+        if(!list) return;
         list.innerHTML = "";
         document.getElementById('arcCount').innerText = archive.length;
         archive.forEach(item => {
@@ -542,6 +503,7 @@
 
     function renderLog() {
         const list = document.getElementById('logList');
+        if(!list) return;
         list.innerHTML = "";
         document.getElementById('logCount').innerText = dailyLog.length;
         dailyLog.forEach(log => {
@@ -557,310 +519,14 @@
         });
     }
 
-    // --- 交互逻辑 ---
-    function incrementStat(type) {
-        if (type === 'willpower') {
-            userStats.willpower++;
-            showToast("💪 战胜了冲动！意志力+1");
-        } else if (type === 'joy') {
-            userStats.joy++;
-            showToast("✨ 捕捉到美好！小确幸+1");
-        }
-        updateStatsUI();
-        save();
+    function updateStatsUI() {
+        const elWill = document.getElementById('stat-willpower');
+        const elJoy = document.getElementById('stat-joy');
+        if(elWill) elWill.innerText = userStats.willpower;
+        if(elJoy) elJoy.innerText = userStats.joy;
     }
 
-    function handleEnter(e) { 
-        if(e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            addNew(); 
-        }
-    }
-
-    function setMode(m) {
-        mode = m;
-        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
-        const map = { 'normal':0, 'culture':1, 'vinyl':2, 'sos':3 };
-        if(map[m] !== undefined) document.querySelectorAll('.mode-tab')[map[m]].classList.add('active');
-        
-        const filter = document.getElementById('filterSec');
-        const display = document.getElementById('displaySec');
-        const normCtl = document.getElementById('controls-normal');
-        const sosCtl = document.getElementById('controls-sos');
-        const btn = document.getElementById('mainBtn');
-
-        if(m === 'sos') {
-            filter.style.background = 'var(--bg-sos)';
-            display.style.background = '#F3E5F5';
-            normCtl.style.display = 'none';
-            sosCtl.style.display = 'flex';
-            btn.innerText = "🚑 救救我";
-            btn.style.background = "#957DAD";
-        } else {
-            filter.style.background = 'var(--bg-blue)';
-            display.style.background = 'var(--bg-pink)';
-            normCtl.style.display = 'flex';
-            sosCtl.style.display = 'none';
-            btn.style.background = "#FF9AA2";
-            if(m === 'vinyl') btn.innerText = "🎵 挑唱片";
-            else if(m === 'culture') btn.innerText = "🎬 精神食粮";
-            else btn.innerText = "🔮 帮我选 (混合)";
-        }
-    }
-
-    function parseTimeFromInput(str) {
-        let detectedTime = null;
-        let cleanStr = str;
-        const regexH = /(\d+(?:\.\d+)?)\s*(h|hr|hour|hours|小时)/i;
-        let matchH = str.match(regexH);
-        if (matchH) {
-            detectedTime = parseFloat(matchH[1]) * 60;
-            cleanStr = cleanStr.replace(matchH[0], '').trim();
-        }
-        if (!detectedTime) {
-            const regexM = /(\d+)\s*(m|min|mins|分|分钟)/i;
-            let matchM = str.match(regexM);
-            if (matchM) {
-                detectedTime = parseInt(matchM[1]);
-                cleanStr = cleanStr.replace(matchM[0], '').trim();
-            }
-        }
-        return { time: detectedTime, title: cleanStr };
-    }
-
-    function draw() {
-        const card = document.getElementById('resultCard');
-        card.style.display = 'none';
-        
-        setTimeout(() => {
-            let result = null;
-            if (mode === 'sos') {
-                const r = Math.floor(Math.random() * sosLibrary.length);
-                result = { ...sosLibrary[r], type: 'sos', time: 0 };
-            } else {
-                const ctx = document.getElementById('selContext').value;
-                const limitTime = parseInt(document.getElementById('selTime').value);
-                const todayStr = new Date().toDateString();
-
-                let validPool = db.filter(item => {
-                    if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
-                    
-                    const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
-                    const isFlexible = (tTime === 0);
-                    
-                    if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
-
-                    if (mode === 'vinyl') return item.type === 'vinyl';
-                    if (mode === 'culture') return item.type === 'culture';
-                    
-                    if (item.type === 'culture' || item.type === 'vinyl') {
-                        if (ctx === 'outdoor') return false; 
-                    } else if (item.type === 'sport') {
-                        return true; 
-                    } else {
-                        if (ctx === 'desktop') return item.type !== 'outdoor';
-                        if (ctx === 'indoor') return item.type === 'indoor';
-                        if (ctx === 'outdoor') return item.type === 'outdoor';
-                    }
-                    return true;
-                });
-
-                if (validPool.length > 0) {
-                    let nonRecentPool = validPool.filter(item => !recentHistory.includes(item.id));
-                    let finalPool = (nonRecentPool.length > 0) ? nonRecentPool : validPool;
-
-                    const isFrogTime = (mode === 'normal' && (ctx === 'desktop' || ctx === 'indoor') && limitTime >= 60);
-                    const frogs = finalPool.filter(t => t.isFrog);
-                    
-                    if (isFrogTime && frogs.length > 0 && Math.random() < 0.7) {
-                        result = frogs[Math.floor(Math.random() * frogs.length)];
-                    } else {
-                        let groups = { 'daily': [], 'culture': [], 'vinyl': [], 'sport': [] };
-                        finalPool.forEach(item => {
-                            if (item.type === 'culture') groups.culture.push(item);
-                            else if (item.type === 'vinyl') groups.vinyl.push(item);
-                            else if (item.type === 'sport') groups.sport.push(item);
-                            else groups.daily.push(item);
-                        });
-
-                        let activeCategories = [];
-                        if (groups.daily.length > 0) activeCategories.push('daily');
-                        if (groups.culture.length > 0) activeCategories.push('culture');
-                        if (groups.vinyl.length > 0) activeCategories.push('vinyl');
-                        if (groups.sport.length > 0) activeCategories.push('sport');
-
-                        if(activeCategories.length > 0) {
-                            const luckyCategory = activeCategories[Math.floor(Math.random() * activeCategories.length)];
-                            const targetList = groups[luckyCategory];
-                            result = targetList[Math.floor(Math.random() * targetList.length)];
-                        }
-                    }
-                }
-            }
-
-            if (result && result.type !== 'sos') {
-                recentHistory.push(result.id);
-                if (recentHistory.length > 2) recentHistory.shift(); 
-            }
-
-            currentTask = result;
-            if (result) {
-                document.getElementById('rTitle').innerText = result.title;
-                
-                let badgesHtml = "";
-                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
-                if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
-                if (result.recurrence === 'daily') badgesHtml += `<span class='card-badge bg-cycle'>🔄 每日</span>`;
-                document.getElementById('rBadge').innerHTML = badgesHtml;
-                
-                let displayDesc = result.desc;
-                if (!displayDesc || displayDesc === "自定义" || displayDesc === "自定义任务") {
-                    displayDesc = getDescByType(result.type);
-                }
-                document.getElementById('rDesc').innerText = displayDesc;
-                document.getElementById('rIcon').innerText = result.icon || getSmartIcon(result);
-                
-                let timeStr = "";
-                if (result.type === 'sos') timeStr = "⚡️ 即时";
-                else if (result.isQuick) timeStr = "⚡️ 速战速决";
-                else if(result.time === 0) timeStr = "⏳ 丰俭由人";
-                else if(result.time) timeStr = `⏱️ ${result.time} min`;
-                else timeStr = "⏱️ 30 min";
-                document.getElementById('rTime').innerText = timeStr;
-            } else {
-                currentTask = null;
-                document.getElementById('rTitle').innerText = "暂无任务";
-                document.getElementById('rBadge').innerHTML = "";
-                document.getElementById('rDesc').innerText = "休息一下？";
-                document.getElementById('rIcon').innerText = "🌙";
-                document.getElementById('rTime').innerText = "";
-            }
-            card.style.display = 'block';
-        }, 300);
-    }
-
-    function finishTask() {
-        if (!currentTask) return;
-        if (currentTask.type === 'sos') {
-             showToast("状态重启！🌱");
-             document.getElementById('resultCard').style.display = 'none';
-             return;
-        }
-
-        const recordLog = () => {
-            const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            dailyLog.unshift({
-                title: currentTask.title,
-                icon: currentTask.icon || getSmartIcon(currentTask),
-                timeStr: timeStr,
-                date: now.toDateString()
-            });
-            renderLog();
-        };
-
-        if (currentTask.recurrence === 'daily') {
-            const taskIndex = db.findIndex(t => t.id === currentTask.id);
-            if (taskIndex > -1) {
-                db[taskIndex].lastDone = new Date().toDateString();
-            }
-            recordLog();
-            save(); renderList();
-            showToast("✅ 今日打卡成功！");
-            document.getElementById('resultCard').style.display = 'none';
-            return;
-        }
-
-        if (currentTask.type === 'culture') {
-            if (currentTask.isSeries) {
-                showToast("🎉 记录完成！");
-                document.getElementById('resultCard').style.display = 'none';
-                return;
-            }
-            showModal(`《${currentTask.title}》彻底看完了吗？`, 'normal', () => {
-                db = db.filter(i => i.id !== currentTask.id);
-                const doneItem = { ...currentTask, finishDate: new Date().toLocaleDateString() };
-                archive.unshift(doneItem);
-                save(); renderList(); renderArchive();
-                showToast("🏆 已载入荣誉殿堂！");
-                document.getElementById('resultCard').style.display = 'none';
-            });
-        } 
-        else {
-            db = db.filter(i => i.id !== currentTask.id);
-            recordLog();
-            save(); renderList(); 
-            showToast("✨ 完成！已记入今日足迹");
-            document.getElementById('resultCard').style.display = 'none';
-        }
-    }
-
-    function autoTag() {
-        const raw = document.getElementById('inpTitle').value;
-        const lines = raw.split('\n');
-        let targetLine = lines[0] || ""; 
-        const parsed = parseTimeFromInput(targetLine);
-        const feedback = document.getElementById('timeFeedback');
-        
-        if (parsed.time) feedback.innerText = `💡 识别: ${parsed.time} min`;
-        else feedback.innerText = "";
-
-        if (targetLine.includes("每天") || targetLine.includes("每日")) {
-            if(!isCycleActive) toggleCycle();
-        }
-
-        const v = targetLine;
-        const tags = document.querySelectorAll('.tag');
-        
-        let t = null;
-        let detectQuick = false;
-
-        if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(v)) {
-            t = 'indoor';
-            detectQuick = true;
-        } 
-        else if(v.includes('唱') || v.includes('听')) t = 'vinyl';
-        else if(v.includes('书') || v.includes('影') || v.includes('读') || v.includes('看') || v.includes('杂志')) t = 'culture';
-        else if(v.includes('动') || v.includes('跑') || v.includes('练') || v.includes('跳') || v.includes('球') || v.includes('舞') || v.includes('操')) t = 'sport';
-        else if(v.includes('买') || v.includes('外') || v.includes('取') || v.includes('拿')) t = 'outdoor';
-        else if(v.includes('脑') || v.includes('写') || v.includes('研究') || v.includes('作') || v.includes('编辑')) t = 'desktop';
-        
-        if (t) {
-            tags.forEach(tag => tag.classList.remove('active'));
-            const activeTag = document.querySelector(`.tag[data-v="${t}"]`);
-            activeTag.classList.add('active');
-            toggleTimeInput(t);
-        }
-
-        if (detectQuick && !switchState.flash) {
-            toggleSwitch('flash', true); 
-            document.getElementById('inpTime').value = "5"; 
-        }
-    }
-
-    function pickTag(el) {
-        document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        toggleTimeInput(el.dataset.v);
-    }
-    
-    function toggleTimeInput(type) {
-        const sel = document.getElementById('inpTime');
-        if (type === 'vinyl' || type === 'culture') sel.classList.add('disabled');
-        else sel.classList.remove('disabled');
-    }
-
-    function toggleSwitch(type, forceState) {
-        const newState = (forceState !== undefined) ? forceState : !switchState[type];
-        switchState[type] = newState;
-        
-        const sw = document.getElementById(type + 'Switch');
-        const activeClass = (type === 'cycle') ? 'active-cycle' : 'active-flash';
-        
-        if (newState) sw.classList.add(activeClass);
-        else sw.classList.remove(activeClass);
-    }
-
+    // --- 🚀 业务逻辑 ---
     function addNew() {
         const rawInput = document.getElementById('inpTitle').value;
         if(!rawInput || rawInput.trim() === "") return;
@@ -874,11 +540,8 @@
             const first = lines[0].toLowerCase();
             const isCleaning = /(理|整理|收拾|擦|扫|拖|洗|换|叠|铺|挂|扔|拆|装|喝)/.test(first);
             if (!isCleaning) {
-                if (['看', '影', '视', '剧', '片', 'movie'].some(k => first.includes(k))) {
-                    batchSubtype = 'movie';
-                } else if (['读', '书', '阅', 'book', 'read', '杂志'].some(k => first.includes(k))) {
-                    batchSubtype = 'book';
-                }
+                if (['看', '影', '视', '剧', '片', 'movie'].some(k => first.includes(k))) batchSubtype = 'movie';
+                else if (['读', '书', '阅', 'book', 'read', '杂志'].some(k => first.includes(k))) batchSubtype = 'book';
                 if (batchSubtype && first.length <= 4) lines.shift();
             }
         }
@@ -890,16 +553,11 @@
             let subtype = batchSubtype;
 
             let isFrog = false;
-            if (title.startsWith('*') || title.startsWith('＊')) {
-                isFrog = true;
-                title = title.substring(1).trim();
-            }
+            if (title.startsWith('*') || title.startsWith('＊')) { isFrog = true; title = title.substring(1).trim(); }
 
             let isQuick = switchState.flash;
             if (!isQuick) {
-                if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(title)) {
-                    isQuick = true;
-                }
+                if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(title)) isQuick = true;
                 if (timeVal && timeVal <= 5) isQuick = true;
             }
 
@@ -907,8 +565,7 @@
                 timeVal = parseInt(document.getElementById('inpTime').value);
                 if (type === 'vinyl' && !isQuick) timeVal = 0;
                 else if (type === 'culture' && !isQuick) {
-                    if (subtype === 'movie') timeVal = 120;
-                    else timeVal = 0;
+                    if (subtype === 'movie') timeVal = 120; else timeVal = 0;
                 }
             }
             
@@ -922,9 +579,7 @@
             title = title.replace(/^(去|看|读|听|写|做)\s*/, '').trim();
 
             if (!isQuick && (type === 'culture' || type === 'vinyl')) {
-                if (!title.startsWith('《') && !title.endsWith('》')) {
-                    title = `《${title}》`;
-                }
+                if (!title.startsWith('《') && !title.endsWith('》')) title = `《${title}》`;
             }
 
             let isSeries = false;
@@ -946,49 +601,85 @@
         });
 
         save(); renderList();
-        
         const input = document.getElementById('inpTitle');
-        input.value = '';
-        input.placeholder = "✅ 存入成功！";
+        input.value = ''; input.placeholder = "✅ 存入成功！";
         document.getElementById('timeFeedback').innerText = "";
-        
         if(switchState.cycle) toggleSwitch('cycle', false);
         if(switchState.flash) toggleSwitch('flash', false);
-        
         showToast(`🎉 存入 ${addedCount} 个任务！`);
         setTimeout(() => input.placeholder = "输入事项... (*开头标记重要/青蛙)", 1500);
     }
 
-    function tryDeleteItem(id) {
-        showModal("确定删除吗？", 'danger', () => {
-            db = db.filter(item => item.id !== id);
-            save(); renderList();
-            showToast("🗑️ 已删除");
-        });
+    function draw() {
+        const card = document.getElementById('resultCard'); card.style.display = 'none';
+        setTimeout(() => {
+            let result = null;
+            if (mode === 'sos') { const r = Math.floor(Math.random() * sosLibrary.length); result = { ...sosLibrary[r], type: 'sos', time: 0 }; }
+            else {
+                const ctx = document.getElementById('selContext').value;
+                const limitTime = parseInt(document.getElementById('selTime').value);
+                const todayStr = new Date().toDateString();
+                let validPool = db.filter(item => {
+                    if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
+                    const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
+                    const isFlexible = (tTime === 0);
+                    if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
+                    if (mode === 'vinyl') return item.type === 'vinyl';
+                    if (mode === 'culture') return item.type === 'culture';
+                    if (item.type === 'culture' || item.type === 'vinyl') { if (ctx === 'outdoor') return false; } 
+                    else if (item.type === 'sport') { return true; } 
+                    else { if (ctx === 'desktop') return item.type !== 'outdoor'; if (ctx === 'indoor') return item.type === 'indoor'; if (ctx === 'outdoor') return item.type === 'outdoor'; }
+                    return true;
+                });
+
+                if (validPool.length > 0) {
+                    let nonRecentPool = validPool.filter(item => !recentHistory.includes(item.id));
+                    let finalPool = (nonRecentPool.length > 0) ? nonRecentPool : validPool;
+                    const isFrogTime = (mode === 'normal' && (ctx === 'desktop' || ctx === 'indoor') && limitTime >= 60);
+                    const frogs = finalPool.filter(t => t.isFrog);
+                    if (isFrogTime && frogs.length > 0 && Math.random() < 0.7) {
+                        result = frogs[Math.floor(Math.random() * frogs.length)];
+                    } else {
+                        result = finalPool[Math.floor(Math.random() * finalPool.length)];
+                    }
+                }
+            }
+
+            if (result && result.type !== 'sos') {
+                recentHistory.push(result.id);
+                if (recentHistory.length > 2) recentHistory.shift(); 
+            }
+
+            currentTask = result;
+            if (result) {
+                document.getElementById('rTitle').innerText = result.title;
+                let badgesHtml = "";
+                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
+                if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
+                if (result.recurrence === 'daily') badgesHtml += `<span class='card-badge bg-cycle'>🔄 每日</span>`;
+                document.getElementById('rBadge').innerHTML = badgesHtml;
+                let displayDesc = result.desc;
+                if (!displayDesc || displayDesc === "自定义") displayDesc = getDescByType(result.type);
+                document.getElementById('rDesc').innerText = displayDesc;
+                document.getElementById('rIcon').innerText = result.icon || getSmartIcon(result);
+                let timeStr = "";
+                if (result.type === 'sos') timeStr = "⚡️ 即时"; else if (result.isQuick) timeStr = "⚡️ 速战速决"; else if(result.time === 0) timeStr = "⏳ 丰俭由人"; else timeStr = `⏱️ ${result.time} min`;
+                document.getElementById('rTime').innerText = timeStr;
+            } else {
+                currentTask = null; document.getElementById('rTitle').innerText = "暂无任务"; document.getElementById('rBadge').innerHTML = ""; document.getElementById('rDesc').innerText = "休息一下？"; document.getElementById('rIcon').innerText = "🌙"; document.getElementById('rTime').innerText = "";
+            }
+            card.style.display = 'block';
+        }, 300);
     }
 
-    function tryResetAll() {
-        showModal("⚠️ 确定清空所有数据？不可恢复！", 'danger', () => {
-            db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 };
-            save(); renderList(); renderArchive(); renderLog(); updateStatsUI();
-            localStorage.removeItem(KEY_VISITED); 
-            showToast("已格式化");
-        });
-    }
-
-    function toggleList(id) {
-        const el = document.getElementById(id);
-        if(el.classList.contains('open')) el.classList.remove('open');
-        else el.classList.add('open');
-    }
-
-    // --- 导入逻辑 ---
+    // --- 数据操作 ---
+    function tryDeleteItem(id) { if(confirm("确定删除吗？")) { db = db.filter(item => item.id !== id); save(); renderList(); showToast("🗑️ 已删除"); } }
+    function tryResetAll() { if(confirm("⚠️ 确定清空？")) { db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 }; save(); renderList(); renderArchive(); renderLog(); updateStatsUI(); showToast("已格式化"); } }
+    
+    // --- 导入导出 修复版 ---
     function executeImport() {
         const str = document.getElementById('dataArea').value;
-        if (!str || str.trim().length === 0) {
-            showModal("⚠️ 文本框是空的！请先长按粘贴代码。", 'normal', () => {});
-            return;
-        }
+        if (!str || str.trim().length === 0) return alert("⚠️ 请先粘贴代码！");
         
         try {
             const json = JSON.parse(str);
@@ -998,7 +689,7 @@
 
             if (!Array.isArray(incomingDB)) throw new Error("数据格式错误");
 
-            showModal(`📡 找到 ${incomingDB.length} 个任务。<br>确定要合并吗？`, 'confirm', () => {
+            if(confirm(`📡 找到 ${incomingDB.length} 个任务。\n\n确定合并数据吗？`)) {
                  let addCount = 0;
                  incomingDB.forEach(newItem => {
                     const exists = db.some(e => e.title === newItem.title && e.type === newItem.type);
@@ -1009,60 +700,27 @@
                         addCount++;
                     }
                  });
-                 
-                 incomingArchive.forEach(newArc => {
-                     const arcExists = archive.some(a => a.title === newArc.title);
-                     if(!arcExists) archive.unshift(newArc);
-                 });
-
+                 incomingArchive.forEach(newArc => { const arcExists = archive.some(a => a.title === newArc.title); if(!arcExists) archive.unshift(newArc); });
                  if (incomingStats.willpower) userStats.willpower = Math.max(userStats.willpower, incomingStats.willpower);
                  if (incomingStats.joy) userStats.joy = Math.max(userStats.joy, incomingStats.joy);
-
-                 fixLegacyData();
-                 save(); renderList(); renderArchive(); updateStatsUI();
-                 showToast(`✅ 成功合并 ${addCount} 个新任务`);
+                 fixLegacyData(); save(); renderList(); renderArchive(); updateStatsUI();
+                 alert(`✅ 成功合并 ${addCount} 个新任务！`);
                  document.getElementById('dataArea').value = "";
-            });
-
-        } catch(e) {
-            showModal(`❌ <b>数据格式错误</b><br><br>请确保你复制了完整的代码（以 { 或 [ 开头，以 } 或 ] 结尾）。<br><br>错误详情: ${e.message}`, 'danger', ()=>{});
-        }
+            }
+        } catch(e) { alert(`❌ 导入失败：\n${e.message}`); }
     }
-
     function triggerImport() { document.getElementById('fileInput').click(); }
-    function importFromFile(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) { 
-            document.getElementById('dataArea').value = e.target.result;
-            executeImport(); 
-        };
-        reader.readAsText(file);
-    }
+    function importFromFile(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { document.getElementById('dataArea').value = e.target.result; executeImport(); }; reader.readAsText(file); }
+    function exportToFile() { const allData = { db, archive, dailyLog, userStats }; const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json"; a.click(); }
+    function copyToClip() { const str = JSON.stringify({ db, archive, dailyLog, userStats }); if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(str).then(()=> alert("✅ 已复制")).catch(()=>{ document.getElementById('dataArea').value=str; alert("⚠️ 自动复制失败，请手动全选复制"); }); } else { document.getElementById('dataArea').value=str; alert("⚠️ 请手动全选复制"); } }
 
-    function exportToFile() {
-        const allData = { db, archive, dailyLog, userStats };
-        const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json";
-        a.click();
-    }
-    
-    function copyToClip() {
-        const str = JSON.stringify({ db, archive, dailyLog, userStats });
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(str)
-                .then(()=> showToast("✅ 已复制文本码"))
-                .catch(()=>{ document.getElementById('dataArea').value=str; showToast("⚠️ 请手动全选复制"); });
-        } else {
-            document.getElementById('dataArea').value=str; 
-            showToast("⚠️ 请手动全选复制"); 
-        }
-    }
+    // 辅助
+    function toggleList(id) { const el = document.getElementById(id); if(el.classList.contains('open')) el.classList.remove('open'); else el.classList.add('open'); }
+    function toggleCycle() { isCycleActive = !isCycleActive; const sw = document.getElementById('cycleSwitch'); if (isCycleActive) sw.classList.add('active'); else sw.classList.remove('active'); }
+    function toggleSwitch(type, forceState) { const newState = (forceState !== undefined) ? forceState : !switchState[type]; switchState[type] = newState; const sw = document.getElementById(type + 'Switch'); const activeClass = (type === 'cycle') ? 'active-cycle' : 'active-flash'; if (newState) sw.classList.add(activeClass); else sw.classList.remove(activeClass); }
 
-    init(); // 启动
+    // Start
+    init();
 </script>
 </body>
 </html>
