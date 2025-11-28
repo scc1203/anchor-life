@@ -413,7 +413,8 @@
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.1</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.1 通用版</span>
+</div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -434,7 +435,7 @@
         <div class="mode-tabs">
             <div class="mode-tab active" onclick="setMode('normal')">🔮 混合/全域</div>
             <div class="mode-tab" onclick="setMode('culture')">📖 只看书影</div>
-            <div class="mode-tab" onclick="setMode('vinyl')">💿 只听唱片</div>
+          
             <div class="mode-tab" onclick="setMode('sos')" style="color:#d9534f">🆘 SOS</div>
         </div>
         <div id="controls-normal" class="control-group">
@@ -497,7 +498,7 @@
                 <div class="tag" data-v="outdoor" onclick="pickTag(this)">🌳 户外</div>
                 <div class="tag" data-v="sport" onclick="pickTag(this)">🏃 运动</div>
                 <div class="tag" data-v="culture" onclick="pickTag(this)">📖 书/影</div>
-                <div class="tag" data-v="vinyl" onclick="pickTag(this)">💿 听碟</div>
+                
             </div>
         </div>
         <div class="input-options" style="margin-top:8px;">
@@ -542,7 +543,7 @@
                         <span class="panel-title">🎞 媒体库房</span>
                         <span class="panel-count">(<span id="mediaCount">0</span>)</span>
                     </div>
-                    <div class="panel-subtitle">书 / 电影 / 唱片 等</div>
+                    <div class="panel-subtitle">书 / 电影 等</div>
                 </div>
                 <ul id="mediaList" class="task-list panel-list"></ul>
             </div>
@@ -651,9 +652,9 @@
     const KEY_VISITED = 'anchor_has_visited';
 
     const defaultDB = [
-        { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
-        { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
-    ];
+    { id: 1, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
+];
+
 
     let db = JSON.parse(localStorage.getItem(KEY_DB)) || [];
     let archive = JSON.parse(localStorage.getItem(KEY_ARCHIVE)) || [];
@@ -675,9 +676,10 @@
         renderList(); renderArchive(); renderLog(); updateStatsUI(); 
         setMode('normal');
         if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v5.1！");
+            alert("👋 欢迎来到 Anchor v5.1 通用版！\n\n📖 页面底部有详细说明书，可以慢慢翻；\n🎰 本次更新加入了「扭蛋机抽卡」功能，帮你随机选出下一步要做什么。");
             localStorage.setItem(KEY_VISITED, 'true');
-        }
+}
+
     });
 
     function scrollToSettings() {
