@@ -155,7 +155,7 @@
         }
         .time-select-small.disabled { opacity: 0.3; pointer-events: none; }
 
-        /* Lists - 修复点：使用 display 切换，不使用 max-height 动画 */
+        /* --- 🔴 修复开始：修改列表折叠逻辑 --- */
         .section-list { background-color: #fff; padding: 20px; }
         .list-section-header {
             display: flex; justify-content: space-between; align-items: center; 
@@ -167,12 +167,13 @@
             list-style: none; 
             padding: 0; 
             margin: 0; 
-            display: none; /* 默认隐藏 */
+            display: none; /* 改为 display: none */
         }
         .task-list.open { 
-            display: block; /* 展开显示 */
+            display: block; /* 改为 display: block */
         }
-        
+        /* --- 🔴 修复结束 --- */
+
         .task-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; border-bottom: 1px solid #f9f9f9; }
         .task-status-done { opacity: 0.4; text-decoration: line-through; }
         .list-badge { font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 5px; border: 1px solid #eee; color: #888;}
@@ -187,7 +188,6 @@
         .archive-item { padding: 5px 0; display: flex; gap: 10px; }
         .archive-date { font-family: monospace; color: #ccc; }
 
-        /* Manual & Settings */
         .section-manual { background-color: #fff; padding: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; line-height: 1.6; }
         details { background: #f9f9f9; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
         summary { padding: 15px; font-weight: bold; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #444; }
@@ -205,7 +205,6 @@
         textarea { width: 100%; height: 80px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; color:#555; padding: 8px; font-family: monospace; }
         .btn-danger { width: 100%; padding: 10px; background: #ffebee; border: 1px solid #ffcdd2; color: #c62828; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 0.8rem; }
 
-        /* Modal & Toast */
         .custom-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; display: none; justify-content: center; align-items: center; }
         .custom-modal { background: white; width: 80%; max-width: 320px; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: left; animation: popIn 0.2s ease-out; max-height: 80vh; overflow-y: auto; }
         @keyframes popIn { from {transform: scale(0.9); opacity: 0;} to {transform: scale(1); opacity: 1;} }
@@ -334,13 +333,14 @@
             <div class="manual-content">
                 <div class="manual-h3">💡 核心概念</div>
                 <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让“命运”帮你做决定。</p>
+                
                 <div class="manual-h3">⌨️ 智能输入</div>
                 <p>支持“说人话”和批量粘贴。每行一个任务。</p>
                 <ul>
                     <li><b>自动书影：</b> 输入 <span class="manual-tag">看/读/书/影</span> 开头，自动归类为文化，并加书名号。</li>
                     <li><b>闪电速办：</b> 输入 <span class="manual-tag">洗/刷/理/拆/扔/喝</span> 等，自动标记为 <span class="manual-tag">⚡️速办</span> (5min)。</li>
                     <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*</span> (星号) 开头，标记为困难重要的 <span class="manual-tag">🐸青蛙</span>。</li>
-                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
+                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每日/每天</span>，自动开启循环。</li>
                 </ul>
                 <div class="manual-h3">🎲 抽取逻辑</div>
                 <ul>
@@ -507,12 +507,14 @@
             list.appendChild(li);
         });
     }
-
+    
     function updateStatsUI() {
-        document.getElementById('stat-willpower').innerText = userStats.willpower;
-        document.getElementById('stat-joy').innerText = userStats.joy;
+        const elWill = document.getElementById('stat-willpower');
+        const elJoy = document.getElementById('stat-joy');
+        if(elWill) elWill.innerText = userStats.willpower;
+        if(elJoy) elJoy.innerText = userStats.joy;
     }
-
+    
     function showToast(msg) {
         const t = document.getElementById('toast');
         if(t) {
@@ -678,7 +680,7 @@
     function triggerImport() { document.getElementById('fileInput').click(); }
     function importFromFile(input) { const file = input.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = function(e) { document.getElementById('dataArea').value = e.target.result; executeImport(); }; reader.readAsText(file); }
     function exportToFile() { const allData = { db, archive, dailyLog, userStats }; const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json"; a.click(); }
-    function copyToClip() { const str = JSON.stringify({ db, archive, dailyLog, userStats }); if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(str).then(()=> alert("✅ 已复制文本码")).catch(()=>{ document.getElementById('dataArea').value=str; alert("⚠️ 自动复制失败，请手动全选复制"); }); } else { document.getElementById('dataArea').value=str; alert("⚠️ 请手动全选复制"); } }
+    function copyToClip() { const str = JSON.stringify({ db, archive, dailyLog, userStats }); if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(str).then(()=> alert("✅ 已复制")).catch(()=>{ document.getElementById('dataArea').value=str; alert("⚠️ 自动复制失败，请手动全选复制"); }); } else { document.getElementById('dataArea').value=str; alert("⚠️ 请手动全选复制"); } }
 
 </script>
 </body>
