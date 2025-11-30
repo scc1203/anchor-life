@@ -15,11 +15,12 @@
     <style>
         /* --- 🎨 Anchor v5.1 --- */
         :root {
-            --bg-blue: #D4F1F4;
+            --bg-blue: #D4F1F4; /* 更偏马卡龙的浅天蓝，与粉色搭配更柔和 */
             --bg-wood: #FDF6E3;
-            --bg-pink: #FFE2E2;
+            --bg-pink: #FFE2E2; /* 更柔和的粉色，适合作为大面积背景 */
             --bg-sos:  #E8DFF5;
             --bg-setting: #F0F4F8;
+            --bg-footer: #F8F3FF; /* 04区：更淡的薰衣草马卡龙背景，减弱存在感 */
             --text-main: #5D5C61;
             --gold: #D4AF37;
             --sport-green: #B5EAD7;
@@ -66,52 +67,142 @@
             border-bottom: 1px solid #eee;
         }
         .stat-btn {
-            flex: 1; margin: 0 5px; padding: 8px; border-radius: 12px; cursor: pointer;
-            background: #fafafa; border: 1px solid #eee; text-align: center;
-            transition: all 0.1s; user-select: none;
+            flex: 1;
+            margin: 0 5px;
+            padding: 8px;
+            border-radius: 14px;
+            cursor: pointer;
+            background: #F3FBF7; /* 更柔和的马卡龙绿色背景，降低存在感 */
+            border: 1px solid rgba(198, 231, 216, 0.6); /* 描边更柔和，不抢主舞台 */
+            text-align: center;
+            transition: all 0.1s;
+            user-select: none;
+        }
+        .stat-btn:active {
+            transform: scale(0.96);
+            background: #E5F4ED;
         }
         .stat-btn:active { transform: scale(0.96); background: #f0f0f0; }
         .stat-label { font-size: 0.8rem; color: #666; margin-right: 5px; }
         .stat-count { font-weight: bold; font-size: 1rem; color: #333; font-family: monospace; }
-        .stat-btn.willpower { color: #5C6BC0; }
-        .stat-btn.joy { color: #FFA726; }
+        .stat-btn.willpower { color: #2E7D32; }
+        .stat-btn.joy { color: #558B2F; }
 
         /* 抽取区域 */
         .section-filter {
-            background-color: var(--bg-blue); padding: 20px; text-align: center;
-            border-bottom-left-radius: 25px; border-bottom-right-radius: 25px;
-            transition: background 0.4s; position: relative; z-index: 10;
+            background: var(--bg-blue);
+            padding: 8px 14px 6px; /* 再略缩高度，顶部与底部留白更加接近 */
+            text-align: left;
+            border-radius: 18px;
+            /* 保持现在的天蓝色，但改为纯色底，去掉渐变 */
+            box-shadow: 0 6px 18px rgba(144, 202, 249, 0.25);
+            margin: 4px 6px 8px;
+            transition: background 0.4s, box-shadow 0.2s, transform 0.2s;
+            position: relative;
+            z-index: 10;
         }
-        .mode-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-label {
+            font-size: 0.8rem;
+            color: #6b7a99;
+            margin-bottom: 6px;
+            padding-left: 4px;
+        }
+        .mode-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
         .mode-tab {
-            padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;
-            background: rgba(255,255,255,0.5); transition: all 0.2s;
+            padding: 6px 14px;
+            border-radius: 999px; /* 更接近椭圆，和筛选按钮形状区分 */
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: rgba(255,255,255,0.55);
+            transition: all 0.2s;
         }
         .mode-tab.active { background: #fff; font-weight: bold; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
-        .control-group { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        select { padding: 8px 12px; border: none; border-radius: 10px; background: rgba(255,255,255,0.9); font-size: 16px; }
+        .control-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 10px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .select-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .section-filter select {
+            width: 100%;
+            padding: 10px 40px 10px 16px;
+            border-radius: 12px; /* 与「意志力」按钮类似的轻圆角长方形 */
+            border: 1px solid #d6dde8;
+            background: #ffffff !important; /* 纯白底色 */
+            font-size: 0.95rem;
+            box-shadow: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            color: #455A64;
+        }
+        .select-wrapper::after {
+            content: "⌃\A⌄";
+            white-space: pre;
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9rem;
+            color: #90A4AE;
+            pointer-events: none;
+            line-height: 0.4; /* 上下箭头更紧凑，距离更近 */
+        }
         
         .btn-main {
-            background-color: #FF9AA2; color: white; font-weight: bold; font-size: 1.1rem;
-            padding: 12px 40px; border: none; border-radius: 30px;
-            box-shadow: 0 4px 12px rgba(255, 154, 162, 0.4); cursor: pointer; transition: transform 0.1s;
+            background-image: linear-gradient(135deg, #FF9AA2, #FFB6B9);
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            font-size: 1.05rem;
+            padding: 12px 44px;
+            border: none;
+            border-radius: 999px;
+            box-shadow: 0 10px 24px rgba(255, 154, 162, 0.55);
+            cursor: pointer;
+            transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
+            display: block;
+            margin: 16px auto 6px; /* 稍微靠近结果卡片 */
         }
-        .btn-main:active { transform: scale(0.95); }
+        .btn-main:active {
+            transform: translateY(1px) scale(0.97);
+            box-shadow: 0 5px 14px rgba(255, 154, 162, 0.45);
+        }
 
         /* 抽取结果显示区 + 扭蛋机 */
         .section-display {
-            flex-grow: 1; background-color: var(--bg-pink); display: flex;
-            flex-direction: column; align-items: center; justify-content: center;
-            padding: 20px; min-height: 220px; transition: background 0.4s;
+            flex-grow: 1;
+            /* 背景交给 hero-wrapper 的大渐变，这里保持透明以突出卡片 */
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;  /* 结果卡片靠近上方，离“帮我选”更近 */
+            padding: 12px 22px 22px; /* 让结果卡片更贴近按钮，整体更紧凑 */
+            min-height: 260px;
+            transition: background 0.4s;
             position: relative;
+            border-radius: 0 0 16px 16px;
         }
         .card {
-            background: white; padding: 25px; border-radius: 20px; text-align: center; width: 85%;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: none;
+            background: white;
+            padding: 34px 26px;
+            border-radius: 26px;
+            text-align: center;
+            width: 100%;          /* 再放大一些，占满容器可用宽度 */
+            max-width: 560px;     /* 桌面端也更大一号 */
+            box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+            display: none;
         }
-        .card-icon { font-size: 3.5rem; display: block; margin-bottom: 10px; }
-        .card-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; color: #333; }
+        .card-icon { font-size: 4.4rem; display: block; margin-bottom: 16px; }
+        .card-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 10px; color: #333; }
         .card-desc { font-size: 0.9rem; color: #777; line-height: 1.6; margin-bottom: 15px; }
         .card-time { 
             display: inline-block; background: #f0f0f0; color: #888; padding: 2px 8px; 
@@ -143,6 +234,11 @@
         .btn-add { background: #B5EAD7; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; color: #555; cursor: pointer; }
         
         .input-options { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .input-options-row2 { display: flex; justify-content: flex-start; align-items: center; gap: 10px; margin-top: 8px; }
+        .input-options-row2 .time-select-small {
+    margin-left: auto;   /* 把时间选择推到这一行最右边 */
+}
+
         .tags-row { display: flex; gap: 6px; flex-wrap: wrap; }
         .tag {
             padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; background: rgba(0,0,0,0.05); 
@@ -151,19 +247,24 @@
         .tag.active { background: #C7CEEA; border-color: #989ec2; color: #333; }
         .tag[data-v="sport"].active { background: var(--sport-green); border-color: #99cbb9; }
 
-        .switch-container { display: flex; gap: 8px; }
+        .switch-container { display: flex; gap: 8px; margin-left: 0; }
         .switch-btn {
-            font-size: 0.75rem; color: #666; display: flex; align-items: center; gap: 5px; cursor: pointer;
-            background: rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 10px; border: 1px solid transparent;
+            font-size: 0.85rem; color: #555; display: flex; align-items: center; gap: 6px; cursor: pointer;
+            background: rgba(255,255,255,0.7); padding: 6px 20px; border-radius: 12px; border: 1px solid transparent;
             transition: all 0.2s;
         }
         .switch-btn.active-cycle { background: var(--cycle-purple); color: #fff; font-weight: bold; border-color: var(--cycle-purple); }
         .switch-btn.active-flash { background: var(--flash-yellow); color: #555; font-weight: bold; border-color: #FBC02D; }
 
-        .time-select-small {
-            font-size: 16px; padding: 4px; border-radius: 8px; border: 1px solid #ddd; color: #666;
-            transition: opacity 0.3s;
-        }
+       .time-select-small {
+    font-size: 16px;
+    padding: 6px 14px;
+    border-radius: 12px;                 /* 和那两个开关按钮圆角接近 */
+    border: 1px solid rgba(0,0,0,0.06);  /* 很淡的描边，不抢戏 */
+    background: #ffffff;                 /* 重点：白底 */
+    color: #666;
+    transition: opacity 0.3s;
+}
         .time-select-small.disabled { opacity: 0.3; pointer-events: none; }
 
         /* 四大块列表区域：两列排版 */
@@ -264,7 +365,77 @@
         .archive-del:hover { color: #e57373; }
 
         /* 说明书 & 设置区 */
-        .section-manual { background-color: #fff; padding: 20px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; line-height: 1.6; }
+        
+        /* 04 区：用户手册 & 数据方舟 统一背景 */
+        .section-footer-area {
+            background-color: var(--bg-footer);
+            padding: 10px 16px 20px;
+            margin-top: 0;
+        }
+        
+        /* 04区卡片统一风格：用户手册 / 最近更新 / 数据方舟 */
+        .section-footer-area .section-manual,
+        .section-footer-area .section-updates,
+        .section-footer-area .section-settings {
+            background-color: #F9FAFB;
+            padding: 10px 12px;
+            border-radius: 16px;
+        }
+        .section-footer-area .section-manual details,
+        .section-footer-area .section-updates details,
+        .section-footer-area .section-settings details {
+            background: transparent;
+            border-radius: 0;
+            margin-bottom: 0;
+        }
+        .section-footer-area summary,
+        .section-footer-area .settings-title {
+            font-size: 0.95rem;
+        }
+        .section-footer-area summary {
+            padding: 10px 4px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #444;
+        }
+        .section-footer-area .manual-content {
+            padding: 0 4px 10px 4px;
+            border-top: 1px solid #eee;
+            font-size: 0.85rem;
+        }
+.footer-note {
+            margin-top: 10px;
+            font-size: 0.75rem;
+            color: #777;
+            text-align: center;
+        }
+
+        .section-footer-area .section-manual,
+        .section-footer-area .section-updates,
+        .section-footer-area .section-settings {
+            background-color: #F9FAFB;
+        }
+        .section-footer-area summary,
+        .section-footer-area .settings-title {
+            font-size: 0.95rem;
+        }
+
+        .section-footer-area .section-manual,
+        .section-footer-area .section-updates,
+        .section-footer-area .section-settings {
+            margin-bottom: 14px;
+            border-radius: 16px;
+        }
+        .section-footer-area .section-settings {
+            /* 04区中与其他卡片保持一致的内边距 */
+        }
+        .section-footer-area .section-manual details,
+        .section-footer-area .section-updates details {
+            margin-bottom: 0;
+        }
+.section-manual { background-color: #F9FAFB; padding: 16px; border-top: 1px solid #eee; color: #666; font-size: 0.9rem; line-height: 1.6; }
         details { background: #f9f9f9; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
         summary { padding: 15px; font-weight: bold; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #444; }
         summary::after { content: '+'; font-size: 1.2rem; font-weight: normal; color: #999; }
@@ -290,9 +461,24 @@
         .modal-btn.cancel { background: #f0f0f0; color: #666; }
         .modal-btn.confirm { background: var(--bg-blue); color: #006064; }
         .modal-btn.danger { background: var(--danger-red); color: white; }
-        .toast-notification { position: fixed; top: -60px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 30px; font-size: 0.9rem; z-index: 2000; transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .toast-notification.show { top: 20px; }
-
+        .toast-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(33,33,33,0.92);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease-out;
+        }
+        .toast-notification.show {
+            opacity: 1;
+        }
         /* --- 扭蛋机动画：对齐 demo 路径 --- */
         #gachaLayer {
             position: absolute;
@@ -398,7 +584,54 @@
             40%  { transform: scaleX(0.9); opacity: 1; }
             100% { transform: scaleX(1);   opacity: 1; }
         }
-    </style>
+    
+        .hero-wrapper {
+            margin: 4px 0 0;
+            padding: 8px 12px 8px;
+            /* 从 01 标题开始，整体从白色过渡到浅粉色 */
+            background: linear-gradient(to bottom, #FFFFFF 0%, var(--bg-pink) 82%);
+            border-radius: 0;
+            border: none;
+            box-shadow: none;
+        }
+        #selContext, #selTime {
+            font-size: 0.95rem;
+            min-width: 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .section-subtitle {
+            font-size: 0.75rem;
+            color: #777;
+            margin-bottom: 10px;
+        }
+        .section-footer-header {
+            padding: 8px -8px 4px;
+            margin-top: 4px; /* 与前面分区的标题相对位置保持一致 */
+        }
+
+        .input-label {
+            font-size: 0.75rem;
+            color: #777;
+            margin: 4px 0 4px 2px;
+        }
+        .section-list-title {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .section-list-subtitle {
+            font-size: 0.75rem;
+            color: #777;
+            margin-bottom: 8px;
+        }
+</style>
 </head>
 <body>
 
@@ -413,8 +646,7 @@
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.1 通用版</span>
-</div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.2 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -431,30 +663,37 @@
     </div>
 
     <!-- 抽取区 -->
-    <div class="section-filter" id="filterSec">
-        <div class="mode-tabs">
-            <div class="mode-tab active" onclick="setMode('normal')">🔮 混合/全域</div>
-            <div class="mode-tab" onclick="setMode('culture')">📖 只看书影</div>
-          
-            <div class="mode-tab" onclick="setMode('sos')" style="color:#d9534f">🆘 SOS</div>
-        </div>
+    <div class="hero-wrapper">
+        <div class="section-title">01 · 抽签装置（筛选 + 抽卡）</div>
+        <div class="section-filter" id="filterSec">
         <div id="controls-normal" class="control-group">
-            <select id="selContext">
-                <option value="desktop">💻 书桌前</option>
-                <option value="indoor">🏠 室内/家</option>
-                <option value="outdoor">🌳 户外</option>
-            </select>
-            <select id="selTime">
-                <option value="30">⏳ 有30分钟</option>
-                <option value="60">⏳ 有1小时</option>
-                <option value="120">⏳ 有2小时+</option>
-            </select>
+            <div class="select-wrapper">
+                <select id="selContext">
+                    <option value="desktop">💻 书桌前</option>
+                    <option value="indoor">🏠 室内/家</option>
+                    <option value="outdoor">🌳 户外</option>
+                </select>
+            </div>
+            <div class="select-wrapper">
+                <select id="selTime">
+                    <option value="15">⏱️ 15min以内</option>
+                    <option value="30" selected>⏱️ 30min左右</option>
+                    <option value="60">⏱️ 1小时+</option>
+                    <option value="120">⏱️ 2小时+</option>
+                </select>
+            </div>
         </div>
         <div id="controls-sos" class="control-group" style="display:none; color: #555; font-size:0.9rem;">
             <span>🍃 允许自己暂时停下来...</span>
         </div>
-        <button class="btn-main" onclick="draw()" id="mainBtn">抽取任务</button>
+        <div class="mode-tabs">
+            <div class="mode-tab active" onclick="setMode('normal')">🔮 混合/全域</div>
+            <div class="mode-tab" onclick="setMode('culture')">📖 只看书影</div>
+            <div class="mode-tab" id="mode-tab-vinyl" onclick="setMode('vinyl')">💿 只听唱片</div>
+            <div class="mode-tab" onclick="setMode('sos')" style="color:#d9534f">🆘 SOS</div>
+        </div>
     </div>
+    <button class="btn-main" onclick="draw()" id="mainBtn">抽取任务</button>
 
     <!-- 抽取结果 + 扭蛋机 -->
     <div class="section-display" id="displaySec">
@@ -484,24 +723,30 @@
             </div>
         </div>
     </div>
+    </div>
 
     <!-- 输入区 -->
     <div class="section-input">
+        <div class="section-title">02 · 新任务入库</div>
         <div class="input-box">
-            <textarea id="inpTitle" rows="1" placeholder="输入事项... (*开头标记重要/青蛙)" oninput="autoTag()" onkeypress="handleEnter(event)"></textarea>
-            <button class="btn-add" onclick="addNew()">＋</button>
-        </div>
+    <textarea id="inpTitle"
+      placeholder="输入事项…（支持批量输入）&#10;例：*写导言30m / 整理书桌 / 看好东西…"
+      oninput="autoTag()"
+      onkeypress="handleEnter(event)"></textarea>
+    <button class="btn-add" onclick="addNew()">＋</button>
+</div>
         <div class="input-options">
+            <div class="input-label">给这条任务贴标签：</div>
             <div class="tags-row">
                 <div class="tag active" data-v="indoor" onclick="pickTag(this)">🏠 室内</div>
                 <div class="tag" data-v="desktop" onclick="pickTag(this)">💻 桌前</div>
                 <div class="tag" data-v="outdoor" onclick="pickTag(this)">🌳 户外</div>
                 <div class="tag" data-v="sport" onclick="pickTag(this)">🏃 运动</div>
                 <div class="tag" data-v="culture" onclick="pickTag(this)">📖 书/影</div>
-                
+                <div class="tag" id="tag-vinyl" data-v="vinyl" onclick="pickTag(this)">💿 听碟</div>
             </div>
         </div>
-        <div class="input-options" style="margin-top:8px;">
+        <div class="input-options-row2">
             <div class="switch-container">
                 <div class="switch-btn" id="cycleSwitch" onclick="toggleSwitch('cycle')">
                     <span>🔄 每日循环</span>
@@ -510,7 +755,6 @@
                     <span>⚡️ 速办模式</span>
                 </div>
             </div>
-            
             <select id="inpTime" class="time-select-small">
                 <option value="5">5m (速办)</option>
                 <option value="15">15m</option>
@@ -524,6 +768,7 @@
 
     <!-- 四大块列表 -->
     <div class="section-list">
+        <div class="section-list-title">03 · 任务库 & 记录</div>
         <!-- 第一行：日常&运动 + 媒体库房 -->
         <div class="list-panels">
             <div class="list-panel">
@@ -543,7 +788,7 @@
                         <span class="panel-title">🎞 媒体库房</span>
                         <span class="panel-count">(<span id="mediaCount">0</span>)</span>
                     </div>
-                    <div class="panel-subtitle">书 / 电影 等</div>
+                    <div class="panel-subtitle">书 / 电影 / 唱片 等</div>
                 </div>
                 <ul id="mediaList" class="task-list panel-list"></ul>
             </div>
@@ -575,8 +820,12 @@
         </div>
     </div>
 
-    <!-- 说明书 -->
-    <div class="section-manual">
+    <!-- 用户手册 & 数据方舟 -->
+    <div class="section-footer-area">
+        <div class="section-footer-header">
+            <div class="section-title">04 · 用户手册 & 数据方舟</div>
+        </div>
+        <div class="section-manual">
         <details>
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
@@ -609,9 +858,22 @@
         </details>
     </div>
 
-    <!-- 设置 & 备份 -->
+    
+    <div class="section-updates">
+        <details>
+            <summary>📑 更新日志</summary>
+            <div class="manual-content">
+                <ul>
+                    <li><b>v5.2：</b> 新增扭蛋机抽卡动画（其他形式陆续添加中）；功能分区重新规划更加清晰。</li>
+                </ul>
+            </div>
+        </details>
+    </div>
+<!-- 设置 & 备份 -->
     <div class="section-settings" id="settingSec">
-        <div class="settings-title">📡 数据方舟 (Offline)</div>
+        <details>
+            <summary>📡 数据方舟 (Offline)</summary>
+            <div class="manual-content">
         <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (电脑端推荐)</div>
         <div class="backup-grid">
             <button class="btn-file" onclick="exportToFile()">📥 导出文件</button>
@@ -627,14 +889,20 @@
         <button class="btn-file" style="width:100%; background:#E8F5E9; border-color:#A5D6A7; color:#2E7D32;" onclick="executeImport()">✅ 确认导入 (Merge)</button>
         <button class="btn-danger" onclick="tryResetAll()">🗑️ 格式化/重置所有数据</button>
         <input type="file" id="fileInput" style="display:none" onchange="importFromFile(this)">
-        <div style="margin-top:10px; font-size:0.75rem; color:#999; text-align:center;">
+                </div>
+        </details>
+    </div>
+        <div class="footer-note">
             本工具仅在本机浏览器存储数据，不上传云端。请记得「导出备份」。<br>
             Anchor · by scc 🌊
         </div>
     </div>
-</div>
 
 <script>
+    // ===== Anchor Variant Switch =====
+    // 'personal' 显示唱片相关功能；'common' 隐藏唱片相关功能
+    const APP_VARIANT = 'common';
+
     const sosLibrary = [
         { title: "大口喝水", icon: "💧", desc: "感受水流经过食道。" },
         { title: "看窗外远方", icon: "👀", desc: "寻找视野里最远的一棵树。" },
@@ -649,12 +917,12 @@
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
     const KEY_STATS = 'anchor_live_stats';
-    const KEY_VISITED = 'anchor_has_visited';
+    const KEY_VISITED = 'anchor_has_visited_v52';
 
     const defaultDB = [
-    { id: 1, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
-];
-
+        { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
+        { id: 2, title: "喝水果茶", type: "indoor", desc: "补充维C", time: 15 }
+    ];
 
     let db = JSON.parse(localStorage.getItem(KEY_DB)) || [];
     let archive = JSON.parse(localStorage.getItem(KEY_ARCHIVE)) || [];
@@ -671,16 +939,22 @@
     let userOverrideFlash = false;
 
     document.addEventListener('DOMContentLoaded', () => {
-        if(db.length === 0 && archive.length === 0) db = defaultDB; 
+        if(db.length === 0 && archive.length === 0) {
+            if (typeof APP_VARIANT !== 'undefined' && APP_VARIANT === 'common') {
+                db = defaultDB.filter(item => item.type !== 'vinyl');
+            } else {
+                db = defaultDB;
+            }
+        } 
         checkLogExpiry();
         renderList(); renderArchive(); renderLog(); updateStatsUI(); 
         setMode('normal');
         if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v5.1 通用版！\n\n📖 页面底部有详细说明书，可以慢慢翻；\n🎰 本次更新加入了「扭蛋机抽卡」功能，帮你随机选出下一步要做什么。");
+            alert("👋 欢迎来到 Anchor v5.2！\n\n🆕 最近更新：\n- 新增扭蛋机抽卡动画（其他形式陆续添加中）\n- 功能分区重新规划，更加清晰。");
             localStorage.setItem(KEY_VISITED, 'true');
-}
-
-    });
+        }
+        applyVariant();
+});
 
     function scrollToSettings() {
         const sec = document.getElementById('settingSec');
@@ -996,8 +1270,9 @@
             btn.innerText = "🚑 救救我"; 
             btn.style.background = "#957DAD"; 
         } else { 
-            filter.style.background = 'var(--bg-blue)'; 
-            display.style.background = 'var(--bg-pink)'; 
+            /* 清除内联背景，使用 CSS 中的渐变背景 */
+            filter.style.background = ''; 
+            display.style.background = ''; 
             normCtl.style.display = 'flex'; 
             sosCtl.style.display = 'none'; 
             btn.style.background = "#FF9AA2"; 
@@ -1100,7 +1375,7 @@
         const parsed = parseTimeFromInput(targetLine);
         const feedback = document.getElementById('timeFeedback');
         if (parsed.time) feedback.innerText = `💡 识别: ${parsed.time} min`; else feedback.innerText = "";
-        if (targetLine.includes("每天") || targetLine.includes("每日")) { if(!isCycleActive) toggleCycle(); }
+        if (targetLine.includes("每天") || targetLine.includes("每日")) { if(!isCycleActive) toggleCycle(true); }
         const v = targetLine; const tags = document.querySelectorAll('.tag');
         let t = null; let detectQuick = false;
         if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(v)) { t = 'indoor'; detectQuick = true; } 
@@ -1144,32 +1419,38 @@
         if (newState) sw.classList.add(activeClass); else sw.classList.remove(activeClass); 
 
         if (type === 'flash') {
-            const sel = document.getElementById('inpTime');
-            if (isUserAction) {
-                // 用户手动点开的/点掉的速办，标记为“用户覆盖”
-                userOverrideFlash = true;
-                if (!newState && sel) {
-                    // 用户主动取消速办：时间恢复默认 30m
-                    sel.value = "30";
-                }
+    const sel = document.getElementById('inpTime');
+    if (isUserAction) {
+        // 用户手动点开的/点掉的速办，标记为“用户覆盖”
+        userOverrideFlash = true;
+
+        if (sel) {
+            if (newState) {
+                // ✅ 用户手动开启速办：时间改成 5m
+                sel.value = "5";
             } else {
-                // 程序自动控制速办（例如关键词识别或存入后重置）
-                if (newState) {
-                    // 自动开启速办时不认为用户覆盖
-                    userOverrideFlash = false;
-                } else {
-                    // 自动关闭时也清掉覆盖标记
-                    userOverrideFlash = false;
-                }
+                // ✅ 用户手动关闭速办：时间恢复默认 30m
+                sel.value = "30";
             }
         }
+    } else {
+        // 程序自动控制速办（例如关键词识别或存入后重置）
+        if (newState) {
+            // 自动开启速办时不认为用户覆盖
+            userOverrideFlash = false;
+        } else {
+            // 自动关闭时也清掉覆盖标记
+            userOverrideFlash = false;
+        }
     }
+}
+}
 
     let isCycleActive = false;
-    function toggleCycle() { 
-        isCycleActive = !isCycleActive; 
-        const sw = document.getElementById('cycleSwitch'); 
-        if (isCycleActive) sw.classList.add('active'); else sw.classList.remove('active'); 
+    function toggleCycle(forceOn) { 
+        const desired = (forceOn === true) ? true : !isCycleActive;
+        isCycleActive = desired;
+        toggleSwitch('cycle', desired);
     }
 
     // 修复版 addNew（与前一版保持一致，只修两个 bug）
@@ -1357,6 +1638,20 @@
             alert("⚠️ 请手动全选复制"); 
         } 
     }
+
+    // 根据 APP_VARIANT 调整 UI（personal / common）
+    function applyVariant() {
+        if (typeof APP_VARIANT === 'undefined') return;
+        var vinylTab = document.getElementById('mode-tab-vinyl');
+        if (vinylTab) {
+            vinylTab.style.display = (APP_VARIANT === 'common') ? 'none' : '';
+        }
+        var vinylTag = document.getElementById('tag-vinyl');
+        if (vinylTag) {
+            vinylTag.style.display = (APP_VARIANT === 'common') ? 'none' : '';
+        }
+    }
+
 </script>
 </body>
 </html>
