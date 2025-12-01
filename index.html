@@ -67,17 +67,29 @@
             border-bottom: 1px solid #eee;
         }
         .stat-btn {
-            flex: 1;
-            margin: 0 5px;
-            padding: 8px;
-            border-radius: 14px;
-            cursor: pointer;
-            background: #F3FBF7; /* 更柔和的马卡龙绿色背景，降低存在感 */
-            border: 1px solid rgba(198, 231, 216, 0.6); /* 描边更柔和，不抢主舞台 */
-            text-align: center;
-            transition: all 0.1s;
-            user-select: none;
-        }
+    flex: 1;
+    margin: 0 5px;
+    padding: 8px;
+    border-radius: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.1s;
+    user-select: none;
+    border: 1px solid rgba(0,0,0,0.03);
+}
+
+.stat-btn.willpower {
+    background: #F3FBF7;  /* 薄荷绿 */
+    color: #2E7D32;
+}
+
+.stat-btn.joy {
+    background: #FFF5EB;  /* 奶桃色 */
+    color: #BF6A2F;       /* 柔和一点的橙棕色文字 */
+}
+
+
+
         .stat-btn:active {
             transform: scale(0.96);
             background: #E5F4ED;
@@ -208,6 +220,30 @@
             display: inline-block; background: #f0f0f0; color: #888; padding: 2px 8px; 
             border-radius: 8px; font-size: 0.75rem; margin-top: 5px; 
         }
+        #rStatus {
+            font-size: 1rem;
+            color: #FF8A65;  /* 柔和珊瑚橙，和粉蓝更和谐 */
+            font-weight: 700;
+            margin-bottom: 6px;
+            text-align: left;
+            display: none;
+        }
+        #rIngPulse {
+            font-size: 0.9rem;
+            color: #FF8A65;
+            font-weight: 600;
+            margin-top: 8px;   /* 和时间拉开一点距离 */
+            margin-bottom: 6px;
+            text-align: center;
+            display: none;
+            animation: anchorPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes anchorPulse {
+            0% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.04); }
+            100% { opacity: 0.3; transform: scale(1); }
+        }
+
         
         .card-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; vertical-align: middle; margin-left: 5px; color: #fff; }
         .bg-cycle { background: var(--cycle-purple); }
@@ -605,6 +641,26 @@
             color: #555;
             margin-bottom: 4px;
         }
+/* === 根据 APP_VARIANT 切换 意志力 / 小确幸 配色 === */
+
+/* personal：一绿一桃（你现在这版的感觉） */
+body.variant-personal .stat-btn.willpower {
+    background: #F3FBF7;
+    color: #2E7D32;
+}
+
+body.variant-personal .stat-btn.joy {
+    background: #FFF5EB;
+    color: #BF6A2F;
+}
+
+/* common：两块都用同一款浅绿 */
+body.variant-common .stat-btn.willpower,
+body.variant-common .stat-btn.joy {
+    background: #F3FBF7;
+    color: #2E7D32;
+}
+
         .section-subtitle {
             font-size: 0.75rem;
             color: #777;
@@ -646,7 +702,7 @@
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.2 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.3 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -710,16 +766,18 @@
 
         <!-- 结果卡片 -->
         <div id="resultCard" class="card">
+            <div id="rStatus">📌 锚点 · ING...</div>
             <span class="card-icon" id="rIcon">🎁</span>
             <div class="card-title">
                 <span id="rTitle"></span>
                 <span id="rBadge"></span>
             </div>
             <div class="card-desc" id="rDesc"></div>
-            <div class="card-time" id="rTime"></div> 
+            <div class="card-time" id="rTime"></div>
+            <div id="rIngPulse">正在进行中 · · ·</div>
             <div style="margin-top:15px;">
-                <button class="btn-card-action" onclick="draw()">换一个</button>
-                <button class="btn-card-action" onclick="finishTask()" id="btnFinish">去完成</button>
+                <button class="btn-card-action" onclick="changeTask()" id="btnChange">换一个</button>
+                <button class="btn-card-action" onclick="handlePrimaryAction()" id="btnPrimary">就它啦</button>
             </div>
         </div>
     </div>
@@ -730,7 +788,7 @@
         <div class="section-title">02 · 新任务入库</div>
         <div class="input-box">
     <textarea id="inpTitle"
-      placeholder="输入事项…（支持批量输入）&#10;例：*写导言30m / 整理书桌 / 看好东西…"
+      placeholder="输入事项…（支持批量输入）&#10;例：！写导言30m / 整理书桌 / 看好东西…"
       oninput="autoTag()"
       onkeypress="handleEnter(event)"></textarea>
     <button class="btn-add" onclick="addNew()">＋</button>
@@ -820,6 +878,16 @@
         </div>
     </div>
 
+    <!-- 历史记录（最近完成） -->
+    <div class="section-history" style="margin-top:12px;">
+        <details id="historyDetails">
+            <summary>📅 历史记录（最近 30 天）</summary>
+            <div class="manual-content" id="historyContent">
+                <p style="font-size:0.8rem; color:#777;">这里会汇总最近一段时间的完成记录，仅在你想回顾时再展开查看。</p>
+            </div>
+        </details>
+    </div>
+
     <!-- 用户手册 & 数据方舟 -->
     <div class="section-footer-area">
         <div class="section-footer-header">
@@ -836,7 +904,7 @@
                 <ul>
                     <li><b>自动书影：</b> 输入 <span class="manual-tag">看/读/书/影</span> 开头，自动归类为文化，并加书名号。</li>
                     <li><b>闪电速办：</b> 输入 <span class="manual-tag">洗/刷/理/拆/扔/喝</span> 等，自动标记为 <span class="manual-tag">⚡️速办</span> (5min)。</li>
-                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*</span> (星号) 开头，标记为困难重要的 <span class="manual-tag">🐸青蛙</span>。</li>
+                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*/!/"重要“+空格</span> (星号) 开头，标记为困难重要的 <span class="manual-tag">🐸青蛙</span>。</li>
                     <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
                 </ul>
                 <div class="manual-h3">🎲 抽取逻辑</div>
@@ -864,7 +932,10 @@
             <summary>📑 更新日志</summary>
             <div class="manual-content">
                 <ul>
-                    <li><b>v5.2：</b> 新增扭蛋机抽卡动画（其他形式陆续添加中）；功能分区重新规划更加清晰。</li>
+                    <li><b>v5.1：</b> 新增扭蛋机抽卡动画（其他形式陆续添加中）。</li>
+                    <li><b>v5.2：</b> 功能分区重新规划 更加清晰明了。</li>
+                    <li><b>v5.3：</b> 增加“正在进行中…”；增加30天历史记录；添加重要任务时可以通过“*”/“！”/“重要”加空格 开启。</li>
+
                 </ul>
             </div>
         </details>
@@ -917,7 +988,7 @@
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
     const KEY_STATS = 'anchor_live_stats';
-    const KEY_VISITED = 'anchor_has_visited_v52';
+    const KEY_VISITED = 'anchor_has_visited_v53_personal';
 
     const defaultDB = [
         { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
@@ -932,6 +1003,8 @@
     let recentHistory = []; 
     let mode = 'normal';
     let currentTask = null;
+    let currentStatus = 'idle';
+    let anchorStartTime = null;
     let switchState = { cycle: false, flash: false };
     let gachaAnimating = false;
 
@@ -947,10 +1020,10 @@
             }
         } 
         checkLogExpiry();
-        renderList(); renderArchive(); renderLog(); updateStatsUI(); 
+        renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI(); 
         setMode('normal');
         if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v5.2！\n\n🆕 最近更新：\n- 新增扭蛋机抽卡动画（其他形式陆续添加中）\n- 功能分区重新规划，更加清晰。");
+            alert("👋 欢迎来到 Anchor v5.3（通用版）！\n\n🆕 最近更新：\n- 新增“正在进行中…” 动效\n- 新增 30 天历史记录\n- 重要任务支持「* / ! / “重要”+空格」开启");
             localStorage.setItem(KEY_VISITED, 'true');
         }
         applyVariant();
@@ -1021,44 +1094,89 @@
         if(!list) return;
         list.innerHTML = "";
         document.getElementById('arcCount').innerText = archive.length;
+
         archive.forEach((item, i) => {
             const div = document.createElement('div');
             div.className = 'archive-item';
+
+            const icon = item.icon || getSmartIcon(item);
+            const badge = (item.isFrog || item.type === 'important') ? ' 🏅' : '';
+
             div.innerHTML = `
-                <span class="archive-date">[${item.finishDate}]</span>
-                <span style="flex:1;">${item.title}</span>
-                <span class="archive-del" onclick="deleteArchiveItem(${i})">❌</span>
+                <span style="flex:1;">${icon} ${item.title}${badge}</span>
+                <span class="archive-del" onclick="deleteArchiveItem(${i})">🗑️</span>
             `;
             list.appendChild(div);
         });
     }
 
-    function renderLog() {
+
+    
+
+function renderLog() {
         const list = document.getElementById('logList');
         if(!list) return;
         list.innerHTML = "";
-        document.getElementById('logCount').innerText = dailyLog.length;
-        dailyLog.forEach(log => {
+        const today = new Date().toDateString();
+        const todaysLogs = dailyLog.filter(log => log.date === today);
+        document.getElementById('logCount').innerText = todaysLogs.length;
+        todaysLogs.forEach(log => {
             const li = document.createElement('li');
             li.className = 'task-item';
+            const suffix = log.done ? ' ✅' : '';
             li.innerHTML = `
                 <div style="display:flex;align-items:center;">
                     <span class="footprint-time">${log.timeStr}</span>
-                    <span class="footprint-item">${log.icon} ${log.title}</span>
+                    <span class="footprint-item">${log.icon} ${log.title}${suffix}</span>
                 </div>
             `;
             list.appendChild(li);
         });
     }
-    
-    function updateStatsUI() {
+
+    function renderHistory() {
+        const container = document.getElementById('historyContent');
+        if (!container) return;
+        if (!Array.isArray(dailyLog) || dailyLog.length === 0) {
+            container.innerHTML = `<p style="font-size:0.8rem; color:#777;">最近暂无完成记录。</p>`;
+            return;
+        }
+        const byDate = {};
+        dailyLog.forEach(log => {
+            if (!log.date) return;
+            if (!byDate[log.date]) byDate[log.date] = [];
+            byDate[log.date].push(log);
+        });
+        const dateKeys = Object.keys(byDate).sort((a,b) => new Date(b) - new Date(a));
+        const maxDays = 30;
+        let htmlStr = "";
+        dateKeys.slice(0, maxDays).forEach(dateStr => {
+            const dayLogs = byDate[dateStr];
+            const dateLabel = new Date(dateStr).toLocaleDateString();
+            htmlStr += `<div style="margin-bottom:8px;">`;
+            htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:2px;">${dateLabel}</div>`;
+            dayLogs.forEach(log => {
+                const suffix = log.done ? ' ✅' : '';
+                htmlStr += `<div style="font-size:0.8rem; color:#444;">${log.icon || ''} ${log.title}${suffix}</div>`;
+            });
+            htmlStr += `</div>`;
+        });
+        if (!htmlStr) {
+            container.innerHTML = `<p style="font-size:0.8rem; color:#777;">最近暂无完成记录。</p>`;
+        } else {
+            container.innerHTML = htmlStr;
+        }
+    }
+
+function updateStatsUI() {
         const elWill = document.getElementById('stat-willpower');
         const elJoy = document.getElementById('stat-joy');
         if(elWill) elWill.innerText = userStats.willpower;
         if(elJoy) elJoy.innerText = userStats.joy;
     }
     
-    function showToast(msg) {
+    
+function showToast(msg) {
         const t = document.getElementById('toast');
         if(t) {
             t.innerText = msg;
@@ -1075,13 +1193,17 @@
         updateStatsUI(); save();
     }
 
-    function checkLogExpiry() {
-        const today = new Date().toDateString();
-        const validLogs = dailyLog.filter(log => log.date === today);
-        if (validLogs.length !== dailyLog.length) { dailyLog = validLogs; save(); }
-    }
     
-    function parseTimeFromInput(str) {
+function checkLogExpiry() {
+        // 以前会在这里清理掉非今天的足迹；现在保留完整 dailyLog 作为历史。
+        // 只做一个轻量保护：确保 dailyLog 是数组。
+        if (!Array.isArray(dailyLog)) {
+            dailyLog = [];
+            save();
+        }
+    }
+
+function parseTimeFromInput(str) {
         let detectedTime = null; let cleanStr = str;
         const regexH = /(\d+(?:\.\d+)?)\s*(h|hr|hour|hours|小时)/i;
         let matchH = str.match(regexH);
@@ -1133,7 +1255,8 @@
         return "gacha-ball-purple.png";
     }
 
-    function renderResultCard(result) {
+    
+function renderResultCard(result) {
         const card   = document.getElementById('resultCard');
         const ph     = document.getElementById('placeholder');
         const title  = document.getElementById('rTitle');
@@ -1141,6 +1264,10 @@
         const descEl = document.getElementById('rDesc');
         const iconEl = document.getElementById('rIcon');
         const timeEl = document.getElementById('rTime');
+        const statusEl = document.getElementById('rStatus');
+        const changeBtn = document.getElementById('btnChange');
+        const primaryBtn = document.getElementById('btnPrimary');
+        const ingEl = document.getElementById('rIngPulse');
 
         if (!card) return;
 
@@ -1151,6 +1278,10 @@
             if (descEl) descEl.innerText = "休息一下？";
             if (iconEl) iconEl.innerText = "🌙";
             if (timeEl) timeEl.innerText = "";
+            if (statusEl) statusEl.style.display = 'none';
+            if (ingEl) ingEl.style.display = 'none';
+            if (changeBtn) changeBtn.style.display = 'none';
+            if (primaryBtn) primaryBtn.style.display = 'none';
         } else {
             if (title) title.innerText = result.title || "";
             if (badge) {
@@ -1170,6 +1301,20 @@
             else if (result.time === 0)     timeStr = "⏳ 丰俭由人";
             else                            timeStr = `⏱️ ${result.time || 30} min`;
             if (timeEl) timeEl.innerText = timeStr;
+
+            if (statusEl) statusEl.style.display = 'none';
+            if (ingEl) ingEl.style.display = 'none';
+            if (changeBtn) changeBtn.style.display = 'inline-block';
+            if (primaryBtn) {
+                primaryBtn.style.display = 'inline-block';
+                if (result.type === 'sos') {
+                    primaryBtn.innerText = "去完成";
+                    currentStatus = 'sos';
+                } else {
+                    primaryBtn.innerText = "就它啦";
+                    currentStatus = 'suggest';
+                }
+            }
         }
 
         card.style.animation = "none";
@@ -1178,7 +1323,74 @@
         card.style.display = 'block';
     }
 
-    function playGachaAnimation(result) {
+    function setCardAsAnchor() {
+        if (!currentTask || currentTask.type === 'sos') return;
+        const statusEl = document.getElementById('rStatus');
+        const primaryBtn = document.getElementById('btnPrimary');
+        const ingEl = document.getElementById('rIngPulse');
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.innerText = '📌 锚点 · ING...';
+        }
+        if (ingEl) {
+            ingEl.style.display = 'block';
+        }
+        if (primaryBtn) {
+            primaryBtn.innerText = '已完成';
+        }
+        currentStatus = 'anchor';
+        anchorStartTime = Date.now();
+    }
+
+    function handlePrimaryAction() {
+        if (!currentTask) return;
+        if (currentTask.type === 'sos') {
+            finishTask();
+            return;
+        }
+        if (currentStatus === 'suggest') {
+            setCardAsAnchor();
+        } else if (currentStatus === 'anchor') {
+            finishTask();
+        } else {
+            draw();
+        }
+    }
+
+    function changeTask() {
+        if (!currentTask) { 
+            draw();
+            return;
+        }
+        if (currentTask.type !== 'sos' && currentStatus === 'anchor' && anchorStartTime) {
+            const now = Date.now();
+            const elapsed = now - anchorStartTime;
+            if (elapsed >= 30000) {
+                const dt = new Date();
+                const timeStr = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+                dailyLog.unshift({
+                    title: currentTask.title,
+                    icon: currentTask.icon || getSmartIcon(currentTask),
+                    timeStr: timeStr,
+                    date: dt.toDateString(),
+                    done: false
+                });
+                save();
+                renderLog();
+                renderHistory();
+            }
+        }
+        currentTask = null;
+        currentStatus = 'idle';
+        anchorStartTime = null;
+        const statusEl = document.getElementById('rStatus');
+        const ingEl = document.getElementById('rIngPulse');
+        if (statusEl) statusEl.style.display = 'none';
+        if (ingEl) ingEl.style.display = 'none';
+        draw();
+    }
+
+function playGachaAnimation(result) {
         const layer  = document.getElementById('gachaLayer');
         const eggOut = document.getElementById('eggOut');
         const img    = document.getElementById('gachaImg');
@@ -1335,65 +1547,155 @@
         }, 300);
     }
 
-    function finishTask() {
+    
+function finishTask() {
         if (!currentTask) return;
+
+        const card = document.getElementById('resultCard');
+        const statusEl = document.getElementById('rStatus');
+        const ingEl = document.getElementById('rIngPulse');
+
+        // SOS 模式：只重置状态，不记入足迹/荣誉殿堂
         if (currentTask.type === 'sos') { 
             showToast("状态重启！🌱"); 
-            document.getElementById('resultCard').style.display = 'none'; 
+            if (card) card.style.display = 'none'; 
+            currentTask = null;
+            if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+            if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+            if (statusEl) statusEl.style.display = 'none';
+            if (ingEl) ingEl.style.display = 'none';
             return; 
         }
+
+        // 写入「今日足迹 / 历史记录」
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        dailyLog.unshift({ title: currentTask.title, icon: currentTask.icon || getSmartIcon(currentTask), timeStr: timeStr, date: now.toDateString() });
-        
+        dailyLog.unshift({ 
+            title: currentTask.title, 
+            icon: currentTask.icon || getSmartIcon(currentTask), 
+            timeStr: timeStr, 
+            date: now.toDateString(),
+            done: true
+        });
+
+        // 1）每日循环任务：只打卡，不出任务池
         if (currentTask.recurrence === 'daily') {
             const taskIndex = db.findIndex(t => t.id === currentTask.id);
-            if (taskIndex > -1) db[taskIndex].lastDone = new Date().toDateString();
-            renderLog(); save(); renderList(); showToast("✅ 今日打卡成功！");
-        } else if (currentTask.type === 'culture') {
+            if (taskIndex > -1) db[taskIndex].lastDone = now.toDateString();
+            renderLog(); 
+            if (typeof renderHistory === 'function') renderHistory();
+            save(); 
+            renderList(); 
+            showToast("✅ 今日打卡成功！");
+        } 
+        // 2）书/影/唱片等 culture 类：走原来的“归档”逻辑
+        else if (currentTask.type === 'culture') {
             if (currentTask.isSeries) { 
-                showToast("🎉 记录完成！"); 
-            }
-            else if(confirm(`《${currentTask.title}》彻底看完了吗？\n[确定]=归档 [取消]=稍后继续`)) {
+                // 连载类，只记录，不强制归档
+                showToast("🎉 记录完成！");
+            } else if (confirm(`《${currentTask.title}》彻底看完了吗？\n[确定]=归档 [取消]=稍后继续`)) {
                 db = db.filter(i => i.id !== currentTask.id);
-                archive.unshift({ ...currentTask, finishDate: new Date().toLocaleDateString() });
-                save(); renderList(); renderArchive(); showToast("🏆 已归档");
+                archive.unshift({ 
+                    ...currentTask, 
+                    finishDate: now.toLocaleDateString() 
+                });
+                save(); 
+                renderList(); 
+                renderArchive(); 
+                showToast("🏆 已归档");
             }
-        } else {
-            db = db.filter(i => i.id !== currentTask.id); 
-            save(); renderList(); showToast("✨ 完成！");
+        } 
+        // 3）普通任务：完成后从任务池删除；
+        //    如果是重要任务（青蛙），同时放入荣誉殿堂（重要任务分区）
+        else {
+            db = db.filter(i => i.id !== currentTask.id);
+
+            if (currentTask.isFrog) {
+                archive.unshift({
+                    title: currentTask.title,
+                    type: 'important',
+                    isFrog: true,
+                    icon: currentTask.icon || getSmartIcon(currentTask),
+                    finishDate: now.toLocaleDateString()
+                });
+            }
+
+            save(); 
+            renderList(); 
+            renderArchive();
+            showToast(currentTask.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
         }
+
         renderLog();
-        document.getElementById('resultCard').style.display = 'none';
+        if (typeof renderHistory === 'function') renderHistory();
+
+        // 收起卡片 & 清空锚点状态
+        if (card) card.style.display = 'none';
+        if (statusEl) statusEl.style.display = 'none';
+        if (ingEl) ingEl.style.display = 'none';
+        currentTask = null;
+        if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+        if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
     }
-    
+
     function recordLog() { renderLog(); }
+
 
     function autoTag() {
         const raw = document.getElementById('inpTitle').value;
-        const lines = raw.split('\n'); let targetLine = lines[0] || ""; 
+        const lines = raw.split('\n'); 
+        let targetLine = lines[0] || ""; 
+
+        // 解析时间并给出小提示
         const parsed = parseTimeFromInput(targetLine);
         const feedback = document.getElementById('timeFeedback');
-        if (parsed.time) feedback.innerText = `💡 识别: ${parsed.time} min`; else feedback.innerText = "";
-        if (targetLine.includes("每天") || targetLine.includes("每日")) { if(!isCycleActive) toggleCycle(true); }
-        const v = targetLine; const tags = document.querySelectorAll('.tag');
-        let t = null; let detectQuick = false;
-        if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(v)) { t = 'indoor'; detectQuick = true; } 
-        else if(v.includes('唱') || v.includes('听')) t = 'vinyl'; 
-        else if(v.includes('书') || v.includes('影') || v.includes('读') || v.includes('看') || v.includes('杂志')) t = 'culture'; 
-        else if(v.includes('动') || v.includes('跑') || v.includes('练') || v.includes('跳') || v.includes('球') || v.includes('舞') || v.includes('操')) t = 'sport'; 
-        else if(v.includes('买') || v.includes('外') || v.includes('取') || v.includes('拿')) t = 'outdoor'; 
-        else if(v.includes('脑') || v.includes('写') || v.includes('研究') || v.includes('作') || v.includes('编辑')) t = 'desktop';
+        if (parsed.time) feedback.innerText = `💡 识别: ${parsed.time} min`;
+        else feedback.innerText = "";
+
+        // 自动识别“每日循环”
+        if (targetLine.includes("每天") || targetLine.includes("每日")) { 
+            if (!isCycleActive) toggleCycle(true); 
+        }
+
+        const v = targetLine;
+        const tags = document.querySelectorAll('.tag');
+        let t = null;
+        let detectQuick = false;
+
+        // ⭐ 特判：整理照片不算速办
+        const isPhotoSort = v.includes('整理') && v.includes('照片');
+
+        // 自动猜标签
+        if (!isPhotoSort && /(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(v)) { 
+            t = 'indoor'; 
+            detectQuick = true; 
+        } 
+        else if (v.includes('唱') || v.includes('听')) t = 'vinyl'; 
+        else if (v.includes('书') || v.includes('影') || v.includes('读') || v.includes('看') || v.includes('杂志')) t = 'culture'; 
+        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操')) t = 'sport'; 
+        else if (v.includes('买') || v.includes('外') || v.includes('取') || v.includes('拿')) t = 'outdoor'; 
+        else if (v.includes('脑') || v.includes('写') || v.includes('研究') || v.includes('作') || v.includes('编辑')) t = 'desktop';
+
+        // 应用自动标签高亮
         if (t) { 
             tags.forEach(tag => tag.classList.remove('active')); 
             const activeTag = document.querySelector(`.tag[data-v="${t}"]`); 
             if (activeTag) activeTag.classList.add('active'); 
             toggleTimeInput(t); 
         }
-        if (detectQuick && !switchState.flash) { 
-            // 自动识别速办：程序性开启，不算“用户手动”，不触发覆盖标记
+
+        // ⭐ 自动速办逻辑（考虑“整理照片” & 用户手动覆盖）
+        if (!isPhotoSort && detectQuick && !switchState.flash && !userOverrideFlash) { 
+            // 自动识别为速办：程序打开速办 + 把时间调成 5m
             toggleSwitch('flash', true); 
-            document.getElementById('inpTime').value = "5"; 
+            const sel = document.getElementById('inpTime');
+            if (sel) sel.value = "5";
+        } else if (isPhotoSort && switchState.flash && !userOverrideFlash) {
+            // 一开始输入“整理”时可能被判成速办，
+            // 但进一步变成“整理照片”后，我们自动纠正：关掉速办 + 把时间调回 30m
+            toggleSwitch('flash', false);
+            const sel = document.getElementById('inpTime');
+            if (sel && sel.value === "5") sel.value = "30";
         }
     }
 
@@ -1480,21 +1782,30 @@
             let subtype = batchSubtype;
 
             let isFrog = false; 
-            if (title.startsWith('*') || title.startsWith('＊')) { 
-                isFrog = true; 
-                title = title.substring(1).trim(); 
+            // 重要事项标记：支持 行首 * / ＊ / ! / ！ / “重要 ”
+            let rawTitle = title.trimStart();
+            const importantMarkers = ['*', '＊', '!', '！'];
+            if (importantMarkers.some(m => rawTitle.startsWith(m))) {
+                isFrog = true;
+                rawTitle = rawTitle.substring(1).trim();
+            } else if (rawTitle.startsWith('重要')) {
+                isFrog = true;
+                rawTitle = rawTitle.replace(/^重要\s*/, '').trim();
             }
+            title = rawTitle;
 
             // ⭐ 修改点 2（核心）：如果用户没有手动覆盖速办，则允许关键词/时间自动判定；
             // 一旦 userOverrideFlash 为 true，就完全尊重当前开关状态，不再被“整理”等关键词强制拉回速办。
             let isQuick = switchState.flash; 
-            if (!userOverrideFlash) { 
-                if (!isQuick) { 
-                    if (/(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(title)) isQuick = true; 
-                    if (timeVal && timeVal <= 5) isQuick = true; 
-                }
-            }
-
+if (!userOverrideFlash) { 
+    if (!isQuick) { 
+        const isPhotoSort = title.includes('整理') && title.includes('照片');
+        if (!isPhotoSort && /(洗|刷|发|联系|通知|拿|取|拆|装|擦|扫|倒|收|理|整理|收拾|浇|喂|剪|充|拖|换|叠|铺|挂|扔|喝)/.test(title)) {
+            isQuick = true; 
+        }
+        if (timeVal && timeVal <= 5) isQuick = true; 
+    }
+}
             if (!timeVal) { 
                 timeVal = parseInt(document.getElementById('inpTime').value); 
                 if (type === 'vinyl' && !isQuick) timeVal = 0; 
@@ -1511,7 +1822,7 @@
                 else if (title.includes('书') || title.includes('读') || title.includes('阅') || title.includes('杂志') || title.includes('周刊')) subtype = 'book'; 
             }
 
-            title = title.replace(/^(去|看|读|听|写|做)\s*/, '').trim();
+            title = title.replace(/^(去|看|读|听|做)\s*/, '').trim();
             if (!isQuick && (type === 'culture' || type === 'vinyl')) { 
                 if (!title.startsWith('《') && !title.endsWith('》')) title = `《${title}》`; 
             }
@@ -1565,7 +1876,7 @@
     function tryResetAll() { 
         if(confirm("⚠️ 确定清空？")) { 
             db = []; archive = []; dailyLog = []; userStats = { willpower: 0, joy: 0 }; 
-            save(); renderList(); renderArchive(); renderLog(); updateStatsUI(); showToast("已格式化"); 
+            save(); renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI(); showToast("已格式化"); 
         } 
     }
 
@@ -1640,17 +1951,32 @@
     }
 
     // 根据 APP_VARIANT 调整 UI（personal / common）
-    function applyVariant() {
-        if (typeof APP_VARIANT === 'undefined') return;
-        var vinylTab = document.getElementById('mode-tab-vinyl');
-        if (vinylTab) {
-            vinylTab.style.display = (APP_VARIANT === 'common') ? 'none' : '';
-        }
-        var vinylTag = document.getElementById('tag-vinyl');
-        if (vinylTag) {
-            vinylTag.style.display = (APP_VARIANT === 'common') ? 'none' : '';
-        }
+function applyVariant() {
+    if (typeof APP_VARIANT === 'undefined') return;
+
+    // 1）根据 variant 给 body 加 class，方便 CSS 区分配色
+    document.body.classList.remove('variant-personal', 'variant-common');
+    document.body.classList.add(APP_VARIANT === 'common' ? 'variant-common' : 'variant-personal');
+
+    // 2）原来的唱片入口显隐逻辑
+    var vinylTab = document.getElementById('mode-tab-vinyl');
+    if (vinylTab) {
+        vinylTab.style.display = (APP_VARIANT === 'common') ? 'none' : '';
     }
+    var vinylTag = document.getElementById('tag-vinyl');
+    if (vinylTag) {
+        vinylTag.style.display = (APP_VARIANT === 'common') ? 'none' : '';
+    }
+}
+
+/* --- 页面载入后自动选择筛选默认值 --- */
+document.addEventListener("DOMContentLoaded", function() {
+    const ctx = document.getElementById("selContext");
+    const time = document.getElementById("selTime");
+    if (ctx) ctx.value = "desktop";  // 书桌前
+    if (time) time.value = "120";    // 2小时+
+});
+
 
 </script>
 </body>
