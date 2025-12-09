@@ -507,6 +507,94 @@
     font-size: 0.8rem;
 }
 
+/* 冷库卡片：和历史记录风格一致，但整体更低调一点 */
+.section-cold {
+    margin-top: 8px;
+}
+
+.section-cold details {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+    margin-bottom: 0;
+}
+
+.section-cold summary {
+    padding: 10px 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #444;
+    display: flex;
+   justify-content: flex-start;
+    align-items: center;
+}
+
+.section-cold summary span:last-child {
+    margin-left: auto;
+}
+
+.section-cold .manual-content {
+    border-top: 1px solid #eee;
+    padding: 6px 8px 10px;
+    font-size: 0.8rem;
+}
+/* 冷库操作弹窗整体背景：尽量轻，不要抢戏 */
+.cold-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    display: none;                 /* 默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.08);  /* 轻微灰幕 */
+    z-index: 999;
+}
+
+/* 中间的小卡片本体 */
+.cold-dialog {
+    background: #fff;
+    border-radius: 18px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    width: 86%;
+    max-width: 320px;
+    box-sizing: border-box;
+    font-size: 0.85rem;
+}
+
+.cold-dialog-title {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* 三个按钮横排 */
+.cold-dialog-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.cold-dialog-buttons button {
+    flex: 1;
+    padding: 6px 8px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+/* 三个按钮稍微区分一下色调，但都保持柔和 */
+.cold-btn-delete {
+    background: #ffecec;
+}
+
+.cold-btn-cold {
+    background: #e7f4ff;
+}
+
+.cold-btn-cancel {
+    background: #f5f5f5;
+}
+
 /* 让整个 03 区下面不要留太多空白 */
 .section-list {
     padding-bottom: 20px;
@@ -673,6 +761,37 @@
             color: #555;
             margin-bottom: 4px;
         }
+.section-title.section-title-ritual {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ritual-icons {
+    display: flex;
+    gap: 4px;
+}
+
+.ritual-icon-btn {
+    min-width: 40px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.10);
+    background: #fffaf5;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.75;          /* 默认淡一点 */
+}
+
+.ritual-icon-btn.dimmed {
+    opacity: 0.3;           /* 完成后变更淡 */
+}
+
 /* === 根据 APP_VARIANT 切换 意志力 / 小确幸 配色 === */
 
 /* personal：一绿一桃（你现在这版的感觉） */
@@ -719,6 +838,114 @@ body.variant-common .stat-btn.joy {
             color: #777;
             margin-bottom: 8px;
         }
+/* 🌅🌙 仪式区小按钮 */
+        .ritual-shortcuts {
+            display: flex;
+            gap: 6px;
+            margin: 6px 0 4px;
+            font-size: 0.8rem;
+        }
+        .ritual-btn {
+            flex: 1;
+            padding: 4px 6px;
+            border-radius: 999px;
+            border: 1px dashed rgba(0,0,0,0.08);
+            background: #fffaf5;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+/* 🌅🌙 仪式卡片：作为抽取区里的普通一张卡 */
+#ritualOverlay {
+    display: none;          /* 默认不显示 */
+    width: 100%;            /* ✅ 关键：让外层容器占满结果区宽度 */
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+
+.ritual-card {
+    width: 100%;
+    max-width: 560px;       /* 和 resultCard 一致 */
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 26px;    /* 和 resultCard 一样 */
+    box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+    padding: 34px 26px;     /* 和 resultCard 一样 */
+    box-sizing: border-box;
+    text-align: center;     /* 和结果卡一样，主标题居中 */
+}
+
+/* 顶部大图标，复用 card-icon 的感觉 */
+.ritual-card .card-icon {
+    font-size: 4.4rem;      /* 和 .card-icon 相同 */
+    display: block;
+    margin-bottom: 12px;
+}
+
+/* 标题，简洁一点 */
+.ritual-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+/* 中间 checklist 文本改为左对齐，并稍微收窄一下宽度 */
+.ritual-steps {
+    margin: 6px 0 16px;
+    padding-left: 1.2rem;
+    max-height: 220px;      /* ✅ 为 6–7 条预留更高的可视区域 */
+    overflow-y: auto;
+    font-size: 0.9rem;      /* 和 card-desc 接近，读起来更舒服 */
+    line-height: 1.6;
+    text-align: left;
+}
+
+.ritual-steps li {
+    margin-bottom: 4px;     /* 稍微紧凑一点，7 条也不会太长 */
+}
+
+
+/* 底部两个按钮，和其他卡片按钮风格统一 */
+.ritual-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.ritual-actions button {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;     /* 防止“✅ 仪式完成”换行 */
+}
+
+.ritual-btn-primary {
+    background: var(--bg-pink);
+}
+
+.ritual-btn-secondary {
+    background: #f5f5f5;
+}
+
+
+.ritual-step-checkbox {
+    width: 14px;
+    height: 14px;
+}
+
+.ritual-steps li label span.completed {
+    text-decoration: line-through;
+    color: #999;
+}
+
 </style>
 </head>
 <body>
@@ -734,7 +961,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.4 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.5 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -752,7 +979,19 @@ body.variant-common .stat-btn.joy {
 
     <!-- 抽取区 -->
     <div class="hero-wrapper">
-        <div class="section-title">01 · 抽签装置（筛选 + 抽卡）</div>
+        <div class="section-title section-title-ritual">
+    <span>01 · 抽签装置（筛选 + 抽卡）</span>
+    <div class="ritual-icons">
+        <button class="ritual-icon-btn" data-ritual="morning"
+                onclick="openRitual('morning')" aria-label="起床起飞">
+            🌅
+        </button>
+        <button class="ritual-icon-btn" data-ritual="night"
+                onclick="openRitual('night')" aria-label="睡前着陆">
+            🌙
+        </button>
+    </div>
+</div>
         <div class="section-filter" id="filterSec">
         <div id="controls-normal" class="control-group">
             <div class="select-wrapper">
@@ -795,6 +1034,33 @@ body.variant-common .stat-btn.joy {
             </div>
             <div class="gm-caption">命运转一转，看看今天的锚点…</div>
         </div>
+
+    <!-- 🌅🌙 起飞 / 着陆仪式卡片 -->
+        <div id="ritualOverlay">
+        <div class="ritual-card">
+            <!-- 顶部大图标，和抽卡结果的 card-icon 一致 -->
+            <span class="card-icon" id="ritualIcon">🌅</span>
+
+            <!-- 标题，只写“起床起飞 / 睡前着陆” -->
+            <div class="ritual-title" id="ritualTitle">起床起飞</div>
+
+            <!-- 中间 checklist -->
+            <ul class="ritual-steps" id="ritualSteps">
+                <!-- 这里的步骤会用 JS 填充 -->
+            </ul>
+
+            <!-- 底部按钮区 -->
+            <div class="ritual-actions">
+                <button class="ritual-btn-secondary" type="button" onclick="closeRitual()">
+                    先关掉
+                </button>
+                <button class="ritual-btn-primary" type="button" onclick="completeRitual()">
+                    ✅ 仪式完成
+                </button>
+            </div>
+        </div>
+    </div>
+
 
         <!-- 结果卡片 -->
         <div id="resultCard" class="card">
@@ -918,6 +1184,45 @@ body.variant-common .stat-btn.joy {
             </div>
         </div>
 
+        <!-- 冷库：暂时退场的任务 -->
+        <div class="section-cold" style="margin-top:12px;">
+            <details id="coldDetails">
+                <summary>
+    <span style="font-size:0.9rem; font-weight:bold;">🧊 冷库</span>
+    <span style="margin-left:auto; margin-right:8px; display:flex; align-items:center; font-size:0.75rem; color:#999;">
+        <span>(</span>
+        <span id="coldCount">0</span>
+        <span>)</span>
+    </span>
+</summary>
+                <div class="manual-content" id="coldContent">
+                    <p style="font-size:0.78rem; color:#777; margin-bottom:6px;">
+                        暂时退场的任务，不会被抽到。需要时可以赦免回库或彻底删除。
+                    </p>
+                    <ul id="coldList" class="task-list" style="max-height:160px; overflow-y:auto; margin-top:4px;"></ul>
+                </div>
+            </details>
+        </div>
+    <!-- 冷库操作小弹窗：选择 删除 / 冷库 / 取消 -->
+    <div id="coldDialog" class="cold-dialog-backdrop">
+        <div class="cold-dialog">
+            <div class="cold-dialog-title">
+                要怎么处理这条任务？
+            </div>
+            <div class="cold-dialog-buttons">
+                <button type="button" class="cold-btn-delete" onclick="confirmColdAction('delete')">
+                    🗑️ 删除
+                </button>
+                <button type="button" class="cold-btn-cold" onclick="confirmColdAction('cold')">
+                    🧊 冷库
+                </button>
+                <button type="button" class="cold-btn-cancel" onclick="confirmColdAction('cancel')">
+                    🔙 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
         <!-- 历史记录（最近完成） -->
         <div class="section-history" style="margin-top:12px;">
             <details id="historyDetails">
@@ -979,12 +1284,45 @@ body.variant-common .stat-btn.joy {
                     <li><b>v5.2：</b> 功能分区重新规划 更加清晰明了。</li>
                     <li><b>v5.3：</b> 增加“正在进行中…”；增加30天历史记录；添加重要任务时可以通过“*”/“!”/“重要”加空格 开启。</li>
                     <li><b>v5.4：</b> 关键词修订：输入“看/影”开头：识别为电影；“读/书”开头：识别为书籍；“追/剧”开头：识别为剧集。</li>
-
+                    <li><b>v5.5：</b> 增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；增加冷库功能：任务封存，暂时不被抽到（可恢复）</li>
 
                 </ul>
             </div>
         </details>
     </div>
+    <!-- 起飞 & 着陆仪式编辑 -->
+    <div class="section-settings">
+        <details>
+            <summary>📝 起飞 / 着陆仪式编辑</summary>
+            <div class="manual-content">
+                <div style="font-size:0.8rem; color:#666; margin-bottom:6px;">
+                    每行代表一个步骤，可以修改、删减或增加；如果全部留空，会自动恢复默认模板。
+                </div>
+
+                <div style="font-size:0.8rem; font-weight:bold; margin:6px 0 4px;">
+                    🌅 起床起飞
+                </div>
+                <textarea id="ritualMorningInput"
+                          placeholder="例如：&#10;起身离开床&#10;拉开窗帘 / 开灯&#10;喝一口水&#10;走到书桌 / 固定角落"></textarea>
+
+                <div style="font-size:0.8rem; font-weight:bold; margin:10px 0 4px;">
+                    🌙 睡前着陆
+                </div>
+                <textarea id="ritualNightInput"
+                          placeholder="例如：&#10;手机充电并远离床边&#10;喝一口水 / 吃药&#10;关窗帘 / 灯&#10;写一句“明天想做的事”"></textarea>
+
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="btn-file" style="flex:1;" type="button" onclick="saveRitualFromInputs()">
+                        💾 保存仪式
+                    </button>
+                    <button class="btn-outline" style="flex:1;" type="button" onclick="resetRitualToDefault()">
+                        ✨ 恢复默认
+                    </button>
+                </div>
+            </div>
+        </details>
+    </div>
+
 <!-- 设置 & 备份 -->
     <div class="section-settings" id="settingSec">
         <details>
@@ -1013,7 +1351,6 @@ body.variant-common .stat-btn.joy {
             Anchor · by scc 🌊
         </div>
     </div>
-
 <script>
     // ===== Anchor Variant Switch =====
     // 'personal' 显示唱片相关功能；'common' 隐藏唱片相关功能
@@ -1033,7 +1370,10 @@ body.variant-common .stat-btn.joy {
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
     const KEY_STATS = 'anchor_live_stats';
-    const KEY_VISITED = 'anchor_has_visited_v54_personal';
+    const KEY_VISITED = 'anchor_has_visited_v55_personal';
+    const KEY_RITUAL_MORNING = 'anchor_ritual_morning_v55';
+    const KEY_RITUAL_NIGHT  = 'anchor_ritual_night_v55';
+
 
     const defaultDB = [
         { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
@@ -1044,8 +1384,53 @@ body.variant-common .stat-btn.joy {
     let archive = JSON.parse(localStorage.getItem(KEY_ARCHIVE)) || [];
     let dailyLog = JSON.parse(localStorage.getItem(KEY_LOG)) || [];
     let userStats = JSON.parse(localStorage.getItem(KEY_STATS)) || { willpower: 0, joy: 0 };
+            // 🌅🌙 起飞 / 着陆默认步骤（默认模板）
+    const ritualMorningDefault = [
+        '起身离开床',
+        '拉开窗帘 / 开灯',
+        '喝一口水',
+        '走到书桌 / 固定角落'
+    ];
+
+    const ritualNightDefault = [
+        '手机充电并远离床边',
+        '喝一口水 / 吃药',
+        '关窗帘 / 灯',
+        '写一句“明天想做的事”'
+    ];
+
+    // 当前实际使用的步骤数组（允许被用户自定义覆盖）
+    let ritualMorningSteps = ritualMorningDefault.slice();
+    let ritualNightSteps   = ritualNightDefault.slice();
+
+    let currentRitualType = null; // 'morning' | 'night'
     
-    let recentHistory = []; 
+    let recentHistory = [];
+    // 冷库操作弹窗：当前要处理哪一条任务
+    let pendingColdId = null;
+
+    function loadRitualSettings() {
+        try {
+            const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
+            const storedNight   = localStorage.getItem(KEY_RITUAL_NIGHT);
+
+            if (storedMorning) {
+                const parsed = JSON.parse(storedMorning);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    ritualMorningSteps = parsed;
+                }
+            }
+            if (storedNight) {
+                const parsed = JSON.parse(storedNight);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    ritualNightSteps = parsed;
+                }
+            }
+        } catch (e) {
+            console.warn('加载仪式设置出错', e);
+        }
+    }
+
     let mode = 'normal';
     let currentTask = null;
     let currentStatus = 'idle';
@@ -1057,6 +1442,8 @@ body.variant-common .stat-btn.joy {
     let userOverrideFlash = false;
 
     document.addEventListener('DOMContentLoaded', () => {
+        // 先读取可能存在的自定义仪式
+        loadRitualSettings();
         if(db.length === 0 && archive.length === 0) {
             if (typeof APP_VARIANT !== 'undefined' && APP_VARIANT === 'common') {
                 db = defaultDB.filter(item => item.type !== 'vinyl');
@@ -1068,11 +1455,30 @@ body.variant-common .stat-btn.joy {
         renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI(); 
         setMode('normal');
                 if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v5.4（通用版）！\n\n🆕 最近更新：\n- \"看/影\" 开头：识别为电影\n- \"读/书\" 开头：识别为书籍\n- \"追/剧\" 开头：识别为剧集");
+            alert("👋 欢迎来到 Anchor v5.5（通用版）！\n\n🆕 最近更新：\n- \增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；\n- \增加冷库功能：任务封存，暂时不被抽到（可恢复）。");
             localStorage.setItem(KEY_VISITED, 'true');
         }
         applyVariant();
+
+        // 初始化仪式编辑区文本：把当前使用的步骤写进文本框
+        const inputMorning = document.getElementById('ritualMorningInput');
+        const inputNight   = document.getElementById('ritualNightInput');
+        if (inputMorning) inputMorning.value = ritualMorningSteps.join('\n');
+        if (inputNight)   inputNight.value   = ritualNightSteps.join('\n');
 });
+
+        // 🌅🌙 仪式步骤：勾选时给文字加上划线
+        const ritualStepsEl = document.getElementById('ritualSteps');
+        if (ritualStepsEl) {
+            ritualStepsEl.addEventListener('change', function (e) {
+                const checkbox = e.target;
+                if (!checkbox.classList.contains('ritual-step-checkbox')) return;
+                const span = checkbox.nextSibling;
+                if (span && span.nodeType === 1) {
+                    span.classList.toggle('completed', checkbox.checked);
+                }
+            });
+        }
 
     function scrollToSettings() {
         const sec = document.getElementById('settingSec');
@@ -1089,11 +1495,16 @@ body.variant-common .stat-btn.joy {
     function renderList() {
         const dailyList = document.getElementById('dailyList');
         const mediaList = document.getElementById('mediaList');
-        if(!dailyList || !mediaList) return; 
-        dailyList.innerHTML = ""; mediaList.innerHTML = "";
-        let dCount = 0, mCount = 0;
+        const coldList  = document.getElementById('coldList');
+        if (!dailyList || !mediaList) return;
+
+        dailyList.innerHTML = "";
+        mediaList.innerHTML = "";
+        if (coldList) coldList.innerHTML = "";
+
+        let dCount = 0, mCount = 0, cCount = 0;
         const todayStr = new Date().toDateString();
-        const sortedDB = [...db].sort((a,b) => b.id - a.id);
+        const sortedDB = [...db].sort((a, b) => b.id - a.id);
 
         sortedDB.forEach(item => {
             const li = document.createElement('li');
@@ -1102,16 +1513,36 @@ body.variant-common .stat-btn.joy {
             if (isDoneToday) li.classList.add('task-status-done');
 
             const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
-            const cycleBadge = item.recurrence === 'daily' ? 
-                (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`) : '';
-            
+            const cycleBadge = item.recurrence === 'daily'
+                ? (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`)
+                : '';
+
             let extraBadges = "";
-            if(item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
-            if(item.isQuick) extraBadges += `<span class="list-badge lb-flash">⚡️</span>`;
+            if (item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
+            if (item.isQuick) extraBadges += `<span class="list-badge lb-flash">⚡️</span>`;
 
             let tDisplay = "";
             if (item.time === 0) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">任意</span>`;
             else if (item.time) tDisplay = `<span style="font-size:0.7rem;color:#ccc;margin-left:5px;">${item.time}m</span>`;
+
+            const isCold = item.inColdStorage === true;
+
+            let actionHtml = "";
+            if (isCold) {
+                actionHtml = `
+                <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#ccc;">
+                    <span class="task-restore" style="cursor:pointer;" onclick="restoreFromColdStorage(${item.id})">♻️</span>
+                    <span class="task-del" style="cursor:pointer;" onclick="tryDeleteItem(${item.id})">🗑️</span>
+                </div>
+                `;
+            } else {
+    actionHtml = `
+    <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#ccc;">
+        <span class="task-cold" style="cursor:pointer;" onclick="handleColdOrDelete(${item.id})">🧊</span>
+    </div>
+    `;
+}
+
 
             li.innerHTML = `
                 <div style="display:flex;align-items:center;gap:5px;">
@@ -1119,19 +1550,38 @@ body.variant-common .stat-btn.joy {
                     <span style="font-size:0.9rem;color:#555;">${item.title}</span>
                     ${seriesBadge}${cycleBadge}${extraBadges}${tDisplay}
                 </div>
-                <div class="task-del" style="font-size:0.75rem;color:#ccc;cursor:pointer;" onclick="tryDeleteItem(${item.id})">🗑️</div>
+                ${actionHtml}
             `;
 
-            if (item.type === 'culture' || item.type === 'vinyl') { 
-                mediaList.appendChild(li); 
-                mCount++; 
-            } else { 
-                dailyList.appendChild(li); 
-                dCount++; 
+            if (isCold) {
+                if (coldList) {
+                    coldList.appendChild(li);
+                    cCount++;
+                }
+            } else if (item.type === 'culture' || item.type === 'vinyl') {
+                mediaList.appendChild(li);
+                mCount++;
+            } else {
+                dailyList.appendChild(li);
+                dCount++;
             }
         });
-        document.getElementById('dailyCount').innerText = dCount;
-        document.getElementById('mediaCount').innerText = mCount;
+
+        const dailyCountEl = document.getElementById('dailyCount');
+        const mediaCountEl = document.getElementById('mediaCount');
+        const coldCountEl  = document.getElementById('coldCount');
+
+        if (dailyCountEl) dailyCountEl.innerText = dCount;
+        if (mediaCountEl) mediaCountEl.innerText = mCount;
+        if (coldCountEl) coldCountEl.innerText = cCount;
+
+        const coldContent = document.getElementById('coldContent');
+        if (coldContent) {
+            const infoP = coldContent.querySelector('p');
+            if (infoP) {
+                infoP.style.display = cCount === 0 ? 'block' : 'none';
+            }
+        }
     }
 
     function renderArchive() {
@@ -1585,6 +2035,11 @@ function playGachaAnimation(result) {
     function draw() {
         const card = document.getElementById('resultCard'); 
         if (card) card.style.display = 'none';
+
+        // 👉 如果有起床/睡前仪式卡在，就先关掉
+        const overlay = document.getElementById('ritualOverlay');
+        if (overlay) overlay.style.display = 'none';
+
         if (mode !== 'sos' && gachaAnimating) return;
 
         setTimeout(() => {
@@ -1597,6 +2052,7 @@ function playGachaAnimation(result) {
                 const limitTime = parseInt(document.getElementById('selTime').value); 
                 const todayStr = new Date().toDateString();
                 let validPool = db.filter(item => {
+                    if (item.inColdStorage) return false;
                     if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
                     const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
                     const isFlexible = (tTime === 0);
@@ -1635,7 +2091,137 @@ function playGachaAnimation(result) {
         }, 300);
     }
 
-    
+    // 🌅🌙 起飞 / 着陆：打开浮层
+        function dimRitualButton(type) {
+        if (!type) return;
+        const selector = type === 'morning'
+            ? '.ritual-icon-btn[data-ritual="morning"]'
+            : '.ritual-icon-btn[data-ritual="night"]';
+        const btn = document.querySelector(selector);
+        if (btn) {
+            btn.classList.add('dimmed');
+        }
+    }
+function openRitual(type) {
+    currentRitualType = type; // 'morning' or 'night'
+    const overlay = document.getElementById('ritualOverlay');
+    const titleEl = document.getElementById('ritualTitle');
+    const iconEl  = document.getElementById('ritualIcon');
+    const listEl  = document.getElementById('ritualSteps');
+    if (!overlay || !titleEl || !listEl) return;
+
+    const steps = type === 'morning' ? ritualMorningSteps : ritualNightSteps;
+
+    // 顶部大图标 + 简短标题
+    if (iconEl) {
+        iconEl.textContent = (type === 'morning') ? '🌅' : '🌙';
+    }
+    titleEl.textContent = (type === 'morning') ? '起床起飞' : '睡前着陆';
+
+
+    // 先把其他结果区状态都收起来
+    const resultCard = document.getElementById('resultCard');
+    const placeholder = document.getElementById('placeholder');
+    const gachaLayer = document.getElementById('gachaLayer');
+
+    if (resultCard) resultCard.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'none';
+    if (gachaLayer) gachaLayer.style.display = 'none';
+
+    // 清空并生成步骤（保持你之前勾选逻辑）
+    listEl.innerHTML = '';
+    steps.forEach((text, index) => {
+        if (!text) return;
+        const li = document.createElement('li');
+
+        const label = document.createElement('label');
+        label.style.display = 'flex';
+        label.style.alignItems = 'center';
+        label.style.gap = '6px';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'ritual-step-checkbox';
+
+        const span = document.createElement('span');
+        span.textContent = text;
+
+        label.appendChild(checkbox);
+        label.appendChild(span);
+        li.appendChild(label);
+        listEl.appendChild(li);
+    });
+
+    // 显示仪式卡片
+    overlay.style.display = 'block';
+
+    // 仪式不是“任务抽卡”，所以清掉 currentTask
+    if (typeof currentTask !== 'undefined') {
+        currentTask = null;
+    }
+}
+
+    // 关闭浮层（不写入足迹）
+    function closeRitual() {
+    const overlay = document.getElementById('ritualOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // 仪式结束后，恢复默认占位 & 扭蛋机
+    const placeholder = document.getElementById('placeholder');
+    const gachaLayer = document.getElementById('gachaLayer');
+    const resultCard = document.getElementById('resultCard');
+
+    if (placeholder) placeholder.style.display = 'block';
+    if (gachaLayer) gachaLayer.style.display = 'block';
+    if (resultCard) resultCard.style.display = 'none';
+
+    currentRitualType = null;
+}
+
+
+    // 完成仪式：在今日足迹写一条记录
+    function completeRitual() {
+        if (!currentRitualType) {
+            closeRitual();
+            return;
+        }
+
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        const icon = currentRitualType === 'morning' ? '🌅' : '🌙';
+        const title = currentRitualType === 'morning' ? '起床起飞' : '睡前着陆';
+
+        dailyLog.unshift({
+            title: title,
+            icon: icon,
+            timeStr: timeStr,
+            date: now.toDateString(),
+            done: true
+        });
+
+        save();
+        renderLog();
+        if (typeof renderHistory === 'function') renderHistory();
+
+               const overlay = document.getElementById('ritualOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // 完成后恢复默认占位 & 扭蛋机
+    const placeholder = document.getElementById('placeholder');
+    const gachaLayer = document.getElementById('gachaLayer');
+    const resultCard = document.getElementById('resultCard');
+
+    if (placeholder) placeholder.style.display = 'block';
+    if (gachaLayer) gachaLayer.style.display = 'block';
+    if (resultCard) resultCard.style.display = 'none';
+
+    // 本次会话内，让对应的小图标淡一些
+    dimRitualButton(currentRitualType);
+
+    showToast(icon === '🌅' ? '🌅 起飞啦！' : '🌙 着陆完成');
+    currentRitualType = null;
+}
+   
 function finishTask() {
         if (!currentTask) return;
 
@@ -2134,6 +2720,66 @@ if (!userOverrideFlash) {
             save(); renderList(); showToast("🗑️ 已删除"); 
         } 
     }
+       // 点击任务列表里的冰块：打开弹窗，后续具体操作在 confirmColdAction 里执行
+    function handleColdOrDelete(id) {
+        const item = db.find(t => t.id === id);
+        if (!item) return;
+        pendingColdId = id;
+
+        const dlg = document.getElementById('coldDialog');
+        if (dlg) {
+            dlg.style.display = 'flex';
+        }
+    }
+    // 弹窗中点击三个按钮之一：delete / cold / cancel
+    function confirmColdAction(action) {
+        const dlg = document.getElementById('coldDialog');
+        if (dlg) {
+            dlg.style.display = 'none';
+        }
+
+        const id = pendingColdId;
+        pendingColdId = null;
+        if (!id) return;
+
+        if (action === 'cold') {
+            // 直接移入冷库
+            moveToColdStorage(id);
+            } else if (action === 'delete') {
+        // 删除再做一次确认，避免误删
+        const ok = confirm("确定要彻底删除这条任务吗？\n此操作不可恢复。");
+        if (ok) {
+            // 这里直接删除，不再走 tryDeleteItem（避免再弹一次确认）
+            db = db.filter(item => item.id !== id);
+            save();
+            renderList();
+            showToast("🗑️ 已删除");
+            }
+        } else {
+            // cancel：什么都不做
+            return;
+        }
+    }
+
+
+   function moveToColdStorage(id) {
+    const item = db.find(t => t.id === id);
+    if (!item) return;
+    item.inColdStorage = true;
+    save();
+    renderList();
+    showToast("🧊 已移入冷库");
+}
+
+
+    function restoreFromColdStorage(id) {
+        const item = db.find(t => t.id === id);
+        if (!item) return;
+        item.inColdStorage = false;
+        save();
+        renderList();
+        showToast("♻️ 已从冷库赦免");
+    }
 
     function deleteArchiveItem(index) {
         if (index < 0 || index >= archive.length) return;
@@ -2195,6 +2841,52 @@ if (!userOverrideFlash) {
             executeImport(); 
         }; 
         reader.readAsText(file); 
+    }
+    // 从编辑框保存起飞 / 着陆仪式到本地
+    function saveRitualFromInputs() {
+        const inputMorning = document.getElementById('ritualMorningInput');
+        const inputNight   = document.getElementById('ritualNightInput');
+        if (!inputMorning || !inputNight) return;
+
+        const mLines = inputMorning.value
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean);   // 去掉空行
+        const nLines = inputNight.value
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean);
+
+        // 如果用户全删空，就退回默认模板，避免出现“空仪式”
+        ritualMorningSteps = mLines.length ? mLines : ritualMorningDefault.slice();
+        ritualNightSteps   = nLines.length ? nLines : ritualNightDefault.slice();
+
+        try {
+            localStorage.setItem(KEY_RITUAL_MORNING, JSON.stringify(ritualMorningSteps));
+            localStorage.setItem(KEY_RITUAL_NIGHT,  JSON.stringify(ritualNightSteps));
+        } catch (e) {
+            console.warn('保存仪式设置出错', e);
+        }
+
+        showToast('📝 已更新起飞 / 着陆仪式');
+    }
+
+    // 恢复为默认模板
+    function resetRitualToDefault() {
+        ritualMorningSteps = ritualMorningDefault.slice();
+        ritualNightSteps   = ritualNightDefault.slice();
+
+        try {
+            localStorage.removeItem(KEY_RITUAL_MORNING);
+            localStorage.removeItem(KEY_RITUAL_NIGHT);
+        } catch (e) {}
+
+        const inputMorning = document.getElementById('ritualMorningInput');
+        const inputNight   = document.getElementById('ritualNightInput');
+        if (inputMorning) inputMorning.value = ritualMorningSteps.join('\n');
+        if (inputNight)   inputNight.value   = ritualNightSteps.join('\n');
+
+        showToast('✨ 已恢复默认仪式');
     }
 
     function exportToFile() { 
