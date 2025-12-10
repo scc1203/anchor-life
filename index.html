@@ -476,6 +476,11 @@
         summary { padding: 15px; font-weight: bold; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #444; }
         summary::after { content: '+'; font-size: 1.2rem; font-weight: normal; color: #999; }
         details[open] summary::after { content: '-'; }
+	/* 冷库这一行的 +/- 单独调小一点，并微调垂直位置 */
+	.section-cold summary::after {
+    	position: relative;
+    	top: -1px;            /* 如果感觉还是略高，可以改成 2px 试试 */
+}
         .manual-content { padding: 0 15px 20px 15px; border-top: 1px solid #eee; font-size: 0.85rem; }
         .manual-h3 { font-weight: bold; color: #333; margin: 15px 0 5px 0; }
         .manual-tag { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 0 2px; }
@@ -897,10 +902,13 @@ body.variant-common .stat-btn.joy {
 /* 中间 checklist 文本改为左对齐，并稍微收窄一下宽度 */
 .ritual-steps {
     margin: 6px 0 16px;
-    padding-left: 1.2rem;
-    max-height: 220px;      /* ✅ 为 6–7 条预留更高的可视区域 */
+    /* 去掉 ul 自带的项目符号和额外缩进 */
+    list-style: none;
+    padding-left: 0;
+
+    max-height: 220px;
     overflow-y: auto;
-    font-size: 0.9rem;      /* 和 card-desc 接近，读起来更舒服 */
+    font-size: 0.9rem;
     line-height: 1.6;
     text-align: left;
 }
@@ -961,7 +969,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.5 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.6 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -1185,24 +1193,24 @@ body.variant-common .stat-btn.joy {
         </div>
 
         <!-- 冷库：暂时退场的任务 -->
-        <div class="section-cold" style="margin-top:12px;">
-            <details id="coldDetails">
-                <summary>
-    <span style="font-size:0.9rem; font-weight:bold;">🧊 冷库</span>
-    <span style="margin-left:auto; margin-right:8px; display:flex; align-items:center; font-size:0.75rem; color:#999;">
-        <span>(</span>
-        <span id="coldCount">0</span>
-        <span>)</span>
-    </span>
-</summary>
-                <div class="manual-content" id="coldContent">
-                    <p style="font-size:0.78rem; color:#777; margin-bottom:6px;">
-                        暂时退场的任务，不会被抽到。需要时可以赦免回库或彻底删除。
-                    </p>
-                    <ul id="coldList" class="task-list" style="max-height:160px; overflow-y:auto; margin-top:4px;"></ul>
-                </div>
-            </details>
+<div class="section-cold" style="margin-top:12px;">
+    <details id="coldDetails">
+        <summary>
+            <!-- 标题字号和历史记录对齐：0.95rem + 加粗 -->
+            <span style="font-size:0.95rem; font-weight:bold;">🧊 冷库</span>
+            <!-- 在原基础上增加 margin-right:6px，让括号和 + 拉开一点 -->
+            <span style="font-size:0.8rem; color:#999; margin-left:auto; margin-right:6px;">
+                (<span id="coldCount">0</span>)
+            </span>
+        </summary>
+        <div class="manual-content" id="coldContent">
+            <p style="font-size:0.78rem; color:#777; margin-bottom:6px;">
+                暂时退场的任务，不会被抽到。需要时可以赦免回库或彻底删除。
+            </p>
+            <ul id="coldList" class="task-list" style="max-height:160px; overflow-y:auto; margin-top:4px;"></ul>
         </div>
+    </details>
+</div>
     <!-- 冷库操作小弹窗：选择 删除 / 冷库 / 取消 -->
     <div id="coldDialog" class="cold-dialog-backdrop">
         <div class="cold-dialog">
@@ -1285,6 +1293,7 @@ body.variant-common .stat-btn.joy {
                     <li><b>v5.3：</b> 增加“正在进行中…”；增加30天历史记录；添加重要任务时可以通过“*”/“!”/“重要”加空格 开启。</li>
                     <li><b>v5.4：</b> 关键词修订：输入“看/影”开头：识别为电影；“读/书”开头：识别为书籍；“追/剧”开头：识别为剧集。</li>
                     <li><b>v5.5：</b> 增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；增加冷库功能：任务封存，暂时不被抽到（可恢复）</li>
+		    <li><b>v5.6：</b> 点击任务库 & 媒体库房里的任务名称，可勾选直接完成。</li>
 
                 </ul>
             </div>
@@ -1455,7 +1464,7 @@ body.variant-common .stat-btn.joy {
         renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI(); 
         setMode('normal');
                 if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v5.5（通用版）！\n\n🆕 最近更新：\n- \增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；\n- \增加冷库功能：任务封存，暂时不被抽到（可恢复）。");
+            alert("👋 欢迎来到 Anchor v5.6（通用版）！\n\n🆕 最近更新：\n- \增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；\n- \增加冷库功能：任务封存，暂时不被抽到（可恢复）；\n- \点击任务库 & 媒体库房里的任务名称，可勾选直接完成。");
             localStorage.setItem(KEY_VISITED, 'true');
         }
         applyVariant();
@@ -1536,18 +1545,33 @@ body.variant-common .stat-btn.joy {
                 </div>
                 `;
             } else {
-    actionHtml = `
-    <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#ccc;">
-        <span class="task-cold" style="cursor:pointer;" onclick="handleColdOrDelete(${item.id})">🧊</span>
-    </div>
-    `;
-}
+                actionHtml = `
+                <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:#ccc;">
+                    <span class="task-cold" style="cursor:pointer;" onclick="handleColdOrDelete(${item.id})">🧊</span>
+                </div>
+                `;
+            }
 
+            // ⭐ 标题是否可点击（冷库不点，日常 & 媒体可点）
+            let titleSpanHtml;
+            if (isCold) {
+                // 冷库里只展示，不提供“直接完成”
+                titleSpanHtml = `<span style="font-size:0.9rem;color:#555;">${item.title}</span>`;
+            } else {
+                // 日常任务库 & 媒体库里的标题：可点击手动完成
+                titleSpanHtml = `
+                    <span
+                        style="font-size:0.9rem;color:#555;cursor:pointer;"
+                        title="点击标记今天已完成"
+                        onclick="manualCompleteFromList(${item.id})"
+                    >${item.title}</span>
+                `;
+            }
 
             li.innerHTML = `
                 <div style="display:flex;align-items:center;gap:5px;">
                     <span style="width:20px;text-align:center;">${getSmartIcon(item)}</span>
-                    <span style="font-size:0.9rem;color:#555;">${item.title}</span>
+                    ${titleSpanHtml}
                     ${seriesBadge}${cycleBadge}${extraBadges}${tDisplay}
                 </div>
                 ${actionHtml}
@@ -2222,67 +2246,78 @@ function openRitual(type) {
     currentRitualType = null;
 }
    
-function finishTask() {
-        if (!currentTask) return;
 
-        const card = document.getElementById('resultCard');
-        const statusEl = document.getElementById('rStatus');
-        const ingEl = document.getElementById('rIngPulse');
+    /**
+     * 通用完成逻辑核心：
+     * - task: 要完成的任务对象（可以来自 currentTask，也可以来自列表 db）
+     * - options.silentCard: true 时不动结果卡片 / 锚点状态（用于列表手动完成）
+     */
+    function completeTaskCore(task, options) {
+        if (!task) return;
 
-        // SOS 模式：只重置状态，不记入足迹/荣誉殿堂
-        if (currentTask.type === 'sos') { 
-            showToast("状态重启！🌱"); 
-            if (card) card.style.display = 'none'; 
-            currentTask = null;
-            if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
-            if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
-            if (statusEl) statusEl.style.display = 'none';
-            if (ingEl) ingEl.style.display = 'none';
-            return; 
+        const opts = options || {};
+        const silent = !!opts.silentCard;
+
+        // 只有在“不是 silent”的时候，才去操作结果卡片相关 DOM
+        const card     = silent ? null : document.getElementById('resultCard');
+        const statusEl = silent ? null : document.getElementById('rStatus');
+        const ingEl    = silent ? null : document.getElementById('rIngPulse');
+
+        // SOS 模式：只重置状态，不记入足迹/荣誉殿堂（理论上不会从列表触发）
+        if (task.type === 'sos') {
+            if (!silent) {
+                showToast("状态重启！🌱");
+                if (card) card.style.display = 'none';
+                currentTask = null;
+                if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+                if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+                if (statusEl) statusEl.style.display = 'none';
+                if (ingEl) ingEl.style.display = 'none';
+            }
+            return;
         }
 
         // 写入「今日足迹 / 历史记录」
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        dailyLog.unshift({ 
-            title: currentTask.title, 
-            icon: currentTask.icon || getSmartIcon(currentTask), 
-            timeStr: timeStr, 
+
+        dailyLog.unshift({
+            title: task.title,
+            icon: task.icon || getSmartIcon(task),
+            timeStr: timeStr,
             date: now.toDateString(),
             done: true
         });
 
         // 1）每日循环任务：只打卡，不出任务池
-        if (currentTask.recurrence === 'daily') {
-            const taskIndex = db.findIndex(t => t.id === currentTask.id);
+        if (task.recurrence === 'daily') {
+            const taskIndex = db.findIndex(t => t.id === task.id);
             if (taskIndex > -1) db[taskIndex].lastDone = now.toDateString();
-            renderLog(); 
+            renderLog();
             if (typeof renderHistory === 'function') renderHistory();
-            save(); 
-            renderList(); 
+            save();
+            renderList();
             showToast("✅ 今日打卡成功！");
-        } 
-                // 2）书 / 影 / 剧 等 culture 类：
-        //    - 电影（非系列）：一次性看完型，询问是否彻底看完
-        //    - 书 / 杂志 / 剧集等长线内容：每次完成一小节，都在荣誉殿堂记一笔，但任务继续留在媒体篮
-        else if (currentTask.type === 'culture') {
-            const subtype = currentTask.subtype || null;
-            const icon = currentTask.icon || getSmartIcon(currentTask);
-            const isSeries = !!currentTask.isSeries;
+        }
+        // 2）书 / 影 / 剧 等 culture 类
+        else if (task.type === 'culture') {
+            const subtype = task.subtype || null;
+            const icon = task.icon || getSmartIcon(task);
+            const isSeries = !!task.isSeries;
 
-            // ✅ 把“电影”的判断放宽：
+            // 把“电影”的判断放宽：
             // 1）subtype === 'movie'
             // 2）或者 图标就是 🎬
             const isMovie = (subtype === 'movie') || icon === '🎬';
 
             // 🎬 电影（非系列）：一次性看完
             if (isMovie && !isSeries) {
-                const ok = confirm(`《${currentTask.title}》这部电影彻底看完了吗？\n[确定]=归档 [取消]=仅记录本次观看`);
+                const ok = confirm(`《${task.title}》这部电影彻底看完了吗？\n[确定]=归档 [取消]=仅记录本次观看`);
                 if (ok) {
                     // 完整看完：从任务池删除，并进入荣誉殿堂
-                    db = db.filter(t => t.id !== currentTask.id);
+                    db = db.filter(t => t.id !== task.id);
                     archive.unshift({
-                        ...currentTask,
+                        ...task,
                         finishDate: now.toLocaleDateString()
                     });
                     save();
@@ -2302,48 +2337,87 @@ function finishTask() {
                 // 📚 书 / 杂志 / 剧集 / 其他长线文化内容：
                 // 不从媒体篮移除，只在荣誉殿堂记进度
                 archive.unshift({
-                    ...currentTask,
+                    ...task,
                     finishDate: now.toLocaleDateString()
                 });
                 save();
                 renderArchive();
                 showToast("📚 已记录到荣誉殿堂");
             }
-        } 
-
-        // 3）普通任务：完成后从任务池删除；
-        //    如果是重要任务（青蛙），同时放入荣誉殿堂（重要任务分区）
+        }
+        // 3）普通任务：完成后从任务池删除；如果是重要任务（青蛙），同时放入荣誉殿堂
         else {
-            db = db.filter(i => i.id !== currentTask.id);
+            db = db.filter(i => i.id !== task.id);
 
-            if (currentTask.isFrog) {
+            if (task.isFrog) {
                 archive.unshift({
-                    title: currentTask.title,
+                    title: task.title,
                     type: 'important',
                     isFrog: true,
-                    icon: currentTask.icon || getSmartIcon(currentTask),
+                    icon: task.icon || getSmartIcon(task),
                     finishDate: now.toLocaleDateString()
                 });
             }
 
-            save(); 
-            renderList(); 
+            save();
+            renderList();
             renderArchive();
-            showToast(currentTask.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
+            showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
         }
 
         // 统一刷新足迹 & 历史
         renderLog();
         if (typeof renderHistory === 'function') renderHistory();
 
-        // 收起卡片 & 清空锚点状态
-        if (card) card.style.display = 'none';
-        if (statusEl) statusEl.style.display = 'none';
-        if (ingEl) ingEl.style.display = 'none';
-        currentTask = null;
-        if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
-        if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+        // 非 silent 模式下，收起卡片 & 清空锚点状态
+        if (!silent) {
+            if (card) card.style.display = 'none';
+            if (statusEl) statusEl.style.display = 'none';
+            if (ingEl) ingEl.style.display = 'none';
+            currentTask = null;
+            if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+            if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+        }
     }
+
+    /** 原 finishTask：现在只是一个“壳”，把 currentTask 丢给核心逻辑 */
+    function finishTask() {
+        if (!currentTask) return;
+        completeTaskCore(currentTask, { silentCard: false });
+    }
+
+    /**
+     * 列表里手动点击标题完成：
+     * - 日常任务：相当于“今天这条打卡一次”
+     * - 一次性任务：完成并移出任务池（青蛙进荣誉殿堂）
+     * - 书 / 影 / 剧：相当于“今天看/读/追了一点”，电影会再问是否彻底看完
+     */
+    function manualCompleteFromList(id) {
+        // 1) 先看看是不是当前抽出来那张卡本身
+        let task = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === id)
+            ? currentTask
+            : db.find(t => t.id === id);
+
+        if (!task) return;
+        if (task.inColdStorage) return;  // 冷库不支持“直接完成”（双重保护）
+
+        // 2) 弹出第一层确认（防误触）
+        let msg;
+        if (task.type === 'culture') {
+            msg = `「${task.title}」今天有看/读/追一点吗？`;
+        } else if (task.recurrence === 'daily') {
+            msg = `要把「${task.title}」标记为今天已完成吗？`;
+        } else {
+            msg = `要把「${task.title}」标记为已完成吗？`;
+        }
+
+        if (!confirm(msg)) return;
+
+        // 3) 如果这条正好是当前 card 上的任务：当作正常 finishTask，顺便关卡片
+        const isCurrent = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === id);
+        completeTaskCore(task, { silentCard: !isCurrent });
+    }
+
 
 
     function recordLog() { renderLog(); }
