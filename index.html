@@ -61,6 +61,10 @@
         .version-badge { background: #81C784; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
         .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
 
+	/* 包住念头计数器 + 00 区的一整块包装 */
+	.stats-and-candy-wrapper {
+   	 position: relative;
+	}
         /* 念头计数器 */
         .stats-bar {
             display: flex; justify-content: space-around; padding: 10px 15px; background: #fff;
@@ -88,6 +92,401 @@
     color: #BF6A2F;       /* 柔和一点的橙棕色文字 */
 }
 
+/* 🍬 吃糖按钮：只有一颗比较大的糖果 emoji，没有外框按钮 */
+.stat-btn.candy {
+    flex: 0;                 /* 不要像其他按钮一样被拉伸 */
+    margin: 0 6px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;         /* 仍然保持可点击 */
+    position: relative;
+}
+/* 当 00 区展开时，从糖果下面连一根线到 00 区顶部 */
+.stats-and-candy-wrapper.candy-open #candyButton::after {
+    content: '';
+    position: absolute;
+    top: calc(100% - 4px);  /* 让起点更靠近糖底部一点 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 18px;           /* 线再长一点，基本能碰到 00 区背景 */
+    background: #F1E4D2;    /* 用和原分界线接近的颜色 */
+}
+/* 线末端的小圆点：让“线”看起来没那么单调 */
+.stats-and-candy-wrapper.candy-open #candyButton::before {
+    content: '';
+    position: absolute;
+    top: calc(100% + 12px); /* 这个数字大约 = 上面那条线的高度 - 一点点 */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #F8A8C8;    /* 柔和一点的糖果粉 */
+    box-shadow: 0 0 4px rgba(248,168,200,0.7);
+}
+
+
+
+.stat-btn.candy .candy-emoji {
+    font-size: 2.1rem;       /* 糖果再大一点 */
+    line-height: 1;
+    transition: transform 0.15s, opacity 0.15s;
+}
+
+/* 本次已经玩过糖 → 糖自动“退场”：稍微变小、变淡 */
+.stat-btn.candy.candy-used .candy-emoji {
+    opacity: 0.5;
+    transform: scale(0.9);
+}
+
+/* 本次已经玩过糖 → 糖自动“退场”：稍微变小、变淡 */
+.stat-btn.candy.candy-used .candy-emoji {
+    opacity: 0.5;
+    transform: scale(0.9);
+}
+
+
+/* 00 区整体容器：默认隐藏，只用浅背景，不再画整圈边框 */
+.candy-section {
+    display: none;  /* 默认关闭，不影响抽卡主区 */
+    background: #FFFDF8;
+    padding: 10px 16px 14px;
+    margin-top: 0;
+}
+
+.candy-header {
+    margin-bottom: 8px;
+}
+
+.candy-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b4a3b;
+}
+
+.candy-subtitle {
+    font-size: 0.75rem;
+    color: #8c6f5a;
+    opacity: 0.9;
+}
+
+.candy-stage {
+    background: rgba(255,255,255,0.8);
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px dashed rgba(0,0,0,0.05);
+}
+/* 音乐糖（网易云歌单）卡片样式 */
+.music-candy-card {
+    background: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.music-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b4a3b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.music-subtitle {
+    font-size: 0.75rem;
+    color: #8c6f5a;
+    opacity: 0.9;
+}
+
+.music-player-wrapper {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+.music-player-iframe {
+    width: 100%;
+    height: 90px; /* 压扁成“音频条”尺寸，减少视频干扰 */
+    border: 0;
+}
+
+.music-player-fallback {
+    margin-top: 4px;
+    font-size: 0.75rem;
+}
+
+.music-player-fallback a {
+    color: #6b4a3b;
+    text-decoration: underline;
+}
+
+.sound-enable-btn {
+    position: fixed;
+    right: 12px;
+    bottom: 16px;
+    z-index: 3000;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(0, 0, 0, 0.72);
+    color: #fff;
+    font-size: 11px;
+    display: none; /* 默认隐藏，只在主屏幕模式里出现 */
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+
+/* 提示文案：复用泡泡 hint 的风格 */
+.bubble-hint,
+.music-hint {
+    font-size: 0.75rem;
+    color: #777;
+}
+
+
+/* 捏气泡糖的泡泡样式（v5.6a 的首发糖） */
+.bubble-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);  /* 每行 6 个 */
+    gap: 4px;
+    justify-items: center;
+    margin-bottom: 8px;
+}
+
+.bubble {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    border: none;
+    background: radial-gradient(circle at 30% 30%, #ffffff, #E0F7FA);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s, opacity 0.15s;
+}
+
+.bubble:active {
+    transform: scale(0.9);
+    box-shadow: none;
+}
+
+.bubble-popped {
+    background: #F1F1F1;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    opacity: 0.7;
+}
+
+.bubble-hint {
+    font-size: 0.75rem;
+    color: #777;
+}
+.bubble-to-gacha {
+    display: block;
+    margin: 8px auto 0;          /* 上下留一点空白，左右自动 = 居中 */
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: none;
+    font-size: 0.85rem;
+    background: #FFEBEE;         /* 柔和的粉底色 */
+    color: #AD1457;              /* 深一点的莓红色字 */
+    cursor: pointer;
+}
+
+.bubble-to-gacha:active {
+    transform: scale(0.97);
+}
+/* --- 涂鸦 / 涂色糖 --- */
+
+.doodle-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.doodle-colors {
+    display: flex;
+    gap: 4px;
+}
+.doodle-linewidth-group {
+    display: flex;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.linewidth-btn {
+    border-radius: 999px;
+    border: none;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    background: #F4F4F4;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+    cursor: pointer;
+}
+
+.linewidth-active {
+    background: #E0E0E0;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.18);
+}
+
+.doodle-color {
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+    transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.doodle-color-active {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.14);
+}
+
+.doodle-clear-btn {
+    border-radius: 999px;
+    border: none;
+    padding: 2px 10px;
+    font-size: 0.7rem;
+    background: #F8F8F8;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+    cursor: pointer;
+    color: #666;
+    flex-shrink: 0; /* 保证在工具条右侧不会被挤掉 */
+}
+
+.doodle-clear-btn:active {
+    transform: scale(0.96);
+}
+
+.doodle-canvas-wrapper {
+    background: #FFFFFF;
+    border-radius: 10px;
+    border: 1px dashed rgba(0,0,0,0.08);
+    overflow: hidden;
+    margin-bottom: 6px;
+    position: relative;   /* 让内部的清空按钮可以绝对定位在这个盒子里 */
+}
+
+#doodleCanvas,
+#coloringCanvas {
+    display: block;
+    width: 100%;
+    height: 180px;  /* 和 JS 里设置的高度一致 */
+    touch-action: none;       /* 在画布上滑动时不滚动页面，专心画画 */
+}
+
+
+.doodle-hint {
+    font-size: 0.75rem;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+/* 每日打卡图弹窗 */
+.daily-poster-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    display: none;              /* 默认隐藏 */
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+}
+
+.daily-poster-card {
+    background: transparent;
+    border-radius: 0;
+    padding: 0 18px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: none;
+}
+
+.daily-poster-image {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    background: #000;
+}
+
+.daily-poster-photo {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+/* 贴在图片底部的文字条 */
+.daily-poster-caption {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 8px 12px;
+    background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.0));
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.daily-poster-day {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.daily-poster-subline {
+    font-size: 0.7rem;
+    opacity: 0.9;
+}
+
+.daily-poster-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* 弹窗内部的三个按钮（不复用外面原有按钮类，避免冲突） */
+.poster-btn-primary,
+.poster-btn-secondary,
+.poster-btn-tertiary {
+    padding: 6px 0;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+}
+
+.poster-btn-primary {
+    background: #81C784;
+    color: #fff;
+}
+
+.poster-btn-secondary {
+    background: #fff;
+    color: #555;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.poster-btn-tertiary {
+    background: transparent;
+    color: #777;
+}
 
 
         .stat-btn:active {
@@ -969,21 +1368,48 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v5.6 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.0 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
+       <div class="stats-and-candy-wrapper">
+    <!-- 念头计数器 + 00 区包裹 -->
+<div class="stats-and-candy-wrapper">
     <!-- 念头计数器 -->
     <div class="stats-bar">
+        <!-- 意志力 -->
         <div class="stat-btn willpower" onclick="incrementStat('willpower')">
             <span class="stat-label">🛡️ 意志力</span>
             <span class="stat-count" id="stat-willpower">0</span>
         </div>
+
+        <!-- 00 区 · 吃糖按钮（盲盒入口，只是一颗糖图标） -->
+        <div id="candyButton" class="stat-btn candy" onclick="handleCandyButtonClick()" aria-label="吃糖">
+            <span class="candy-emoji">🍬</span>
+        </div>
+
+        <!-- 小确幸 -->
         <div class="stat-btn joy" onclick="incrementStat('joy')">
             <span class="stat-label">✨ 小确幸</span>
             <span class="stat-count" id="stat-joy">0</span>
         </div>
     </div>
+
+    <!-- 00 · 吃一颗糖（默认隐藏，不影响抽卡主区） -->
+    <div id="candySection" class="candy-section">
+        <div class="candy-header">
+            <div class="candy-title">00 区 · 吃一颗糖再出发</div>
+            <div class="candy-subtitle">每次点“吃糖”，都会随机打开一个小玩具。</div>
+        </div>
+        <div id="candyStage" class="candy-stage">
+            <!-- 糖的具体内容由脚本渲染 -->
+        </div>
+    </div>
+</div>
+
+<!-- 抽取区 -->
+<div class="hero-wrapper">
+
 
     <!-- 抽取区 -->
     <div class="hero-wrapper">
@@ -1254,30 +1680,53 @@ body.variant-common .stat-btn.joy {
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
                 <div class="manual-h3">💡 核心概念</div>
-                <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让“命运”帮你做决定。</p>
+                <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让「命运」帮你做决定，你只负责「顺着被推一把」。</p>
+
+                <div class="manual-h3">🍬 吃一颗糖（00 区）</div>
+                <p>在真正开始抽卡之前，先「吃一颗糖」。用 1～5 分钟做一点轻松的小事，把自己从发呆 / 拖延状态，缓缓拉回可以行动的轨道。</p>
+                <ul>
+                    <li><b>捏气泡糖：</b> 一整屏小泡泡，随便戳几下出出气，然后点「去抽卡」。</li>
+                    <li><b>涂鸦糖：</b> 像拿蜡笔乱画一样，在空白画布上随便画几笔，不需要好看。</li>
+                    <li><b>涂色糖：</b> 在一张线稿风景图上上色，让大脑慢慢「上线」。</li>
+                    <li><b>音乐糖：</b> 随机播放一首 B 站的小歌，当作今天的开场 BGM。</li>
+                </ul>
+                <p style="font-size:0.78rem; color:#777; margin-top:4px;">
+                    吃糖本身不是任务，不需要完成得好，只是一个从「停滞」切换到「可以动一动」的小仪式。
+                </p>
+
                 <div class="manual-h3">⌨️ 智能输入</div>
-                <p>支持“说人话”和批量粘贴。每行一个任务。</p>
+                <p>支持「说人话」和批量粘贴。每行一个任务。</p>
                 <ul>
                     <li><b>自动书影：</b> 输入 <span class="manual-tag">看/读/书/影/剧/追</span> 开头，自动归类为文化，并加书名号。</li>
-                    <li><b>闪电速办：</b> 输入 <span class="manual-tag">洗/刷/理/拆/扔/喝</span> 等，自动标记为 <span class="manual-tag">⚡️速办</span> (5min)。</li>
-                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*/!/"重要"+空格</span> 开头，标记为困难重要的 <span class="manual-tag">🐸青蛙</span>。</li>
-                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
+                    <li><b>闪电速办：</b> 输入类似 <span class="manual-tag">立刻/马上/顺手/5min</span> 等关键词，自动标记为 <span class="manual-tag">⚡️速办</span>（约 5 分钟）。</li>
+                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">🐸</span> 或 <span class="manual-tag">青蛙</span> 开头，标记为困难但重要的任务。</li>
+                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环，适合刷牙、吃药等日常项目。</li>
                 </ul>
+
                 <div class="manual-h3">🎲 抽取逻辑</div>
                 <ul>
                     <li><b>混合模式：</b> 根据当下时间、地点，从所有库中随机抽取。</li>
-                    <li><b>青蛙优先：</b> 在书桌前且时间充足时，大概率优先推“青蛙”。</li>
+                    <li><b>青蛙优先：</b> 在书桌前且时间充足时，大概率优先推「青蛙任务」。</li>
                     <li><b>防重复：</b> 最近刚抽过的任务，短时间内不会再出现。</li>
                 </ul>
+
+                <div class="manual-h3">🧊 冷库 & 仪式</div>
+                <ul>
+                    <li><b>🧊 冷库：</b> 一时不想面对的任务，可以收入冷库，抽卡时不会被抽到；需要时再赦免回库或彻底删除。</li>
+                    <li><b>🌅 起床起飞：</b> 早晨的固定启动流程（起身、开灯、喝水、走到书桌…），写在「起飞仪式」里，每天照着走一遍，减少决策消耗。</li>
+                    <li><b>🌙 睡前着陆：</b> 晚上的收尾仪式（充电、吃药、关灯、写一句明天想做的事），帮你把一天缓缓落地。</li>
+                </ul>
+
                 <div class="manual-h3">📊 计数器与归档</div>
                 <ul>
-                    <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时，点一下。</li>
-                    <li><b>✨ 小确幸：</b> 遇到开心的小事时，点一下。</li>
+                    <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时，点一下，给自己的克制一点见证。</li>
+                    <li><b>✨ 小确幸：</b> 遇到开心的小事时，点一下，为好事留个记号。</li>
                     <li><b>👣 今日足迹：</b> 记录今天的日常流水，次日自动清空。</li>
-                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影。</li>
+                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影 / 剧集。</li>
                 </ul>
+
                 <div class="manual-h3">🆘 SOS 模式</div>
-                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态。</p>
+                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态，而不是推你去完成高难度任务。</p>
             </div>
         </details>
     </div>
@@ -1294,6 +1743,8 @@ body.variant-common .stat-btn.joy {
                     <li><b>v5.4：</b> 关键词修订：输入“看/影”开头：识别为电影；“读/书”开头：识别为书籍；“追/剧”开头：识别为剧集。</li>
                     <li><b>v5.5：</b> 增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；增加冷库功能：任务封存，暂时不被抽到（可恢复）</li>
 		    <li><b>v5.6：</b> 点击任务库 & 媒体库房里的任务名称，可勾选直接完成。</li>
+ 		    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；音乐糖；增加每日打卡图。</li>
+
 
                 </ul>
             </div>
@@ -1379,7 +1830,7 @@ body.variant-common .stat-btn.joy {
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
     const KEY_STATS = 'anchor_live_stats';
-    const KEY_VISITED = 'anchor_has_visited_v56_personal';
+    const KEY_VISITED = 'anchor_has_visited_v55_personal';
     const KEY_RITUAL_MORNING = 'anchor_ritual_morning_v55';
     const KEY_RITUAL_NIGHT  = 'anchor_ritual_night_v55';
 
@@ -1446,6 +1897,1032 @@ body.variant-common .stat-btn.joy {
     let anchorStartTime = null;
     let switchState = { cycle: false, flash: false };
     let gachaAnimating = false;
+    // 标记本次打开过程中，是否已经“吃过糖”（只是控制按钮变淡，不当作任务）
+    let candyEatenThisSession = false;
+// 记录上一次抽到的是哪一颗糖（bubble / doodle / 将来 coloring / music 等）
+let lastCandyType = null;
+// 涂色糖用的线稿底图
+const coloringBgImg = new Image();
+let coloringBgImgLoaded = false;
+
+// 相对路径：和当前 HTML 在同一目录的 coloring_bg.png
+coloringBgImg.src = 'coloring_bg.png';
+coloringBgImg.onload = function () {
+    coloringBgImgLoaded = true;
+};
+
+// 糖家族配置：先只启用已经做好的两颗糖
+// 以后可以在这里加：music / instrument / web / movie / joke 等
+const CANDY_FAMILIES = [
+    {
+        id: 'draw',              // 绘画类糖
+        weight: 1,               // 这一家族占 1 份权重
+        variants: ['doodle', 'doodle', 'coloring']     // 绘画家族：涂鸦糖 + 涂色糖
+    },
+    {
+        id: 'tactile',           // 触觉类糖
+        weight: 1,
+        variants: ['bubble']     // 已经实现：捏气泡糖
+    },
+    {
+        id: 'audio',             // 音频类糖（音乐糖、乐器糖）
+        weight: 1,
+        variants: ['music']      // 目前只有音乐糖，将来可以再加 'instrument'
+    }
+    // 预留位（将来要用）：
+    // {
+    //   id: 'explore',
+    //   weight: 1,
+    //   variants: ['tetris', 'webtoy']
+    // },
+];
+
+// Anchor 启动歌单（B站播放列表）
+const MUSIC_CLIPS = [
+    {
+        title: '《这条小鱼在乎》王OK / 洪佩瑜',
+        bvid: 'BV1yr421j7vr'
+    },
+    {
+        title: '《Reality》- 1980 年冠军单曲',
+        bvid: 'BV1hr4y1v7k3'
+    },
+    {
+        title: '《Young And Beautiful》- 电影《了不起的盖茨比》插曲',
+        bvid: 'BV1jX4y1474a'
+    },
+    {
+        title: '《我很快乐》- 刘惜君 · 嘴硬之歌',
+        bvid: 'BV1V14y1f7Up'
+    },
+    {
+        title: '《奇妙能力歌》- 陈粒 · 4K Hi-Res 版',
+        bvid: 'BV1ncygBBEcK'
+    },
+    {
+        title: '《水星记》- 郭顶 · “还要多远才能进入你的心”',
+        bvid: 'BV1JeYYevEnd'
+    },
+    {
+        title: '《Mystery of Love》- 电影《请以你的名字呼唤我》插曲',
+        bvid: 'BV1Au4y1o73t'
+    },
+    {
+        title: '《Try Everything》- 电影《疯狂动物城》主题曲',
+        bvid: 'BV1hz4y1D7JP'
+    },
+    {
+        title: '《California Dreaming》经典老歌',
+        bvid: 'BV1U64y1L7x5'
+    },
+    {
+        title: '《我要你》- 任素汐 · 电影《驴得水》主题曲',
+        bvid: 'BV1VY411J7cf'
+    },
+    {
+        title: '《City of Stars》- 电影《爱乐之城》主题曲 MV',
+        bvid: 'BV1Q4411A7Q6'
+    },
+    {
+        title: '《Another Day of Sun》- 电影《爱乐之城》开场曲 4K 60FPS',
+        bvid: 'BV14knez5E4x'
+    }
+];
+// 每日打卡图图库（相对路径，指向 daily_posters 文件夹）
+const DAILY_POSTER_IMAGES = [
+    'daily_posters/poster01.jpg',
+    'daily_posters/poster02.jpg',
+    'daily_posters/poster03.jpg',
+    'daily_posters/poster04.jpg',
+    'daily_posters/poster05.jpg',
+    'daily_posters/poster06.jpg',
+    'daily_posters/poster07.jpg',
+    'daily_posters/poster08.jpg',
+    'daily_posters/poster09.jpg',
+    'daily_posters/poster10.jpg',
+    'daily_posters/poster11.jpg',
+    'daily_posters/poster12.jpg',
+    'daily_posters/poster13.jpg',
+    'daily_posters/poster14.jpg'
+];
+
+// 收集所有当前可用的糖类型（去重）：用于“连续两次不能一样”的兜底逻辑
+function getAllCandyTypes() {
+    const all = [];
+    CANDY_FAMILIES.forEach(f => {
+        if (Array.isArray(f.variants)) {
+            f.variants.forEach(v => {
+                if (!all.includes(v)) {
+                    all.push(v);
+                }
+            });
+        }
+    });
+    return all;
+}
+// 捏气泡用的音效：使用一段外部音频文件（兼容 iOS Safari + 主屏幕模式）
+const BUBBLE_POP_URL = 'bubble-pop-short.mp3'; // 和 index.html 同目录
+const bubblePopAudio = new Audio(BUBBLE_POP_URL);
+bubblePopAudio.preload = 'auto';
+bubblePopAudio.volume = 1.0;
+
+let bubbleSoundUnlocked = false;
+
+// 判断是否处于「添加到主屏幕」的独立模式
+function isStandaloneMode() {
+    return (
+        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true
+    );
+}
+
+// 初始化「开启音效」按钮逻辑
+function initBubbleSoundUnlock() {
+    const btn = document.getElementById('enableSoundBtn');
+    if (!btn) return;
+
+    if (isStandaloneMode()) {
+        // 主屏幕模式：需要用户点一次来解锁音效
+        btn.style.display = 'inline-flex';
+    } else {
+        // 普通 Safari / 桌面浏览器：直接视为已解锁，不显示按钮
+        bubbleSoundUnlocked = true;
+        btn.style.display = 'none';
+        return;
+    }
+
+    btn.addEventListener('click', () => {
+        // 主动播放一次再立刻暂停，用来“解锁”音频
+        bubblePopAudio.currentTime = 0;
+        bubblePopAudio.play().then(() => {
+            bubblePopAudio.pause();
+            bubblePopAudio.currentTime = 0;
+            bubbleSoundUnlocked = true;
+            btn.style.display = 'none';
+        }).catch(() => {
+            // 即便失败也先隐藏按钮，避免一直挡视线
+            btn.style.display = 'none';
+        });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', initBubbleSoundUnlock);
+
+function playBubblePopSound() {
+    if (!bubbleSoundUnlocked) return; // 还没解锁就不播，避免被系统静音
+    try {
+        bubblePopAudio.currentTime = 0;
+        bubblePopAudio.play().catch(() => {});
+    } catch (e) {
+        // 有问题就静默，不影响其它逻辑
+    }
+}
+
+    // 记录累计打开天数 & 每日打卡图已弹出的日期
+    const KEY_OPENED_DAYS = 'anchor_opened_days_v56';
+    const KEY_POSTER_SHOWN_DAY = 'anchor_poster_shown_day_v56';
+
+    // 获取 yyyy-mm-dd 格式的今天日期
+    function getTodayDateStr() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    // 初始化 / 更新累计打开天数，返回“这是第几天”
+    function initOpenedDays() {
+        const today = getTodayDateStr();
+        let raw = localStorage.getItem(KEY_OPENED_DAYS);
+        let arr;
+        try {
+            arr = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(arr)) arr = [];
+        } catch (e) {
+            arr = [];
+        }
+
+        if (!arr.includes(today)) {
+            arr.push(today);
+            localStorage.setItem(KEY_OPENED_DAYS, JSON.stringify(arr));
+        }
+
+        return arr.length;
+    }
+
+    // 如有需要，弹出今日打卡图
+function showDailyPosterIfNeeded(openDaysCount) {
+    const overlay = document.getElementById('dailyPosterOverlay');
+    const daySpan = document.getElementById('dailyPosterDayCount');
+    const imgEl   = document.getElementById('dailyPosterImg');
+    const dateEl  = document.getElementById('dailyPosterDate');
+    if (!overlay || !daySpan) return;
+
+    // 更新「第几天」的数字
+    daySpan.textContent = openDaysCount;
+
+        // 更新当天日期 + 文案（格式：YYYY.MM.DD | 像一次短暂停靠，看看今天走到了哪里。）
+    if (dateEl) {
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        const dateStr = `${y}.${m}.${d}`;
+        dateEl.textContent = `${dateStr} | 像一次短暂停靠，看看今天走到了哪里。`;
+    }
+
+    // 按天数在图库里选一张图
+    if (imgEl && Array.isArray(DAILY_POSTER_IMAGES) && DAILY_POSTER_IMAGES.length > 0) {
+        const idx = (openDaysCount - 1) % DAILY_POSTER_IMAGES.length;
+        imgEl.src = DAILY_POSTER_IMAGES[idx];
+    }
+
+    overlay.style.display = 'flex';
+}
+
+    function closeDailyPoster() {
+        const overlay = document.getElementById('dailyPosterOverlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+
+    function dailyPosterEatCandy() {
+        // 关闭弹窗 → 打开 00 区并随机来一颗糖
+        closeDailyPoster();
+        openCandyEngine();
+    }
+
+    function dailyPosterSkipToGacha() {
+        // 关闭弹窗 → 平滑滚动到 01 区抽卡机
+        closeDailyPoster();
+        const hero = document.querySelector('.hero-wrapper');
+        if (hero && hero.scrollIntoView) {
+            hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // --- 00 区 · 吃糖盲盒引擎 ---
+
+    // 顶部 🍬 按钮点击：如果 00 区是关的就打开，是开的就收起
+function handleCandyButtonClick() {
+    const section = document.getElementById('candySection');
+    const stage   = document.getElementById('candyStage');
+    const wrapper = document.querySelector('.stats-and-candy-wrapper');
+    if (!section || !stage) return;
+
+    const isVisible = section.style.display === 'block';
+
+    if (isVisible) {
+        // 收起 00 区
+        section.style.display = 'none';
+        if (wrapper) {
+            wrapper.classList.remove('candy-open');
+        }
+
+        // 视角回到念头计数区
+        const statsBar = document.querySelector('.stats-bar');
+        if (statsBar && statsBar.scrollIntoView) {
+            statsBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    } else {
+        // 打开 00 区并随机一颗糖
+        openCandyEngine();
+    }
+}
+
+
+    // 打开 00 区，并随机选择一种糖模式
+    function openCandyEngine() {
+        const section = document.getElementById('candySection');
+        const stage   = document.getElementById('candyStage');
+  	const wrapper = document.querySelector('.stats-and-candy-wrapper');
+        if (!section || !stage) return;
+
+        // 确保 00 区展示出来
+        section.style.display = 'block';
+    if (wrapper) {
+        wrapper.classList.add('candy-open');
+    }
+
+        // 每次打开都当作一次“拆盲盒”
+        renderRandomCandy(stage);
+
+        // 平滑滚动到 00 区顶部
+        if (section.scrollIntoView) {
+            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    // 根据糖类型，渲染具体糖内容
+function renderRandomCandy(stageEl) {
+    const t = pickCandyType() || 'bubble';  // 兜底：如果出错，就用 bubble
+
+    if (t === 'bubble') {
+        // 捏气泡糖
+        renderBubbleCandy(stageEl);
+    } else if (t === 'doodle') {
+        // 涂鸦糖
+        renderDoodleCandy(stageEl);
+    } else if (t === 'coloring') {
+        // 涂色糖
+        renderColoringCandy(stageEl);
+    } else if (t === 'music') {
+        // 音乐糖（网易云歌单）
+        renderMusicCandy(stageEl);
+    } else {
+        // 万一将来配置里多了新类型但没实现，就安全兜底到气泡糖
+        renderBubbleCandy(stageEl);
+    }
+}
+
+// 从“糖家族”里选出本次要吃的糖：
+// 1）先按家族权重选家族；
+// 2）再在该家族内部随机一颗糖；
+// 3）如果和上一次相同，则尽量重抽，保证“连续两次不一样”。
+function pickCandyType() {
+    // 只保留有有效 variants 的家族
+    const enabledFamilies = CANDY_FAMILIES.filter(f => Array.isArray(f.variants) && f.variants.length > 0);
+    if (enabledFamilies.length === 0) {
+        return null;
+    }
+
+    // 计算总权重
+    let totalWeight = 0;
+    enabledFamilies.forEach(f => {
+        const w = typeof f.weight === 'number' && f.weight > 0 ? f.weight : 1;
+        totalWeight += w;
+    });
+
+    // 按权重随机选择一个家族
+    let r = Math.random() * totalWeight;
+    let chosenFamily = enabledFamilies[0];
+    for (let i = 0; i < enabledFamilies.length; i++) {
+        const f = enabledFamilies[i];
+        const w = typeof f.weight === 'number' && f.weight > 0 ? f.weight : 1;
+        if (r < w) {
+            chosenFamily = f;
+            break;
+        }
+        r -= w;
+    }
+
+    if (!chosenFamily || !Array.isArray(chosenFamily.variants) || chosenFamily.variants.length === 0) {
+        return null;
+    }
+
+    // 在家族内部选一颗糖，同时尽量避免和 lastCandyType 一样
+    let candidate = null;
+
+    // 尝试几次随机，尽量避免重复
+    for (let attempt = 0; attempt < 5; attempt++) {
+        const idx = Math.floor(Math.random() * chosenFamily.variants.length);
+        candidate = chosenFamily.variants[idx];
+        if (candidate !== lastCandyType) {
+            break;
+        }
+    }
+
+    // 如果尝试多次还是和上一次一样，就从所有糖里挑一个“不是上一次”的
+    if (candidate === lastCandyType) {
+        const all = getAllCandyTypes().filter(t => t !== lastCandyType);
+        if (all.length > 0) {
+            candidate = all[Math.floor(Math.random() * all.length)];
+        }
+    }
+
+    // 更新记录，方便下一次“避免重复”
+    lastCandyType = candidate;
+    return candidate;
+}
+
+    // v5.6a：捏气泡糖（更密集 + 有“去抽卡”按钮）
+function renderBubbleCandy(stageEl) {
+    const cols = 6;     // 每行 6 个泡泡
+    const rows = 5;     // 共 5 行
+    const total = cols * rows;
+    const threshold = 8;   // 戳满 8 个就认为“吃完这颗糖”
+
+    let html = '<div class="bubble-grid">';
+    for (let i = 0; i < total; i++) {
+        html += '<button class="bubble" data-popped="0" type="button"></button>';
+    }
+    html += '</div>';
+    html += '<div class="bubble-hint" id="bubbleHint">随便捏几个气泡，不用想太多。</div>';
+    html += '<button type="button" id="bubbleToGachaBtn" class="bubble-to-gacha" style="display:none;">去抽卡</button>';
+
+    stageEl.innerHTML = html;
+
+    let popCount = 0;
+    const bubbles = stageEl.querySelectorAll('.bubble');
+    const hint = stageEl.querySelector('#bubbleHint');
+    const toGachaBtn = stageEl.querySelector('#bubbleToGachaBtn');
+
+    bubbles.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.dataset.popped === '1') return;
+
+            btn.dataset.popped = '1';
+            btn.classList.add('bubble-popped');
+            popCount++;
+
+            // 每次戳都放一个小声音
+            playBubblePopSound();
+
+            // 第一次在本次打开中认真“玩了一会儿糖”
+            if (!candyEatenThisSession && popCount >= threshold) {
+                markCandyDone();
+                if (hint) {
+                    hint.textContent = '好，这样就够啦，可以去抽一张卡。';
+                }
+                if (toGachaBtn) {
+                    toGachaBtn.style.display = 'block';
+                }
+            }
+        });
+    });
+
+    if (toGachaBtn) {
+        toGachaBtn.addEventListener('click', () => {
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero && hero.scrollIntoView) {
+                hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}
+// v6：音乐糖（Anchor 启动歌单 · 网易云）
+function renderMusicCandy(stageEl) {
+    // 如果歌单配置里暂时没有歌曲，就兜底成气泡糖，避免报错
+    if (!Array.isArray(MUSIC_CLIPS) || MUSIC_CLIPS.length === 0) {
+        renderBubbleCandy(stageEl);
+        return;
+    }
+
+    // 随机挑一首歌
+    const clip = MUSIC_CLIPS[Math.floor(Math.random() * MUSIC_CLIPS.length)];
+
+    let html = '';
+    html += '<div class="music-candy-card">';
+    html += '  <div class="music-title">🎵 Anchor 启动歌单 · 随机一曲</div>';
+    html += '  <div class="music-subtitle">' + clip.title + '</div>';
+    html += '  <div class="music-player-wrapper">';
+    html += '    <iframe class="music-player-iframe"';
+    html += '            src="https://player.bilibili.com/player.html?bvid=' + clip.bvid + '&page=1&high_quality=1&autoplay=0"';
+    html += '            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"';
+    html += '            referrerpolicy="no-referrer-when-downgrade"';
+    html += '            frameborder="0" scrolling="no"></iframe>';
+    html += '  </div>';
+    html += '  <div class="music-player-fallback">';
+    html += '    如果播放器加载不出来，可以点击右上角按钮在 B 站中完整播放。';
+    html += '  </div>';
+    html += '  <div class="music-hint">建议只当作「启动 BGM」，听一小会儿就回到抽卡区，不被视频画面带走注意力。</div>';
+    html += '  <button type="button" id="musicToGachaBtn" class="bubble-to-gacha">去抽卡</button>';
+    html += '</div>';
+
+    stageEl.innerHTML = html;
+
+    const toGachaBtn = stageEl.querySelector('#musicToGachaBtn');
+
+    if (toGachaBtn) {
+        toGachaBtn.addEventListener('click', () => {
+            // 点击“去抽卡”时，视为今天这颗糖已经吃过
+            if (!candyEatenThisSession) {
+                markCandyDone();
+            }
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero && hero.scrollIntoView) {
+                hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}
+
+
+// v5.6a：第二颗糖 · 涂鸦 / 涂色糖
+function renderDoodleCandy(stageEl) {
+    // 1. 先把画板和工具条的 HTML 填进去
+    let html = '';
+   html += '<div class="doodle-toolbar">';
+html += '  <div class="doodle-colors">';
+html += '    <button type="button" class="doodle-color doodle-color-active" data-color="#616161" style="background:#616161;"></button>';   // 浅一点的深灰
+html += '    <button type="button" class="doodle-color" data-color="#FFCDD2" style="background:#FFCDD2;"></button>';  // 柔和红
+html += '    <button type="button" class="doodle-color" data-color="#FFF9C4" style="background:#FFF9C4;"></button>';  // 柔和黄
+html += '    <button type="button" class="doodle-color" data-color="#BBDEFB" style="background:#BBDEFB;"></button>';  // 柔和蓝
+html += '    <button type="button" class="doodle-color" data-color="#C8E6C9" style="background:#C8E6C9;"></button>';  // 柔和绿
+html += '    <button type="button" class="doodle-color" data-color="#F8BBD0" style="background:#F8BBD0;"></button>';  // 柔和粉
+html += '    <button type="button" class="doodle-color" data-color="#E1BEE7" style="background:#E1BEE7;"></button>';  // 柔和紫
+html += '  </div>';
+html += '  <button type="button" id="doodleClearBtn" class="doodle-clear-btn">清空</button>';
+html += '</div>';
+html += '<div class="doodle-canvas-wrapper">';
+html += '  <canvas id="doodleCanvas"></canvas>';
+html += '</div>';
+html += '<div class="doodle-hint" id="doodleHint">随手画两笔就可以，不用好看。</div>';
+html += '<button type="button" id="doodleToGachaBtn" class="bubble-to-gacha" style="display:none;">去抽卡</button>';
+
+    stageEl.innerHTML = html;
+
+    const canvas = stageEl.querySelector('#doodleCanvas');
+    const wrapper = stageEl.querySelector('.doodle-canvas-wrapper');
+    const hint    = stageEl.querySelector('#doodleHint');
+    const toGachaBtn = stageEl.querySelector('#doodleToGachaBtn');
+    const clearBtn   = stageEl.querySelector('#doodleClearBtn');
+    const colorBtns  = stageEl.querySelectorAll('.doodle-color');
+
+    if (!canvas || !wrapper) return;
+
+    // 2. 设置画布尺寸（宽度跟随容器，高度固定为 180 像素）
+    const wrapperWidth = wrapper.clientWidth || 260;
+    const canvasHeight = 180;
+    canvas.width = wrapperWidth;
+    canvas.height = canvasHeight;
+
+    const ctx = canvas.getContext('2d');
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+let drawing = false;
+let lastX = 0;
+let lastY = 0;
+let currentColor = '#616161';
+let hasDoodled = false;
+
+
+function getPos(evt) {
+    const rect = canvas.getBoundingClientRect();
+    const touch = evt.touches && evt.touches[0];
+
+    const clientX = (touch ? touch.clientX : evt.clientX);
+    const clientY = (touch ? touch.clientY : evt.clientY);
+
+    // 如果事件里根本拿不到坐标，直接返回上一次的位置，防止报错
+    if (clientX == null || clientY == null) {
+        return { x: lastX, y: lastY };
+    }
+
+    // 计算相对于画布左上角的坐标
+    let x = clientX - rect.left;
+    let y = clientY - rect.top;
+
+    // 把坐标“钉死”在画布边界内：不会画出画布之外
+    x = Math.max(0, Math.min(x, canvas.width));
+    y = Math.max(0, Math.min(y, canvas.height));
+
+    return { x, y };
+}
+
+
+    function startDraw(evt) {
+        evt.preventDefault();
+        drawing = true;
+        const pos = getPos(evt);
+        lastX = pos.x;
+        lastY = pos.y;
+    }
+
+    function draw(evt) {
+        if (!drawing) return;
+        evt.preventDefault();
+        const pos = getPos(evt);
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        lastX = pos.x;
+        lastY = pos.y;
+
+        if (!hasDoodled) {
+            hasDoodled = true;
+            // 只要画过一点点，就认为吃完了这颗糖
+            if (!candyEatenThisSession) {
+                markCandyDone();
+            }
+            if (hint) {
+                hint.textContent = '很好，这样就够啦，可以去抽一张卡。';
+            }
+            if (toGachaBtn) {
+                toGachaBtn.style.display = 'block';
+            }
+        }
+    }
+
+    function endDraw(evt) {
+        if (!drawing) return;
+        drawing = false;
+    }
+
+    // 支持鼠标 + 触摸
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+
+    // 颜色切换
+    colorBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.getAttribute('data-color');
+            if (color) {
+                currentColor = color;
+                // 选中态：当前颜色的小圆点稍微大一点
+                colorBtns.forEach(b => b.classList.remove('doodle-color-active'));
+                btn.classList.add('doodle-color-active');
+            }
+        });
+    });
+
+    // 清空画布
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasDoodled = false;
+            if (hint) {
+                hint.textContent = '重新来一张也可以，随便画。';
+            }
+            if (toGachaBtn) {
+                toGachaBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // “去抽卡”按钮：滚到 01 区
+    if (toGachaBtn) {
+        toGachaBtn.addEventListener('click', () => {
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero && hero.scrollIntoView) {
+                hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}
+// v6：涂色糖 v2 · 区域填色版
+
+function renderColoringCandy(stageEl) {
+    let html = '';
+    // 工具条：左侧是马卡龙色，右侧是清空
+    html += '<div class="doodle-toolbar">';
+html += '  <div class="doodle-colors">';
+html += '    <button type="button" class="doodle-color doodle-color-active" data-color="#616161" style="background:#616161;"></button>';
+html += '    <button type="button" class="doodle-color" data-color="#FFCDD2" style="background:#FFCDD2;"></button>';
+html += '    <button type="button" class="doodle-color" data-color="#FFF9C4" style="background:#FFF9C4;"></button>';
+html += '    <button type="button" class="doodle-color" data-color="#BBDEFB" style="background:#BBDEFB;"></button>';
+html += '    <button type="button" class="doodle-color" data-color="#C8E6C9" style="background:#C8E6C9;"></button>';
+html += '    <button type="button" class="doodle-color" data-color="#F8BBD0" style="background:#F8BBD0;"></button>';
+html += '    <button type="button" class="doodle-color" data-color="#E1BEE7" style="background:#E1BEE7;"></button>';
+html += '  </div>';
+// 新增：线宽切换按钮组
+html += '  <div class="doodle-linewidth-group">';
+html += '    <button type="button" class="linewidth-btn linewidth-thin linewidth-active" data-width="6">细</button>';
+html += '    <button type="button" class="linewidth-btn linewidth-thick" data-width="12">粗</button>';
+html += '  </div>';
+html += '  <button type="button" id="coloringClearBtn" class="doodle-clear-btn">清空</button>';
+html += '</div>';
+
+    // 画布区域
+    html += '<div class="doodle-canvas-wrapper">';
+    html += '  <canvas id="coloringCanvas"></canvas>';
+    html += '</div>';
+
+    // 提示 + 去抽卡按钮
+    html += '<div class="doodle-hint" id="coloringHint">就像拿蜡笔随便涂几笔，不用很工整。</div>';
+    html += '<button type="button" id="coloringToGachaBtn" class="bubble-to-gacha" style="display:none;">去抽卡</button>';
+
+    stageEl.innerHTML = html;
+
+    const canvas = stageEl.querySelector('#coloringCanvas');
+    const wrapper = stageEl.querySelector('.doodle-canvas-wrapper');
+    const hint    = stageEl.querySelector('#coloringHint');
+    const toGachaBtn = stageEl.querySelector('#coloringToGachaBtn');
+    const clearBtn   = stageEl.querySelector('#coloringClearBtn');
+    const colorBtns  = stageEl.querySelectorAll('.doodle-color');
+
+    if (!canvas || !wrapper) return;
+
+    // 设置画布尺寸
+    const wrapperWidth = wrapper.clientWidth || 260;
+    const canvasHeight = 180;
+    canvas.width = wrapperWidth;
+    canvas.height = canvasHeight;
+
+    const ctx = canvas.getContext('2d');
+
+    // 先画一次线稿背景图
+    function drawLineArtBackground() {
+        if (typeof coloringBgImg !== 'undefined' && coloringBgImgLoaded) {
+            ctx.save();
+            // 线稿本身可以稍微淡一点，当作底稿
+            ctx.globalAlpha = 0.85;
+            ctx.drawImage(coloringBgImg, 0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        } else if (typeof coloringBgImg !== 'undefined' && !coloringBgImgLoaded) {
+            const onLoadOnce = () => {
+                coloringBgImgLoaded = true;
+                drawLineArtBackground();
+                coloringBgImg.removeEventListener('load', onLoadOnce);
+            };
+            coloringBgImg.addEventListener('load', onLoadOnce);
+        }
+    }
+
+    drawLineArtBackground();
+
+    let painting = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentColor = '#616161';
+let hasColored = false;
+let strokeSteps = 0;           // 记录画了多少段
+const threshold = 25;          // 画到一定次数就算完成
+let currentLineWidth = 6;      // 默认细线条 6px
+
+
+    function getPos(evt) {
+        const rect = canvas.getBoundingClientRect();
+        const touch = evt.touches && evt.touches[0];
+
+        const clientX = (touch ? touch.clientX : evt.clientX);
+        const clientY = (touch ? touch.clientY : evt.clientY);
+
+        if (clientX == null || clientY == null) {
+            return { x: rect.width / 2, y: rect.height / 2 };
+        }
+
+        let x = clientX - rect.left;
+        let y = clientY - rect.top;
+
+        // 限制在画布范围内，不会画出去
+        x = Math.max(0, Math.min(x, canvas.width));
+        y = Math.max(0, Math.min(y, canvas.height));
+
+        return { x, y };
+    }
+
+    function startPaint(evt) {
+        evt.preventDefault();
+        painting = true;
+        const pos = getPos(evt);
+        lastX = pos.x;
+        lastY = pos.y;
+        drawStrokeTo(pos);
+    }
+
+    function drawStrokeTo(pos) {
+ctx.strokeStyle = currentColor;
+ctx.lineWidth = currentLineWidth;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+
+        lastX = pos.x;
+        lastY = pos.y;
+
+        strokeSteps++;
+
+        if (!hasColored && strokeSteps >= threshold) {
+            hasColored = true;
+            if (!candyEatenThisSession) {
+                markCandyDone();
+            }
+            if (hint) {
+                hint.textContent = '很好，今天这页已经有颜色了，可以去抽一张卡。';
+            }
+            if (toGachaBtn) {
+                toGachaBtn.style.display = 'block';
+            }
+        }
+    }
+
+    function paint(evt) {
+        if (!painting) return;
+        evt.preventDefault();
+        const pos = getPos(evt);
+        drawStrokeTo(pos);
+    }
+
+    function endPaint(evt) {
+        if (!painting) return;
+        painting = false;
+    }
+
+    // 绑定鼠标事件
+    canvas.addEventListener('mousedown', startPaint);
+    canvas.addEventListener('mousemove', paint);
+    canvas.addEventListener('mouseup', endPaint);
+    canvas.addEventListener('mouseleave', endPaint);
+
+    // 绑定触摸事件
+    canvas.addEventListener('touchstart', startPaint, { passive: false });
+    canvas.addEventListener('touchmove', paint, { passive: false });
+    canvas.addEventListener('touchend', endPaint);
+
+    // 颜色切换
+    colorBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const color = btn.getAttribute('data-color');
+            if (color) {
+                currentColor = color;
+                colorBtns.forEach(b => b.classList.remove('doodle-color-active'));
+                btn.classList.add('doodle-color-active');
+            }
+        });
+    });
+// 线宽按钮（细 / 粗）
+const widthBtns = stageEl.querySelectorAll('.linewidth-btn');
+widthBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const wVal = parseFloat(btn.getAttribute('data-width'));
+        if (!isNaN(wVal)) {
+            currentLineWidth = wVal;
+            widthBtns.forEach(b => b.classList.remove('linewidth-active'));
+            btn.classList.add('linewidth-active');
+        }
+    });
+});
+
+    // 清空画布：只清除涂色，再重新画线稿底图
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawLineArtBackground();
+            hasColored = false;
+            strokeSteps = 0;
+            if (hint) {
+                hint.textContent = '可以重新随便涂几笔，玩一玩就好。';
+            }
+            if (toGachaBtn) {
+                toGachaBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // “去抽卡”按钮：滚到 01 区
+    if (toGachaBtn) {
+        toGachaBtn.addEventListener('click', () => {
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero && hero.scrollIntoView) {
+                hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}
+
+// 涂色糖的线稿：天空 + 地面 + 两座小山丘 + 太阳 + 云朵（多个封闭区域）
+// 涂色糖的线稿：天空 + 地面 + 两座山丘 + 湖泊 + 一棵树 + 太阳 + 云朵
+// 涂色糖线稿渲染：先画区域色块，再把线稿底图盖在最上面
+
+function drawColoringTemplate(ctx, w, h, regionColors) {
+    regionColors = regionColors || {};
+    ctx.save();
+    ctx.clearRect(0, 0, w, h);
+
+    // 基于最新线稿的大致结构来划分几个主要区域：
+    // 上方：天空 + 太阳
+    // 中间：两层山丘 + 湖面
+    // 下方：左侧前景草地 / 地面，右侧大树
+
+    // 这些高度和位置全部用「百分比」来写，方便和不同尺寸的画布对齐
+    const hillsTopY    = h * 0.40;  // 山丘上缘大致位置
+    const hillsBottomY = h * 0.55;  // 山丘与湖交界
+    const lakeTopY     = h * 0.55;  // 湖面上缘
+    const lakeBottomY  = h * 0.75;  // 湖面下缘
+    const groundTopY   = h * 0.75;  // 前景草地起点
+
+    // === 1. 天空 ===
+    ctx.beginPath();
+    ctx.rect(0, 0, w, hillsTopY);
+    ctx.fillStyle = regionColors.sky || '#FFFFFF';
+    ctx.fill();
+
+    // 为了让山丘上方还有一点天空缓冲，再画一块天空覆盖到 hillsBottomY
+    ctx.beginPath();
+    ctx.rect(0, hillsTopY, w, hillsBottomY - hillsTopY);
+    ctx.fillStyle = regionColors.sky || '#FFFFFF';
+    ctx.fill();
+
+    // === 2. 左右两座山丘（大致贴合线稿的形状与位置） ===
+    // 左山：大致在画面的左 0–60% 区域
+    const hill1CX = w * 0.28;
+    const hill1CY = (hillsTopY + hillsBottomY) / 2;
+    const hill1RX = w * 0.40;
+    const hill1RY = h * 0.25;
+
+    ctx.beginPath();
+    ctx.ellipse(hill1CX, hill1CY, hill1RX, hill1RY, 0, Math.PI, 0);
+    ctx.lineTo(0, hillsBottomY);
+    ctx.lineTo(0, hillsTopY);
+    ctx.closePath();
+    ctx.fillStyle = regionColors.hill1 || '#FFFFFF';
+    ctx.fill();
+
+    // 右山：大致在画面的中部偏右，覆盖到 x≈70%
+    const hill2CX = w * 0.60;
+    const hill2CY = (hillsTopY + hillsBottomY) / 2;
+    const hill2RX = w * 0.35;
+    const hill2RY = h * 0.23;
+
+    ctx.beginPath();
+    ctx.ellipse(hill2CX, hill2CY, hill2RX, hill2RY, 0, Math.PI, 0);
+    ctx.lineTo(w, hillsBottomY);
+    ctx.lineTo(w, hillsTopY);
+    ctx.closePath();
+    ctx.fillStyle = regionColors.hill2 || '#FFFFFF';
+    ctx.fill();
+
+    // === 3. 湖面 ===
+    // 使用一条横向的椭圆，大致覆盖 JSON 里的 x 0–80%, y 55–75%
+    const lakeCX = w * 0.45;
+    const lakeCY = (lakeTopY + lakeBottomY) / 2;
+    const lakeRX = w * 0.42;
+    const lakeRY = (lakeBottomY - lakeTopY) / 2;
+
+    ctx.beginPath();
+    ctx.ellipse(lakeCX, lakeCY, lakeRX, lakeRY, 0, 0, Math.PI * 2);
+    ctx.fillStyle = regionColors.lake || '#FFFFFF';
+    ctx.fill();
+
+    // === 4. 前景草地 / 地面 ===
+    // 左下角有一大片草，右下角是树脚下的地面，这里合并成一个 ground 区域
+    ctx.beginPath();
+    ctx.moveTo(0, groundTopY);
+    ctx.lineTo(w * 0.55, h);
+    ctx.lineTo(0, h);
+    ctx.closePath();
+    ctx.fillStyle = regionColors.ground || '#FFFFFF';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(w * 0.45, groundTopY);
+    ctx.lineTo(w, groundTopY + h * 0.05);
+    ctx.lineTo(w, h);
+    ctx.lineTo(w * 0.55, h);
+    ctx.closePath();
+    ctx.fillStyle = regionColors.ground || '#FFFFFF';
+    ctx.fill();
+
+    // === 5. 大树（树干 + 树冠） ===
+    // 对应 JSON 里的 x 65–98%, y 5–75%
+    const treeTrunkWidth  = w * 0.05;
+    const treeTrunkHeight = h * 0.26;
+    const treeTrunkX = w * 0.78;
+    const treeTrunkBottomY = h * 0.92;
+    const treeTrunkY = treeTrunkBottomY - treeTrunkHeight;
+
+    const treeCrownCX = treeTrunkX + treeTrunkWidth / 2;
+    const treeCrownCY = h * 0.42;
+    const treeCrownR  = h * 0.18;
+
+    ctx.beginPath();
+    // 树干
+    ctx.rect(treeTrunkX, treeTrunkY, treeTrunkWidth, treeTrunkHeight);
+    // 树冠
+    ctx.arc(treeCrownCX, treeCrownCY, treeCrownR, 0, Math.PI * 2);
+    ctx.fillStyle = regionColors.tree || '#FFFFFF';
+    ctx.fill();
+
+    // === 6. 太阳 ===
+    // 对应 JSON：x 8–22%, y 5–25%
+    const sunCX = w * 0.15;
+    const sunCY = h * 0.16;
+    const sunR  = h * 0.07;
+
+    ctx.beginPath();
+    ctx.arc(sunCX, sunCY, sunR, 0, Math.PI * 2);
+    ctx.fillStyle = regionColors.sun || '#FFFFFF';
+    ctx.fill();
+
+    // === 7. 最后一层：再盖上线稿 ===
+    if (coloringBgImgLoaded) {
+        ctx.save();
+        ctx.globalAlpha = 0.7;   // 线稿稍微透一点，下面的颜色能露出来
+        ctx.drawImage(coloringBgImg, 0, 0, w, h);
+        ctx.restore();
+    } else {
+        // 万一底图还没加载出来，就用一个浅灰边框兜底
+        ctx.strokeStyle = '#D0D0D0';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(0, 0, w, h);
+    }
+
+    ctx.restore();
+}
+// 吃完糖 → 把 🍬 按钮变成低调版本（不是打勾，只是退居二线）
+    function markCandyDone() {
+        candyEatenThisSession = true;
+        const btn = document.getElementById('candyButton');
+        if (btn) {
+            btn.classList.add('candy-used');
+        }
+    }
 
     // 标记用户是否手动覆盖速办
     let userOverrideFlash = false;
@@ -1460,14 +2937,16 @@ body.variant-common .stat-btn.joy {
                 db = defaultDB;
             }
         } 
-        checkLogExpiry();
-        renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI(); 
+                checkLogExpiry();
+        renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI();
         setMode('normal');
-                if (!localStorage.getItem(KEY_VISITED)) {
-            alert("👋 欢迎来到 Anchor v5.6（通用版）！\n\n🆕 最近更新：\n- \增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；\n- \增加冷库功能：任务封存，暂时不被抽到（可恢复）；\n- \点击任务库 & 媒体库房里的任务名称，可勾选直接完成。");
-            localStorage.setItem(KEY_VISITED, 'true');
-        }
+
+        // 计算“这是你和 Anchor 的第几天”，并视情况弹每日打卡图
+        const openDaysCount = initOpenedDays();
+        showDailyPosterIfNeeded(openDaysCount);
+
         applyVariant();
+
 
         // 初始化仪式编辑区文本：把当前使用的步骤写进文本框
         const inputMorning = document.getElementById('ritualMorningInput');
@@ -3016,6 +4495,40 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 </script>
+    <!-- 每日打卡图弹窗（默认隐藏） -->
+    <div id="dailyPosterOverlay" class="daily-poster-overlay">
+        <div class="daily-poster-card">
+<div class="daily-poster-image">
+    <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图">
+    <div class="daily-poster-caption">
+        <div class="daily-poster-day">
+            这是你和 Anchor 的第
+            <span id="dailyPosterDayCount">1</span> 天
+        </div>
+        <div class="daily-poster-subline" id="dailyPosterDate">
+            2025.01.01 像一次短暂停靠，看看今天走到了哪里。
+        </div>
+    </div>
+</div>
+
+            <div class="daily-poster-actions">
+                <button type="button" class="poster-btn-primary" onclick="dailyPosterEatCandy()">
+                    先吃颗糖
+                </button>
+                <button type="button" class="poster-btn-secondary" onclick="dailyPosterSkipToGacha()">
+                    直接抽卡
+                </button>
+                <button type="button" class="poster-btn-tertiary" onclick="closeDailyPoster()">
+                    稍后再说
+                </button>
+            </div>
+        </div>
+    </div>
+
+<button id="enableSoundBtn" class="sound-enable-btn" type="button">
+    开启音效
+</button>
+
 </body>
 </html>
 
