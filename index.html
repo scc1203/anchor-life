@@ -181,6 +181,7 @@
     border-radius: 12px;
     padding: 10px;
     border: 1px dashed rgba(0,0,0,0.05);
+    position: relative;
 }
 /* 音乐糖（网易云歌单）卡片样式 */
 .music-candy-card {
@@ -232,20 +233,21 @@
 }
 
 .sound-enable-btn {
-    position: fixed;
-    right: 12px;
-    bottom: 16px;
-    z-index: 3000;
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: none;
-    background: rgba(0, 0, 0, 0.72);
-    color: #fff;
-    font-size: 11px;
-    display: none; /* 默认隐藏，只在主屏幕模式里出现 */
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 50;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.92);
+    color: rgba(0,0,0,0.72);
+    font-size: 13px;
+    display: none; /* 默认隐藏：仅在需要解锁音效时出现 */
     align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    gap: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    backdrop-filter: blur(6px);
 }
 
 
@@ -1353,6 +1355,72 @@ body.variant-common .stat-btn.joy {
     color: #999;
 }
 
+
+
+/* v6.1 烟花/星空糖 */
+.fireworks-candy-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.fireworks-topbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+.mode-switch {
+    display: inline-flex;
+    background: rgba(255,255,255,0.75);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+}
+.mode-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 10px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: rgba(0,0,0,0.62);
+    cursor: pointer;
+}
+.mode-btn.active {
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    color: rgba(0,0,0,0.85);
+}
+.fireworks-hint {
+    font-size: 13px;
+    color: rgba(0,0,0,0.58);
+}
+.fireworks-canvas {
+    width: 100%;
+    height: 240px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.06);
+    background: rgba(10, 12, 24, 0.92);
+}
+
+/* --- Candy: Fireworks/Stars canvas must stay inside the candy card --- */
+.fireworks-canvas-wrap{
+    width: 100%;
+    height: 240px;              /* 固定舞台高度，避免撑满屏幕 */
+    border-radius: 14px;
+    overflow: hidden;           /* 关键：防止画布溢出到卡片外 */
+    border: 1px solid rgba(0,0,0,0.06);
+    background: rgba(10, 12, 24, 0.92);
+    position: relative;
+}
+.fireworks-canvas-wrap canvas{
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
 </style>
 </head>
 <body>
@@ -1368,7 +1436,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.0 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.1 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -1383,7 +1451,7 @@ body.variant-common .stat-btn.joy {
             <span class="stat-count" id="stat-willpower">0</span>
         </div>
 
-        <!-- 00 · 吃糖按钮（盲盒入口，只是一颗糖图标） -->
+        <!-- 00 区 · 吃糖按钮（盲盒入口，只是一颗糖图标） -->
         <div id="candyButton" class="stat-btn candy" onclick="handleCandyButtonClick()" aria-label="吃糖">
             <span class="candy-emoji">🍬</span>
         </div>
@@ -1402,6 +1470,8 @@ body.variant-common .stat-btn.joy {
             <div class="candy-subtitle">每次点“吃糖”，都会随机打开一个小玩具。</div>
         </div>
         <div id="candyStage" class="candy-stage">
+            <button id="candySoundBtn" class="sound-enable-btn" type="button" style="display:none;">开启音效</button>
+            <div id="candyStageInner"></div>
             <!-- 糖的具体内容由脚本渲染 -->
         </div>
     </div>
@@ -1742,7 +1812,8 @@ body.variant-common .stat-btn.joy {
  		    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；音乐糖；增加每日打卡图。</li>
 
 
-                </ul>
+                <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”（同一颗糖内可切换两种模式）；为“捏气泡/烟花·星空”等需要音效的糖增加主屏幕/沙盒「开启音效」解锁按钮（仅在需要且未解锁时出现）；补充音效播放兼容策略与兜底（缺少本地音效文件时仍可发声）。</li>
+</ul>
             </div>
         </details>
     </div>
@@ -1924,6 +1995,11 @@ const CANDY_FAMILIES = [
         id: 'audio',             // 音频类糖（音乐糖、乐器糖）
         weight: 1,
         variants: ['music']      // 目前只有音乐糖，将来可以再加 'instrument'
+    },
+    {
+        id: 'visual',            // 视觉互动类糖（烟花 / 星空等）
+        weight: 1,
+        variants: ['fireworks']
     }
     // 预留位（将来要用）：
     // {
@@ -1939,7 +2015,7 @@ const MUSIC_CLIPS = [
         title: '《这条小鱼在乎》王OK / 洪佩瑜',
         bvid: 'BV1yr421j7vr'
     },
-	{
+{
   title: '《多远都要在一起》—— 王橹杰（snn定制🍬）',
   bvid: 'BV1jTmMBqE4N'
 },
@@ -1952,9 +2028,9 @@ const MUSIC_CLIPS = [
         bvid: 'BV1jX4y1474a'
     },
     {
-        title: '《我很快乐》- 刘惜君 · 嘴硬之歌',
-        bvid: 'BV1L8411C7Ga'
-    },
+  title: '《我很快乐》—— 刘惜君',
+  bvid: 'BV1L8411C7Ga'
+},
     {
         title: '《奇妙能力歌》- 陈粒 · 4K Hi-Res 版',
         bvid: 'BV1ncygBBEcK'
@@ -2017,16 +2093,97 @@ function getAllCandyTypes() {
                 }
             });
         }
-    });
+    }, { passive: false });
     return all;
 }
 // 捏气泡用的音效：使用一段外部音频文件（兼容 iOS Safari + 主屏幕模式）
-const BUBBLE_POP_URL = 'bubble-pop-short.mp3'; // 和 index.html 同目录
+const BUBBLE_POP_URL = 'bubble-pop-short.mp3';
+const FIREWORK_POP_URL = 'firework-pop.wav';
+const STAR_SHINE_URL  = 'star-shinning.mp3'; // 和 index.html 同目录
+const BUBBLE_POP_FALLBACK_DATA = 'data:audio/wav;base64,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';
+
+// WebAudio 兜底（极短“pop”），用于：本地音频缺失/加载失败时仍可发声
+let _candyAudioCtx = null;
+function getCandyAudioCtx() {
+    try {
+        if (!_candyAudioCtx) {
+            _candyAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (_candyAudioCtx.state === 'suspended') {
+            _candyAudioCtx.resume().catch(() => {});
+        }
+    } catch (e) {}
+    return _candyAudioCtx;
+}
+
+function playWebPop(f = 260, dur = 0.10) {
+    const ctx = getCandyAudioCtx();
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, t0);
+    osc.frequency.exponentialRampToValueAtTime(Math.max(60, f * 1.9), t0 + Math.max(0.02, dur * 0.35));
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1600, t0);
+
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.55, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.01);
+}
+
+async function safePlayAudio(audioEl, fallbackDataUrl) {
+    try {
+        audioEl.currentTime = 0;
+        await audioEl.play();
+        return true;
+    } catch (e) {}
+
+    if (fallbackDataUrl) {
+        try {
+            if (!audioEl.src || audioEl.src.indexOf('data:audio') !== 0) {
+                audioEl.src = fallbackDataUrl;
+                audioEl.load();
+            }
+            audioEl.currentTime = 0;
+            await audioEl.play();
+            return true;
+        } catch (e) {}
+    }
+    return false;
+}
 const bubblePopAudio = new Audio(BUBBLE_POP_URL);
 bubblePopAudio.preload = 'auto';
 bubblePopAudio.volume = 1.0;
+// 若本地 bubble-pop-short.mp3 不存在，自动回退到内置短音效
+bubblePopAudio.addEventListener('error', () => {
+    try {
+        bubblePopAudio.src = BUBBLE_POP_FALLBACK_DATA;
+        bubblePopAudio.load();
+    } catch (e) {}
+});
 
-let bubbleSoundUnlocked = false;
+const fireworkPopAudio = new Audio(FIREWORK_POP_URL);
+fireworkPopAudio.preload = 'auto';
+fireworkPopAudio.volume = 1.0;
+
+const starShineAudio = new Audio(STAR_SHINE_URL);
+starShineAudio.preload = 'auto';
+starShineAudio.loop = true;
+starShineAudio.volume = 0.65;
+
+let soundUnlocked = false;
 
 // 判断是否处于「添加到主屏幕」的独立模式
 function isStandaloneMode() {
@@ -2036,47 +2193,104 @@ function isStandaloneMode() {
     );
 }
 
-// 初始化「开启音效」按钮逻辑
-function initBubbleSoundUnlock() {
-    const btn = document.getElementById('enableSoundBtn');
+// 当前糖是否需要音效（用于控制“开启音效”按钮是否出现）
+let currentCandyNeedsSound = false;
+
+// 仅在“需要音效且尚未解锁”的情况下显示按钮（主要兼容 iOS 主屏幕/沙盒策略）
+function updateCandySoundButton(needsSound) {
+    currentCandyNeedsSound = !!needsSound;
+    const btn = document.getElementById('candySoundBtn');
     if (!btn) return;
 
-    if (isStandaloneMode()) {
-        // 主屏幕模式：需要用户点一次来解锁音效
+    if (isStandaloneMode() && currentCandyNeedsSound && !soundUnlocked) {
         btn.style.display = 'inline-flex';
     } else {
-        // 普通 Safari / 桌面浏览器：直接视为已解锁，不显示按钮
-        bubbleSoundUnlocked = true;
         btn.style.display = 'none';
-        return;
     }
+}
 
-    btn.addEventListener('click', () => {
-        // 主动播放一次再立刻暂停，用来“解锁”音频
-        bubblePopAudio.currentTime = 0;
-        bubblePopAudio.play().then(() => {
+// 统一解锁：用一次用户点击手势，把相关音频都“点亮”
+async function unlockAllCandySounds() {
+    const btn = document.getElementById('candySoundBtn');
+    // 同步唤醒 WebAudio（作为兜底/补充）
+    try { getCandyAudioCtx(); } catch (e) {}
+
+    // 逐个尝试，不要因为某个失败就中断
+    try { await bubblePopAudio.play(); bubblePopAudio.pause(); bubblePopAudio.currentTime = 0; } catch (e) {
+        try {
+            bubblePopAudio.src = BUBBLE_POP_FALLBACK_DATA;
+            bubblePopAudio.load();
+            await bubblePopAudio.play();
             bubblePopAudio.pause();
             bubblePopAudio.currentTime = 0;
-            bubbleSoundUnlocked = true;
-            btn.style.display = 'none';
-        }).catch(() => {
-            // 即便失败也先隐藏按钮，避免一直挡视线
-            btn.style.display = 'none';
-        });
+        } catch (_) {}
+    }
+    try { await fireworkPopAudio.play(); fireworkPopAudio.pause(); fireworkPopAudio.currentTime = 0; } catch (e) {}
+    try { await starShineAudio.play(); starShineAudio.pause(); starShineAudio.currentTime = 0; } catch (e) {}
+
+    soundUnlocked = true;
+    if (btn) btn.style.display = 'none';
+}
+
+// 初始化按钮点击（按钮本身常驻在 candyStage，不会被 innerHTML 清掉）
+function initCandySoundButton() {
+    const btn = document.getElementById('candySoundBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+        unlockAllCandySounds();
+    });
+
+    // 非主屏幕模式：一般不会被自动播放策略卡住，直接视为已解锁
+    if (!isStandaloneMode()) {
+        soundUnlocked = true;
+        btn.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initCandySoundButton);
+
+function playBubblePopSound() {
+    // 主屏幕模式未解锁时，直接不播，避免被系统静音/报错
+    if (isStandaloneMode() && !soundUnlocked) return;
+
+    // 先尝试播放本地文件；失败则回退到内置短音效；再失败则用 WebAudio 兜底
+    safePlayAudio(bubblePopAudio, BUBBLE_POP_FALLBACK_DATA).then((ok) => {
+        if (!ok) {
+            try { playWebPop(260, 0.10); } catch (e) {}
+        }
     });
 }
 
-document.addEventListener('DOMContentLoaded', initBubbleSoundUnlock);
+function playFireworkPopSound() {
+    if (isStandaloneMode() && !soundUnlocked) return;
 
-function playBubblePopSound() {
-    if (!bubbleSoundUnlocked) return; // 还没解锁就不播，避免被系统静音
-    try {
-        bubblePopAudio.currentTime = 0;
-        bubblePopAudio.play().catch(() => {});
-    } catch (e) {
-        // 有问题就静默，不影响其它逻辑
-    }
+    safePlayAudio(fireworkPopAudio, null).then((ok) => {
+        if (!ok) {
+            try { playWebPop(180, 0.12); } catch (e) {}
+        }
+    });
 }
+function startStarShineSound() {
+    // 如果是“主屏幕/沙盒独立模式”且还没解锁音频，就不要硬播，等用户点“开启音效”
+    if (isStandaloneMode() && !soundUnlocked) return;
+
+    try {
+        // 已在播放就不重复触发
+        if (!starShineAudio.paused) return;
+
+        // 循环音效：从头开始更符合“每次进入的仪式感”
+        starShineAudio.currentTime = 0;
+        const p = starShineAudio.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+    } catch (e) {}
+}
+
+function stopStarShineSound() {
+    try {
+        starShineAudio.pause();
+    } catch (e) {}
+}
+
 
     // 记录累计打开天数 & 每日打卡图已弹出的日期
     const KEY_OPENED_DAYS = 'anchor_opened_days_v56';
@@ -2166,26 +2380,18 @@ function showDailyPosterIfNeeded(openDaysCount) {
     // 顶部 🍬 按钮点击：如果 00 区是关的就打开，是开的就收起
 function handleCandyButtonClick() {
     const section = document.getElementById('candySection');
-    const stage   = document.getElementById('candyStage');
+    const stage   = document.getElementById('candyStageInner');
     const wrapper = document.querySelector('.stats-and-candy-wrapper');
     if (!section || !stage) return;
 
     const isVisible = section.style.display === 'block';
 
     if (isVisible) {
-        // 收起 00 区
+        // 收起 00 区（不做任何自动滚动，避免页面越滚越下）
         section.style.display = 'none';
-        if (wrapper) {
-            wrapper.classList.remove('candy-open');
-        }
-
-        // 视角回到念头计数区
-        const statsBar = document.querySelector('.stats-bar');
-        if (statsBar && statsBar.scrollIntoView) {
-            statsBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        if (wrapper) wrapper.classList.remove('candy-open');
     } else {
-        // 打开 00 区并随机一颗糖
+        // 打开 00 区并随机一颗糖（不做 scrollIntoView）
         openCandyEngine();
     }
 }
@@ -2194,28 +2400,24 @@ function handleCandyButtonClick() {
     // 打开 00 区，并随机选择一种糖模式
     function openCandyEngine() {
         const section = document.getElementById('candySection');
-        const stage   = document.getElementById('candyStage');
-  	const wrapper = document.querySelector('.stats-and-candy-wrapper');
+        const stage   = document.getElementById('candyStageInner');
+        const wrapper = document.querySelector('.stats-and-candy-wrapper');
         if (!section || !stage) return;
 
-        // 确保 00 区展示出来
+        // 确保 00 区展示出来（不做 scrollIntoView，避免每次展开都把页面推走）
         section.style.display = 'block';
-    if (wrapper) {
-        wrapper.classList.add('candy-open');
-    }
+        if (wrapper) wrapper.classList.add('candy-open');
 
         // 每次打开都当作一次“拆盲盒”
         renderRandomCandy(stage);
-
-        // 平滑滚动到 00 区顶部
-        if (section.scrollIntoView) {
-            section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
     }
 
     // 根据糖类型，渲染具体糖内容
 function renderRandomCandy(stageEl) {
-    const t = pickCandyType() || 'bubble';  // 兜底：如果出错，就用 bubble
+    const t = pickCandyType() || 'bubble';
+
+    // 只有需要音效的糖（捏气泡 / 烟花·星空）才有可能显示“开启音效”按钮
+    updateCandySoundButton(t === 'bubble' || t === 'fireworks');  // 兜底：如果出错，就用 bubble
 
     if (t === 'bubble') {
         // 捏气泡糖
@@ -2227,8 +2429,11 @@ function renderRandomCandy(stageEl) {
         // 涂色糖
         renderColoringCandy(stageEl);
     } else if (t === 'music') {
-        // 音乐糖（网易云歌单）
+        // 音乐糖（B站播放列表）
         renderMusicCandy(stageEl);
+    } else if (t === 'fireworks') {
+        // 烟花 / 星空拖尾糖
+        renderFireworksCandy(stageEl);
     } else {
         // 万一将来配置里多了新类型但没实现，就安全兜底到气泡糖
         renderBubbleCandy(stageEl);
@@ -2351,6 +2556,461 @@ function renderBubbleCandy(stageEl) {
     }
 }
 // v6：音乐糖（Anchor 启动歌单 · 网易云）
+// v6.1：烟花/星空糖（同一颗糖，两种模式）
+function renderFireworksCandy(stageEl) {
+    const thresholdFire = 8;   // 烟花：点出 8 次视为“够啦”
+    const thresholdStar = 6;   // 星空：完成 6 次按住拖动视为“够啦”
+    const maxRunMs      = 80000; // 最长运行时间：80s
+
+    // 体验策略：默认固定先进入「烟花」，用户可点按钮切到「星空」
+    let mode = 'fireworks';
+
+    let burstCount  = 0;
+    let strokeCount = 0;
+    let startedAt   = Date.now();
+
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // --- UI ---
+    let html = '';
+    html += '<div class="fireworks-candy-card">';
+    html += '  <div class="fireworks-topbar">';
+    html += '    <div class="mode-switch">';
+    html += '      <button type="button" class="mode-btn" id="fwModeFire">烟花</button>';
+    html += '      <button type="button" class="mode-btn" id="fwModeStar">星空</button>';
+    html += '    </div>';
+    html += '  </div>';
+    html += '  <div class="fireworks-hint" id="fwHint"></div>';
+    html += '  <div class="fireworks-canvas-wrap">';
+    html += '    <canvas id="fwCanvas" aria-label="Fireworks / Stars"></canvas>';
+    html += '  </div>';
+    html += '  <button type="button" id="fwToGachaBtn" class="bubble-to-gacha" style="display:none;">去抽卡</button>';
+    html += '</div>';
+
+    stageEl.innerHTML = html;
+
+    const canvas   = stageEl.querySelector('#fwCanvas');
+    const wrap     = stageEl.querySelector('.fireworks-canvas-wrap');
+    const ctx      = canvas.getContext('2d');
+    const hint     = stageEl.querySelector('#fwHint');
+    const btnFire  = stageEl.querySelector('#fwModeFire');
+    const btnStar  = stageEl.querySelector('#fwModeStar');
+    const toGachaBtn = stageEl.querySelector('#fwToGachaBtn');
+
+    // CSS 触控防滚动
+    canvas.style.touchAction = 'none';
+
+    // --- Canvas sizing ---
+    let dpr = 1;
+    function fitCanvas() {
+        const rect = (wrap || canvas).getBoundingClientRect();
+        const w = Math.max(1, Math.floor(rect.width));
+        const h = Math.max(1, Math.floor(rect.height));
+        dpr = Math.min((window.devicePixelRatio || 1), isMobile ? 1.5 : 2);
+        const pxW = Math.floor(w * dpr);
+        const pxH = Math.floor(h * dpr);
+        if (canvas.width !== pxW || canvas.height !== pxH) {
+            canvas.width = pxW;
+            canvas.height = pxH;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+    }
+
+    // 统一底色（轻微残影）
+    function clearFrame(alpha) {
+        fitCanvas();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = `rgba(10, 12, 24, ${alpha})`;
+        const cw = (wrap && wrap.clientWidth) ? wrap.clientWidth : canvas.clientWidth;
+        const ch = (wrap && wrap.clientHeight) ? wrap.clientHeight : canvas.clientHeight;
+        ctx.fillRect(0, 0, cw, ch);
+    }
+
+    // --- 状态与粒子 ---
+    let rafId = 0;
+    let running = false;
+    let isDown = false;
+    let lastSpawnAt = 0;
+
+    // 烟花：完全使用 v6.1 通用版的粒子结构（重力下坠 + 残影）
+    const fwParticles = [];
+    const fwPalette = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#B983FF', '#FF9F1C', '#F72585', '#00BBF9'];
+
+    function spawnBurstFW(x, y) {
+        const count = 42;
+        const base = fwPalette[Math.floor(Math.random() * fwPalette.length)];
+        for (let i = 0; i < count; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const sp = 1.2 + Math.random() * 3.2;
+            fwParticles.push({
+                x, y,
+                vx: Math.cos(a) * sp,
+                vy: Math.sin(a) * sp,
+                life: 1,
+                decay: 0.012 + Math.random() * 0.016,
+                r: 1.2 + Math.random() * 1.8,
+                color: base,
+            });
+        }
+    }
+
+    // 星空：轻量“拖尾刷” + 星点粒子（移动端更省）
+    const starParticles = [];
+    const starPalette = ['rgba(255,255,255,0.95)', 'rgba(217,242,255,0.95)', 'rgba(190,227,255,0.95)', 'rgba(242,233,255,0.95)', 'rgba(255,232,244,0.95)'];
+    let lastPt = null;
+    let dragProgress = 0;
+    let lastFrameAt = 0;
+
+    function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+    // “从细到宽、逐渐散开”：spread 随拖动累计距离增长（略比上一版更大一点点）
+    function getStarSpread() {
+        const t = clamp(dragProgress / 260, 0, 1);   // 0..1
+        return 2.2 + t * 10.2; // 约 2.2 -> 12.4（散开稍大一点点）
+    }
+
+    function spawnStarDots(x, y, spread) {
+        // 尾部星点密集一点，但受移动端/总量上限保护
+        const n = (isMobile ? (4 + Math.floor(Math.random() * 3)) : (6 + Math.floor(Math.random() * 5)));
+        const maxParticles = isMobile ? 220 : 520;
+
+        for (let i = 0; i < n; i++) {
+            const c = starPalette[Math.floor(Math.random() * starPalette.length)];
+            const ox = (Math.random() - 0.5) * spread;
+            const oy = (Math.random() - 0.5) * spread;
+            const life = isMobile ? (34 + Math.random() * 20) : (46 + Math.random() * 26);
+            starParticles.push({
+                x: x + ox,
+                y: y + oy,
+                vx: (Math.random() - 0.5) * 0.55,
+                vy: (Math.random() - 0.5) * 0.55,
+                life: life,
+                maxLife: life,
+                color: c,
+                size: (isMobile ? (0.9 + Math.random() * 1.1) : (1.1 + Math.random() * 1.5))
+            });
+        }
+
+        // 超过上限就丢弃最旧的，防卡顿
+        if (starParticles.length > maxParticles) {
+            starParticles.splice(0, starParticles.length - maxParticles);
+        }
+    }
+
+    function drawStarBrushSegment(a, b, spread) {
+        // 轻量渐变拖尾（避免“白条”：整体 alpha 很克制，靠星点来撑质感）
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const speed = clamp(dist / 18, 0.6, 2.2);
+
+        // 宽度从细到宽（比上一版宽一点点，但不过分）
+        const t = clamp(dragProgress / 260, 0, 1);
+        const base = (isMobile ? 1.6 : 1.8);
+        const maxW = (isMobile ? 6.8 : 7.8);
+        const w = (base + t * (maxW - base)) * speed;
+
+        const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+        g.addColorStop(0, 'rgba(255,255,255,0.00)');
+        g.addColorStop(0.35, 'rgba(190,227,255,0.10)');
+        g.addColorStop(0.75, 'rgba(255,232,244,0.10)');
+        g.addColorStop(1, 'rgba(255,255,255,0.00)');
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = g;
+        ctx.lineWidth = w;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = 'rgba(190,227,255,0.18)';
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+
+        // 额外“散开”的微星尘（轻量，主要在尾部）
+        const dustN = isMobile ? 1 : 2;
+        for (let i = 0; i < dustN; i++) {
+            const px = b.x + (Math.random() - 0.5) * (spread * 0.65);
+            const py = b.y + (Math.random() - 0.5) * (spread * 0.65);
+            ctx.fillStyle = 'rgba(255,255,255,0.14)';
+            ctx.beginPath();
+            ctx.arc(px, py, 0.9 + Math.random() * 0.9, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    }
+
+    // --- 完成判定 ---
+    function maybeComplete() {
+        const done = (mode === 'fireworks') ? (burstCount >= thresholdFire) : (strokeCount >= thresholdStar);
+        if (!done) return;
+
+        if (toGachaBtn) toGachaBtn.style.display = 'block';
+        if (!candyEatenThisSession) markCandyDone();
+
+        if (hint) {
+            hint.textContent = (mode === 'fireworks')
+                ? '好，这样就够啦，可以去抽一张卡。'
+                : '好，星光就到这里。可以去抽一张卡。';
+        }
+    }
+
+    // --- 动画循环 ---
+    function ensureRunning() {
+        if (!running) {
+            running = true;
+            rafId = requestAnimationFrame(tick);
+        }
+    }
+
+    function stopRunning() {
+        running = false;
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+    }
+
+    function computeFadeAlpha(dt, base) {
+        // dt 自适应：低帧率时每帧清得更多，避免“尾巴迟迟不散”
+        const keep = Math.pow(1 - base, dt / 16.6667);
+        return 1 - keep; // 转回 fill 的 alpha
+    }
+
+    function tick(now) {
+        // 容器被替换/移除时停止动画（避免后台占用）
+        if (!document.body.contains(canvas)) {
+            stopStarShineSound();
+            stopRunning();
+            return;
+        }
+
+        // 超时保护：到时间就提示回抽卡
+        if (now - startedAt > maxRunMs && toGachaBtn) {
+            if (!candyEatenThisSession) markCandyDone();
+            toGachaBtn.style.display = 'block';
+        }
+
+        if (mode === 'fireworks') {
+            // v6.1 烟花底色残影（沿用 v6.1.6：更有“残影 + 下坠”手感）
+            clearFrame(0.18);
+
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            for (let i = fwParticles.length - 1; i >= 0; i--) {
+                const p = fwParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.985;
+                p.vy = p.vy * 0.985 + 0.045; // 重力：决定“往下掉”的感觉
+                p.life -= p.decay;
+
+                if (p.life <= 0) {
+                    fwParticles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+            ctx.globalAlpha = 1;
+
+            // 粒子清空且未按下时可停帧（省电）
+            if (fwParticles.length === 0 && !isDown) {
+                stopRunning();
+                return;
+            }
+        } else {
+            // 星空：比烟花更轻，且移动端更快消散
+            const dt = lastFrameAt ? (now - lastFrameAt) : 16.6;
+            lastFrameAt = now;
+
+            const base = isMobile ? 0.34 : 0.26; // base 越大消散越快
+            const fade = computeFadeAlpha(dt, base);
+            clearFrame(fade);
+
+            for (let i = starParticles.length - 1; i >= 0; i--) {
+                const p = starParticles[i];
+                p.life -= 1;
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.985;
+                p.vy *= 0.985;
+
+                if (p.life <= 0) {
+                    starParticles.splice(i, 1);
+                    continue;
+                }
+
+                const alpha = (p.life / p.maxLife);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+
+            if (starParticles.length === 0 && !isDown) {
+                stopRunning();
+                return;
+            }
+        }
+
+        rafId = requestAnimationFrame(tick);
+    }
+
+    // --- 交互 ---
+    function getXY(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left);
+        const y = (e.clientY - rect.top);
+        return { x, y };
+    }
+
+    function setMode(next) {
+        if (mode === next) return;
+        mode = next;
+
+        // 切换时做一次清屏，且停止星空循环音
+        stopStarShineSound();
+        isDown = false;
+        lastPt = null;
+        dragProgress = 0;
+
+        // 清掉粒子（避免跨模式残留）
+        fwParticles.length = 0;
+        starParticles.length = 0;
+
+        // 更新按钮态
+        if (btnFire) btnFire.classList.toggle('active', mode === 'fireworks');
+        if (btnStar) btnStar.classList.toggle('active', mode === 'stars');
+
+        updateHint();
+        clearFrame(0.92);
+    }
+
+    function updateHint() {
+        if (!hint) return;
+        hint.textContent = (mode === 'fireworks')
+            ? '点几下，让它炸开。够啦就去抽卡。'
+            : '按住拖动，画出一点星光拖尾。够啦就去抽卡。';
+    }
+
+    // 事件绑定（pointer 支持桌面/移动端）
+    canvas.addEventListener('pointerdown', (e) => {
+        try {
+        isDown = true;
+        startedAt = startedAt || Date.now();
+        try { canvas.setPointerCapture && canvas.setPointerCapture(e.pointerId); } catch (_) {}
+
+        const { x, y } = getXY(e);
+
+        if (mode === 'fireworks') {
+            spawnBurstFW(x, y);
+            burstCount++;
+            playFireworkPopSound();
+            if (burstCount >= thresholdFire) maybeComplete();
+        } else {
+            strokeCount++;
+            dragProgress = 0;
+            lastPt = { x, y };
+            startStarShineSound();
+
+            const spread = getStarSpread();
+            spawnStarDots(x, y, spread);
+            if (strokeCount >= thresholdStar) maybeComplete();
+        }
+
+        ensureRunning();
+        } catch (err) {
+            console.error('[FireworksCandy] pointerdown error', err);
+            if (hint) hint.textContent = '⚠️ 小烟花出了点小故障，刷新一下再试';
+            stop();
+        }
+
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+        if (!isDown) return;
+
+        const now = Date.now();
+
+        if (mode === 'fireworks') {
+            // 按住拖动：节流连续触发烟花（完全沿用 v6.1 的节奏）
+            if (now - lastSpawnAt < 45) return;
+            lastSpawnAt = now;
+            const { x, y } = getXY(e);
+            spawnBurstFW(x, y);
+            burstCount++;
+            playFireworkPopSound();
+            if (burstCount >= thresholdFire) maybeComplete();
+            ensureRunning();
+            return;
+        }
+
+        // stars：拖动绘制（移动端节流更强）
+        const minInterval = isMobile ? 55 : 28;
+        if (now - lastSpawnAt < minInterval) return;
+        lastSpawnAt = now;
+
+        const { x, y } = getXY(e);
+        if (lastPt) {
+            const dx = x - lastPt.x;
+            const dy = y - lastPt.y;
+            dragProgress += Math.hypot(dx, dy);
+        }
+
+        const spread = getStarSpread();
+
+        // 画渐变拖尾（用低 alpha 防止“白条”）
+        if (lastPt) drawStarBrushSegment(lastPt, { x, y }, spread);
+
+        // 星点更密集一点（但有上限保护）
+        spawnStarDots(x, y, spread);
+
+        lastPt = { x, y };
+        ensureRunning();
+    });
+
+    function endPointer(e) {
+        if (!isDown) return;
+        isDown = false;
+        lastPt = null;
+        dragProgress = 0;
+        stopStarShineSound();
+        ensureRunning(); // 让尾巴自然淡出
+    }
+
+    canvas.addEventListener('pointerup', endPointer);
+    canvas.addEventListener('pointercancel', endPointer);
+    canvas.addEventListener('pointerleave', endPointer);
+
+    // 模式切换按钮
+    if (btnFire) btnFire.addEventListener('click', () => setMode('fireworks'));
+    if (btnStar) btnStar.addEventListener('click', () => setMode('stars'));
+
+    if (toGachaBtn) {
+        toGachaBtn.addEventListener('click', () => {
+            if (!candyEatenThisSession) markCandyDone();
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero && hero.scrollIntoView) {
+                hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    // 初始化
+    setMode('fireworks');
+    updateHint();
+    clearFrame(0.92);
+}
+
 function renderMusicCandy(stageEl) {
     // 如果歌单配置里暂时没有歌曲，就兜底成气泡糖，避免报错
     if (!Array.isArray(MUSIC_CLIPS) || MUSIC_CLIPS.length === 0) {
@@ -4524,10 +5184,6 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
     </div>
-
-<button id="enableSoundBtn" class="sound-enable-btn" type="button">
-    开启音效
-</button>
 
 </body>
 </html>
