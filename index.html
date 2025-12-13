@@ -1645,7 +1645,6 @@ body.variant-common .stat-btn.joy {
     </div>
 </div>
 
-
     <!-- 抽取区 -->
     <div class="hero-wrapper">
         <div class="section-title section-title-ritual">
@@ -2197,7 +2196,7 @@ const MUSIC_CLIPS = [
     },
     {
         title: '《我很快乐》- 刘惜君 · 嘴硬之歌',
-        bvid: 'BV1V14y1f7Up'
+        bvid: 'BV1L8411C7Ga'
     },
     {
         title: '《奇妙能力歌》- 陈粒 · 4K Hi-Res 版',
@@ -2227,6 +2226,42 @@ const MUSIC_CLIPS = [
         title: '《City of Stars》- 电影《爱乐之城》主题曲 MV',
         bvid: 'BV1Q4411A7Q6'
     },
+	{
+  title: '日推歌单｜“偏偏你忽略了我的爱”｜《Beanie》',
+  bvid: 'BV1aRpqe3E7v'
+},
+{
+  title: '4K珍藏｜郁可唯《去有风的地方》主题曲',
+  bvid: 'BV1p14y137HP'
+},
+{
+  title: '10CM - 春雪《背着善宰跑》OST｜Cause I\'m falling slowly love with you',
+  bvid: 'BV1nE421G73Q'
+},
+{
+  title: '【4K修复】徐小凤《心恋》90年代演出现场',
+  bvid: 'BV1z94y117A2'
+},
+{
+  title: '《失恋阵线联盟》草蜢 MV 1080P 60FPS（LD采集）',
+  bvid: 'BV1TL4y1E7dA'
+},
+{
+  title: '贾樟柯电影插曲：Go West - Pet Shop Boys',
+  bvid: 'BV1mV411M7ic'
+},
+{
+  title: '【白雪公主OST】Heigh-Ho',
+  bvid: 'BV1kW411G7Au'
+},
+{
+  title: 'JVKE - golden hour（无损音质 4K60 中英字幕）',
+  bvid: 'BV1GV4y1c7nZ'
+},
+{
+  title: '【无损音质】陈绮贞 - 我喜欢上你时的内心活动',
+  bvid: 'BV1PD4y1w72A'
+},
     {
         title: '《Another Day of Sun》- 电影《爱乐之城》开场曲 4K 60FPS',
         bvid: 'BV14knez5E4x'
@@ -2274,13 +2309,21 @@ const BUBBLE_POP_FALLBACK_DATA = 'data:audio/wav;base64,UklGRl4RAABXQVZFZm10IBAA
 let _candyAudioCtx = null;
 function getCandyAudioCtx() {
     try {
-        if (!_candyAudioCtx) {
-            _candyAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+
+        // 如果之前没有，或者已经被系统关掉，就重建一个
+        if (!_candyAudioCtx || _candyAudioCtx.state === 'closed') {
+            _candyAudioCtx = new AC();
         }
+
+        // 如果只是暂时挂起，恢复它
         if (_candyAudioCtx.state === 'suspended') {
             _candyAudioCtx.resume().catch(() => {});
         }
-    } catch (e) {}
+    } catch (e) {
+        _candyAudioCtx = null;
+    }
     return _candyAudioCtx;
 }
 
@@ -2353,84 +2396,72 @@ starShineAudio.volume = 0.65;
 
 let soundUnlocked = false;
 
-// 判断是否处于「添加到主屏幕」的独立模式
+// 判断是否处于「添加到主屏幕」的独立模式（仅用于提示，不再参与核心判断）
 function isStandaloneMode() {
-    return (
-        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-        window.navigator.standalone === true
-    );
+    try {
+        return (
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+            window.navigator.standalone === true
+        );
+    } catch (e) {
+        return false;
+    }
 }
 
 // 当前糖是否需要音效（用于控制“开启音效”按钮是否出现）
 let currentCandyNeedsSound = false;
 
-// 仅在“需要音效且尚未解锁”的情况下显示按钮（主要兼容 iOS 主屏幕/沙盒策略）
+// 仅在“需要音效且尚未解锁”的情况下显示按钮
 function updateCandySoundButton(needsSound) {
     currentCandyNeedsSound = !!needsSound;
     const btn = document.getElementById('candySoundBtn');
     if (!btn) return;
 
-    if (isStandaloneMode() && currentCandyNeedsSound && !soundUnlocked) {
+    if (currentCandyNeedsSound && !soundUnlocked) {
         btn.style.display = 'inline-flex';
     } else {
         btn.style.display = 'none';
     }
 }
 
-// 统一解锁：用一次用户点击手势，把相关音频都“点亮”
-// 注意：这里不再使用 async/await，避免在 iOS 沙盒里 Promise 卡死
-function unlockAllCandySounds() {
+// 统一解锁：用户点一次按钮，把相关音频都“点亮”
+async function unlockAllCandySounds() {
     const btn = document.getElementById('candySoundBtn');
 
-    // 先直接认为“已解锁”，不让界面卡住
-    soundUnlocked = true;
-    if (btn) {
-        btn.style.display = 'none';
-    }
-
-    // 尝试唤醒 WebAudio 上下文（有就用，没有也无所谓）
+    // 尝试唤醒 WebAudio（作为兜底）
     try { getCandyAudioCtx(); } catch (e) {}
 
-    // 封装一个小工具函数，尽力而为地“点一下”每个音频
-    function tryKickAudio(audio, fallbackData) {
-        if (!audio) return;
+    // 逐个尝试，不要因为某个失败就中断
+    try {
+        bubblePopAudio.currentTime = 0;
+        await bubblePopAudio.play();
+        bubblePopAudio.pause();
+    } catch (e) {
         try {
-            const p = audio.play();
-            if (p && typeof p.then === 'function') {
-                p.then(() => {
-                    try {
-                        audio.pause();
-                        audio.currentTime = 0;
-                    } catch (e) {}
-                }).catch(() => {
-                    if (fallbackData) {
-                        try {
-                            audio.src = fallbackData;
-                            audio.load();
-                            const p2 = audio.play();
-                            if (p2 && typeof p2.then === 'function') {
-                                p2.then(() => {
-                                    try {
-                                        audio.pause();
-                                        audio.currentTime = 0;
-                                    } catch (e) {}
-                                }).catch(() => {});
-                            }
-                        } catch (e) {}
-                    }
-                });
-            }
-        } catch (e) {
-            // 这里出错就算了，不影响后面的逻辑
-        }
+            bubblePopAudio.src = BUBBLE_POP_FALLBACK_DATA;
+            bubblePopAudio.load();
+            bubblePopAudio.currentTime = 0;
+            await bubblePopAudio.play();
+            bubblePopAudio.pause();
+        } catch (_) {}
     }
 
-    // 尽量“点亮”几种音效源
-    tryKickAudio(bubblePopAudio, BUBBLE_POP_FALLBACK_DATA);
-    tryKickAudio(fireworkPopAudio, null);
-    tryKickAudio(starShineAudio, null);
-}
+    try {
+        fireworkPopAudio.currentTime = 0;
+        await fireworkPopAudio.play();
+        fireworkPopAudio.pause();
+    } catch (e) {}
 
+    try {
+        starShineAudio.currentTime = 0;
+        await starShineAudio.play();
+        starShineAudio.pause();
+    } catch (e) {}
+
+    // 不管实际是否发声，只要走到这里，就认为用户已经“尝试开启”
+    soundUnlocked = true;
+    updateCandySoundButton(currentCandyNeedsSound);
+}
 
 // 初始化按钮点击（按钮本身常驻在 candyStage，不会被 innerHTML 清掉）
 function initCandySoundButton() {
@@ -2439,15 +2470,23 @@ function initCandySoundButton() {
     btn.addEventListener('click', () => {
         unlockAllCandySounds();
     });
-
-    // 非主屏幕模式：一般不会被自动播放策略卡住，直接视为已解锁
-    if (!isStandaloneMode()) {
-        soundUnlocked = true;
-        btn.style.display = 'none';
-    }
 }
 
 document.addEventListener('DOMContentLoaded', initCandySoundButton);
+
+// 页面可见性变化时，在沙盒模式下要求用户重新解锁音效
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        if (isStandaloneMode()) {
+            soundUnlocked = false;
+        }
+    } else if (document.visibilityState === 'visible') {
+        if (isStandaloneMode()) {
+            updateCandySoundButton(currentCandyNeedsSound);
+        }
+    }
+});
+
 
 function playBubblePopSound() {
     // 主屏幕模式未解锁时，直接不播，避免被系统静音/报错
@@ -3139,7 +3178,7 @@ function renderFireworksCandy(stageEl) {
         } catch (err) {
             console.error('[FireworksCandy] pointerdown error', err);
             if (hint) hint.textContent = '⚠️ 小烟花出了点小故障，刷新一下再试';
-            stop();
+            stopRunning();
         }
 
     });
