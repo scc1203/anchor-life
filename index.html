@@ -259,6 +259,174 @@
 }
 
 
+
+/* 乐器糖（Kalimba） */
+.instrument-card{
+    background: rgba(255,255,255,0.86);
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 10px 26px rgba(0,0,0,0.05);
+}
+.instrument-title{
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(0,0,0,0.78);
+    margin-bottom: 6px;
+}
+.instrument-sub{
+    font-size: 12px;
+    color: rgba(0,0,0,0.55);
+    margin-bottom: 10px;
+}
+.kalimba-keys{
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    align-items: end;
+}
+.kalimba-key {
+    height: 90px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);  /* 更柔和的边框 */
+    background: 
+        linear-gradient(180deg, rgba(255, 220, 160, 0.7), rgba(255, 255, 255, 0.3));  /* 柔和的浅橙色渐变到白色 */
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);  /* 更轻的阴影效果 */
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+
+
+.kalimba-key:active{
+    transform: translateY(1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.kalimba-num{
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(0,0,0,0.78);
+    line-height: 1.0;
+}
+.kalimba-note{
+    font-size: 10px;
+    color: rgba(0,0,0,0.52);
+    margin-top: 3px;
+}
+.instrument-actions{
+    display:flex;
+    gap:10px;
+    margin-top: 10px;
+}
+.instrument-actions button{
+    flex:1;
+    padding: 9px 10px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255,255,255,0.94);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+    cursor: pointer;
+    color: rgba(0,0,0,0.72);
+    font-size: 13px;
+}
+.instrument-to-gacha{
+    margin-top: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border-radius: 999px;
+    border: none;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+    cursor: pointer;
+    color: rgba(0,0,0,0.78);
+    font-size: 13px;
+}
+
+
+
+/* 乐器糖：模式切换 Tab + Chord Pad */
+.instrument-tabs{
+    display:flex;
+    gap:8px;
+    margin: 8px 0 10px;
+    padding: 2px;
+    border-radius: 999px;
+    background: rgba(0,0,0,0.03);
+}
+.instrument-tab{
+    flex:1;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.06);
+    background: transparent;
+    cursor: pointer;
+    color: rgba(0,0,0,0.60);
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+}
+.instrument-tab:active{
+    transform: translateY(1px);
+}
+.instrument-tab.active{
+    border-color: rgba(0,0,0,0.14);
+    color: rgba(0,0,0,0.84);
+    background: rgba(255,255,255,0.98);
+    box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+}
+.chordpad-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.chordpad-pad{
+    height: 72px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,0.06);
+    /* 马卡龙色系：用变量按 nth-child 分配 */
+    background: radial-gradient(130% 130% at 30% 25%, rgba(255,255,255,0.92), var(--pad, rgba(245,245,245,0.90)));
+    box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+}
+.chordpad-pad:nth-child(1){ --pad: #F7D6E6; } /* blush pink */
+.chordpad-pad:nth-child(2){ --pad: #FAD9C3; } /* peach */
+.chordpad-pad:nth-child(3){ --pad: #F7F0C6; } /* lemon */
+.chordpad-pad:nth-child(4){ --pad: #D6F2E3; } /* mint */
+.chordpad-pad:nth-child(5){ --pad: #D5ECFA; } /* sky */
+.chordpad-pad:nth-child(6){ --pad: #E6D9FA; } /* lavender */
+.chordpad-pad:nth-child(7){ --pad: #F5E8D1; } /* cream */
+.chordpad-pad:nth-child(8){ --pad: #D2F7F4; } /* aqua */
+.chordpad-pad:active{
+    transform: translateY(1px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+    filter: saturate(1.08) brightness(1.02);
+}
+.chordpad-label{
+    font-size: 12px;
+    font-weight: 800;
+    color: rgba(0,0,0,0.78);
+    letter-spacing: 0.2px;
+}
+.chordpad-sub{
+    font-size: 10px;
+    color: rgba(0,0,0,0.50);
+}
+
+
 /* 捏气泡糖的泡泡样式（v5.6a 的首发糖） */
 .bubble-grid {
     display: grid;
@@ -1436,7 +1604,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.1 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.2 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -1476,6 +1644,10 @@ body.variant-common .stat-btn.joy {
         </div>
     </div>
 </div>
+
+<!-- 抽取区 -->
+<div class="hero-wrapper">
+
 
     <!-- 抽取区 -->
     <div class="hero-wrapper">
@@ -1810,7 +1982,10 @@ body.variant-common .stat-btn.joy {
                     <li><b>v5.5：</b> 增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；增加冷库功能：任务封存，暂时不被抽到（可恢复）</li>
 		    <li><b>v5.6：</b> 点击任务库 & 媒体库房里的任务名称，可勾选直接完成。</li>
  		    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；音乐糖；增加每日打卡图。</li>
-                <li><b>v6.1：</b> 增加烟花/星空拖尾糖：点击/触控绽放的小互动，短暂停靠后回到抽卡。</li>
+
+
+                <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”（同一颗糖内可切换两种模式）；为“捏气泡/烟花·星空”等需要音效的糖增加主屏幕/沙盒「开启音效」解锁按钮（仅在需要且未解锁时出现）；补充音效播放兼容策略与兜底（缺少本地音效文件时仍可发声）。</li>
+                    <li><b>v6.2：</b> 增加“乐器糖”：Kalimba（卡林巴琴）；Chord Pad（和弦击垫）。</li>
 </ul>
             </div>
         </details>
@@ -1992,7 +2167,7 @@ const CANDY_FAMILIES = [
     {
         id: 'audio',             // 音频类糖（音乐糖、乐器糖）
         weight: 1,
-        variants: ['music']      // 目前只有音乐糖，将来可以再加 'instrument'
+        variants: ['music', 'instrument']      // v6.2：加入乐器糖（默认 Kalimba）
     },
     {
         id: 'visual',            // 视觉互动类糖（烟花 / 星空等）
@@ -2026,9 +2201,9 @@ const MUSIC_CLIPS = [
         bvid: 'BV1jX4y1474a'
     },
     {
-  title: '《我很快乐》—— 刘惜君',
-  bvid: 'BV1L8411C7Ga'
-},
+        title: '《我很快乐》- 刘惜君 · 嘴硬之歌',
+        bvid: 'BV1V14y1f7Up'
+    },
     {
         title: '《奇妙能力歌》- 陈粒 · 4K Hi-Res 版',
         bvid: 'BV1ncygBBEcK'
@@ -2057,42 +2232,6 @@ const MUSIC_CLIPS = [
         title: '《City of Stars》- 电影《爱乐之城》主题曲 MV',
         bvid: 'BV1Q4411A7Q6'
     },
-	{
-  title: '《Beanie》- “偏偏你忽略了我的爱”',
-  bvid: 'BV1aRpqe3E7v'
-},
-{
-  title: '《去有风的地方》- 郁可唯',
-  bvid: 'BV1p14y137HP'
-},
-{
-  title: ' 《Cause I\'m falling slowly love with you》- 春雪《背着善宰跑》OST｜',
-  bvid: 'BV1nE421G73Q'
-},
-{
-  title: '《心恋》- 徐小凤90年代演出现场',
-  bvid: 'BV1z94y117A2'
-},
-{
-  title: '《失恋阵线联盟》- 草蜢 MV 1080P 60FPS（LD采集）',
-  bvid: 'BV1TL4y1E7dA'
-},
-{
-  title: '《Go West》 - Pet Shop Boys贾樟柯电影插曲',
-  bvid: 'BV1mV411M7ic'
-},
-{
-  title: '《Heigh-Ho》- 白雪公主OST',
-  bvid: 'BV1kW411G7Au'
-},
-{
-  title: '《golden hour》 - JVKE（无损音质 4K60 中英字幕）',
-  bvid: 'BV1GV4y1c7nZ'
-},
-{
-  title: '《我喜欢上你时的内心活动》- 陈绮贞',
-  bvid: 'BV1PD4y1w72A'
-},
     {
         title: '《Another Day of Sun》- 电影《爱乐之城》开场曲 4K 60FPS',
         bvid: 'BV14knez5E4x'
@@ -2304,16 +2443,21 @@ function playFireworkPopSound() {
         }
     });
 }
+
+
 function startStarShineSound() {
-    // 如果是“主屏幕/沙盒独立模式”且还没解锁音频，就不要硬播，等用户点“开启音效”
+    // 主屏幕/沙盒模式：未解锁前不强行播放（避免被系统拦截）
     if (isStandaloneMode() && !soundUnlocked) return;
 
     try {
         // 已在播放就不重复触发
-        if (!starShineAudio.paused) return;
+        if (starShineAudio && !starShineAudio.paused) return;
 
-        // 循环音效：从头开始更符合“每次进入的仪式感”
+        if (!starShineAudio) return;
+
+        // 每次开始从头播放，更像“启动仪式”
         starShineAudio.currentTime = 0;
+
         const p = starShineAudio.play();
         if (p && typeof p.catch === 'function') p.catch(() => {});
     } catch (e) {}
@@ -2451,7 +2595,7 @@ function renderRandomCandy(stageEl) {
     const t = pickCandyType() || 'bubble';
 
     // 只有需要音效的糖（捏气泡 / 烟花·星空）才有可能显示“开启音效”按钮
-    updateCandySoundButton(t === 'bubble' || t === 'fireworks');  // 兜底：如果出错，就用 bubble
+    updateCandySoundButton(t === 'bubble' || t === 'fireworks' || t === 'instrument');  // 兜底：如果出错，就用 bubble
 
     if (t === 'bubble') {
         // 捏气泡糖
@@ -2465,6 +2609,9 @@ function renderRandomCandy(stageEl) {
     } else if (t === 'music') {
         // 音乐糖（B站播放列表）
         renderMusicCandy(stageEl);
+    } else if (t === 'instrument') {
+        // 乐器糖（默认 Kalimba）
+        renderInstrumentCandy(stageEl);
     } else if (t === 'fireworks') {
         // 烟花 / 星空拖尾糖
         renderFireworksCandy(stageEl);
@@ -3090,6 +3237,272 @@ function renderMusicCandy(stageEl) {
         });
     }
 }
+
+
+
+// v6.2：乐器糖（Kalimba）—— 轻量 WebAudio 合成版（不依赖多段音频文件，体积更小）
+function renderInstrumentCandy(stageEl) {
+    const threshold = 10; // 按够 10 下就认为“够啦”
+    let playCount = 0;
+
+    // 默认先显示 Kalimba（你已指定）
+    let mode = 'kalimba';
+
+    // 五声音阶：随便按也好听（避免“不会弹就难听”的挫败）
+    const NOTES = [
+        { num: '1', note: 'C',  freq: 261.63 },
+        { num: '2', note: 'D',  freq: 293.66 },
+        { num: '3', note: 'E',  freq: 329.63 },
+        { num: '4', note: 'G',  freq: 392.00 },
+        { num: '5', note: 'A',  freq: 440.00 },
+        { num: '6', note: 'C',  freq: 523.25 },
+        { num: '7', note: 'D',  freq: 587.33 },
+        { num: '8', note: 'E',  freq: 659.25 }
+    ];
+
+    // Chord Pad：每个 Pad 触发一个“氛围和弦”（不是节奏循环）
+    // 说明：这些和弦刻意选成“按哪一个都不会太刺耳”的组合，适合盲按叠加。
+    const CHORDS = [
+        { label: 'Cmaj9',  sub: '舒展', freqs: [261.63, 329.63, 392.00, 493.88, 587.33] },
+        { label: 'Am9',    sub: '柔和', freqs: [220.00, 261.63, 329.63, 392.00, 493.88] },
+        { label: 'Fmaj7',  sub: '明亮', freqs: [174.61, 220.00, 261.63, 329.63] },
+        { label: 'G6',     sub: '推进', freqs: [196.00, 246.94, 293.66, 392.00] },
+        { label: 'Dm7',    sub: '雾感', freqs: [293.66, 349.23, 392.00, 523.25] },
+        { label: 'Em7',    sub: '漂浮', freqs: [329.63, 392.00, 493.88, 587.33] },
+        { label: 'Csus2',  sub: '通透', freqs: [261.63, 293.66, 392.00, 523.25] },
+        { label: 'Gsus4',  sub: '张力', freqs: [196.00, 261.63, 293.66, 392.00] }
+    ];
+
+    // 简单的“上行再回落”小旋律：给不会弹的人一个“按一下就好听”的入口
+    const MELODY_SEQ = [0, 1, 2, 3, 4, 3, 2, 1, 0];
+
+    // 轻量 polyphony 限制：避免移动端同时触发过多声音导致卡顿
+    const MAX_VOICES = 10;
+    let activeVoices = 0;
+
+    function afterPlayedOne() {
+        playCount++;
+        if (!candyEatenThisSession && playCount >= threshold) {
+            markCandyDone();
+            const hint = stageEl.querySelector('#instrumentHint');
+            if (hint) hint.textContent = '好，这样就够啦，可以去抽一张卡。';
+            const toGachaBtn = stageEl.querySelector('#instrumentToGachaBtn');
+            if (toGachaBtn) toGachaBtn.style.display = 'block';
+        }
+    }
+
+    function canPlayNow() {
+        // 主屏幕/沙盒模式未解锁时：提醒用户先点“开启音效”
+        if (isStandaloneMode() && !soundUnlocked) {
+            if (typeof showToast === 'function') showToast('先点右上角「开启音效」再试~');
+            return false;
+        }
+        return true;
+    }
+
+    function makeVoice(ctx, { freq, type1='sine', type2='triangle', detune2=-7, attack=0.008, peak=0.55, release=1.2, lp=12000 }) {
+        const t0 = ctx.currentTime;
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+
+        osc1.type = type1;
+        osc2.type = type2;
+
+        osc1.frequency.setValueAtTime(freq, t0);
+        osc2.frequency.setValueAtTime(freq * 2, t0);
+        osc2.detune.setValueAtTime(detune2, t0);
+
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(Math.min(lp, Math.max(1200, freq * 10)), t0);
+
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(peak, t0 + attack);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + release);
+
+        osc1.connect(filter);
+        osc2.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(t0);
+        osc2.start(t0);
+        osc1.stop(t0 + release + 0.05);
+        osc2.stop(t0 + release + 0.05);
+
+        activeVoices++;
+        const doneAt = (release + 0.08) * 1000;
+        setTimeout(() => { activeVoices = Math.max(0, activeVoices - 1); }, doneAt);
+    }
+
+    function playKalimbaTone(freq) {
+        if (!canPlayNow()) return;
+
+        if (activeVoices >= MAX_VOICES) return;
+        const ctx = getCandyAudioCtx();
+        if (!ctx) return;
+
+        // Kalimba：更“弹拨”、更短、更清脆
+        makeVoice(ctx, { freq, attack: 0.008, peak: 0.55, release: 1.25, lp: 14000 });
+    }
+
+    function playPadChord(freqs) {
+        if (!canPlayNow()) return;
+
+        const ctx = getCandyAudioCtx();
+        if (!ctx) return;
+
+        // Chord Pad：更“氛围”，释放更长一点（但移动端不能太长）
+        freqs.forEach((f, k) => {
+            if (activeVoices >= MAX_VOICES) return;
+            setTimeout(() => {
+                // 用更柔的包络与滤波，让“叠音”像一团氛围而不是刺耳的堆叠
+                makeVoice(ctx, { freq: f, type1: 'sine', type2: 'sine', detune2: +3, attack: 0.02, peak: 0.22, release: 1.85, lp: 9000 });
+            }, k * 14);
+        });
+    }
+
+    function renderBody() {
+        const body = stageEl.querySelector('#instrumentBody');
+        const sub = stageEl.querySelector('#instrumentSub');
+        if (!body) return;
+
+        if (mode === 'kalimba') {
+            if (sub) sub.textContent = '五声音阶：随便按也好听。余音会叠在一起，像轻轻的和弦。';
+
+            let h = '<div class="kalimba-keys">';
+            NOTES.forEach((n, i) => {
+                h += '<button type="button" class="kalimba-key" data-i="' + i + '">';
+                h += '  <div class="kalimba-num">' + n.num + '</div>';
+                h += '  <div class="kalimba-note">' + n.note + '</div>';
+                h += '</button>';
+            });
+            h += '</div>';
+
+            h += '<div class="instrument-actions">';
+            h += '  <button type="button" id="kalimbaChordBtn">随机和弦</button>';
+            h += '  <button type="button" id="kalimbaMelodyBtn">小旋律</button>';
+            h += '</div>';
+
+            body.innerHTML = h;
+
+            // 绑定：单音
+            body.querySelectorAll('.kalimba-key').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const i = parseInt(btn.getAttribute('data-i') || '0', 10);
+                    const n = NOTES[i] || NOTES[0];
+                    playKalimbaTone(n.freq);
+                    afterPlayedOne();
+                });
+            });
+
+            // 绑定：随机和弦（用三音小拨弦增加“像和弦”的满足感）
+            const chordBtn = body.querySelector('#kalimbaChordBtn');
+            if (chordBtn) {
+                chordBtn.addEventListener('click', () => {
+                    const chordPools = [
+                        [0, 2, 4], // C-E-A
+                        [1, 3, 4], // D-G-A
+                        [0, 3, 4], // C-G-A
+                        [2, 4, 6]  // E-A-D
+                    ];
+                    const chord = chordPools[Math.floor(Math.random() * chordPools.length)];
+                    chord.forEach((idx, k) => {
+                        setTimeout(() => {
+                            const n = NOTES[idx] || NOTES[0];
+                            playKalimbaTone(n.freq);
+                            afterPlayedOne();
+                        }, k * 55);
+                    });
+                });
+            }
+
+            // 绑定：小旋律
+            const melodyBtn = body.querySelector('#kalimbaMelodyBtn');
+            if (melodyBtn) {
+                melodyBtn.addEventListener('click', () => {
+                    MELODY_SEQ.forEach((idx, k) => {
+                        setTimeout(() => {
+                            const n = NOTES[idx] || NOTES[0];
+                            playKalimbaTone(n.freq);
+                            afterPlayedOne();
+                        }, k * 160);
+                    });
+                });
+            }
+
+        } else {
+            if (sub) sub.textContent = 'Chord Pad：一按就是一团和声氛围。可以叠按，越按越有空间感。';
+
+            let h = '<div class="chordpad-grid">';
+            CHORDS.forEach((c, i) => {
+                h += '<button type="button" class="chordpad-pad" data-i="' + i + '">';
+                h += '  <span class="chordpad-label">' + c.label + '</span>';
+                h += '  <span class="chordpad-sub">' + c.sub + '</span>';
+                h += '</button>';
+            });
+            h += '</div>';
+
+            body.innerHTML = h;
+
+            body.querySelectorAll('.chordpad-pad').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const i = parseInt(btn.getAttribute('data-i') || '0', 10);
+                    const c = CHORDS[i] || CHORDS[0];
+                    playPadChord(c.freqs);
+                    afterPlayedOne();
+                });
+            });
+        }
+    }
+
+    // 外壳 HTML：标题 + Tab + 内容区 + 提示 + 去抽卡
+    stageEl.innerHTML = [
+        '<div class="instrument-card">',
+            '<div class="instrument-title">🎶 乐器糖</div>',
+            '<div class="instrument-sub" id="instrumentSub"></div>',
+            '<div class="instrument-tabs">',
+                '<button type="button" class="instrument-tab active" id="tabKalimba">Kalimba</button>',
+                '<button type="button" class="instrument-tab" id="tabChord">Chord Pad</button>',
+            '</div>',
+            '<div id="instrumentBody"></div>',
+            '<div class="bubble-hint" id="instrumentHint">随便按几下，不用弹得“好听”。</div>',
+            '<button type="button" id="instrumentToGachaBtn" class="instrument-to-gacha" style="display:none;">去抽卡</button>',
+        '</div>'
+    ].join('');
+
+    // Tab 切换
+    const tabK = stageEl.querySelector('#tabKalimba');
+    const tabC = stageEl.querySelector('#tabChord');
+
+    function setMode(next) {
+        if (mode === next) return;
+        mode = next;
+        if (tabK) tabK.classList.toggle('active', mode === 'kalimba');
+        if (tabC) tabC.classList.toggle('active', mode === 'chord');
+        renderBody();
+    }
+
+    if (tabK) tabK.addEventListener('click', () => setMode('kalimba'));
+    if (tabC) tabC.addEventListener('click', () => setMode('chord'));
+
+    // 初始渲染（默认 Kalimba）
+    renderBody();
+
+    // 去抽卡
+    const toGachaBtn = stageEl.querySelector('#instrumentToGachaBtn');
+    if (toGachaBtn) {
+        toGachaBtn.addEventListener('click', () => {
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero && hero.scrollIntoView) {
+                hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+}
+
 
 
 // v5.6a：第二颗糖 · 涂鸦 / 涂色糖
