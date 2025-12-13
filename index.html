@@ -1645,6 +1645,7 @@ body.variant-common .stat-btn.joy {
     </div>
 </div>
 
+
     <!-- 抽取区 -->
     <div class="hero-wrapper">
         <div class="section-title section-title-ritual">
@@ -2377,27 +2378,59 @@ function updateCandySoundButton(needsSound) {
 }
 
 // 统一解锁：用一次用户点击手势，把相关音频都“点亮”
-async function unlockAllCandySounds() {
+// 注意：这里不再使用 async/await，避免在 iOS 沙盒里 Promise 卡死
+function unlockAllCandySounds() {
     const btn = document.getElementById('candySoundBtn');
-    // 同步唤醒 WebAudio（作为兜底/补充）
+
+    // 先直接认为“已解锁”，不让界面卡住
+    soundUnlocked = true;
+    if (btn) {
+        btn.style.display = 'none';
+    }
+
+    // 尝试唤醒 WebAudio 上下文（有就用，没有也无所谓）
     try { getCandyAudioCtx(); } catch (e) {}
 
-    // 逐个尝试，不要因为某个失败就中断
-    try { await bubblePopAudio.play(); bubblePopAudio.pause(); bubblePopAudio.currentTime = 0; } catch (e) {
+    // 封装一个小工具函数，尽力而为地“点一下”每个音频
+    function tryKickAudio(audio, fallbackData) {
+        if (!audio) return;
         try {
-            bubblePopAudio.src = BUBBLE_POP_FALLBACK_DATA;
-            bubblePopAudio.load();
-            await bubblePopAudio.play();
-            bubblePopAudio.pause();
-            bubblePopAudio.currentTime = 0;
-        } catch (_) {}
+            const p = audio.play();
+            if (p && typeof p.then === 'function') {
+                p.then(() => {
+                    try {
+                        audio.pause();
+                        audio.currentTime = 0;
+                    } catch (e) {}
+                }).catch(() => {
+                    if (fallbackData) {
+                        try {
+                            audio.src = fallbackData;
+                            audio.load();
+                            const p2 = audio.play();
+                            if (p2 && typeof p2.then === 'function') {
+                                p2.then(() => {
+                                    try {
+                                        audio.pause();
+                                        audio.currentTime = 0;
+                                    } catch (e) {}
+                                }).catch(() => {});
+                            }
+                        } catch (e) {}
+                    }
+                });
+            }
+        } catch (e) {
+            // 这里出错就算了，不影响后面的逻辑
+        }
     }
-    try { await fireworkPopAudio.play(); fireworkPopAudio.pause(); fireworkPopAudio.currentTime = 0; } catch (e) {}
-    try { await starShineAudio.play(); starShineAudio.pause(); starShineAudio.currentTime = 0; } catch (e) {}
 
-    soundUnlocked = true;
-    if (btn) btn.style.display = 'none';
+    // 尽量“点亮”几种音效源
+    tryKickAudio(bubblePopAudio, BUBBLE_POP_FALLBACK_DATA);
+    tryKickAudio(fireworkPopAudio, null);
+    tryKickAudio(starShineAudio, null);
 }
+
 
 // 初始化按钮点击（按钮本身常驻在 candyStage，不会被 innerHTML 清掉）
 function initCandySoundButton() {
