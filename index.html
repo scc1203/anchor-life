@@ -1589,6 +1589,219 @@ body.variant-common .stat-btn.joy {
     background: transparent;
 }
 
+
+/* === v6.3 Tarot Draw Mode (Fix Layout) === */
+:root {
+  /* 确保这里有你的牌背图 */
+  --tarot-back: url("tarot-back.png");
+}
+
+#tarotLayer {
+  display: none;
+  width: 100%;
+  height: 100%; /* 确保层撑满 */
+  align-items: center;
+  justify-content: flex-start; /* 改为从上往下排 */
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 10px;
+  perspective: 1000px; 
+  position: relative;
+  z-index: 50; /* 保证整个塔罗层在最上面 */
+}
+
+.tarot-caption {
+  font-size: 0.95rem;
+  color: #555;
+  text-align: center;
+  line-height: 1.45;
+  margin-top: 10px;
+  z-index: 60; /* 文字不能挡住牌 */
+  pointer-events: none; /* 让鼠标能透过文字点到下面的东西 */
+}
+
+.tarot-subcaption {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  margin-bottom: 10px;
+  pointer-events: none;
+}
+
+/* 修改：把跳过按钮放到顶部，防止挡住下面的牌 */
+.tarot-skip {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 0.78rem;
+  color: #8a7f73;
+  text-decoration: underline;
+  cursor: pointer;
+  z-index: 100; /* 保证它能点，但不干扰中间 */
+}
+
+.tarot-stage {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 280px; 
+  margin-top: 20px;
+  /* 关键：不能 overflow hidden，否则牌飞出去会被切掉 */
+  overflow: visible; 
+}
+
+/* 牌堆 */
+.tarot-deck {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 220px;
+  border-radius: 12px;
+  background-image: var(--tarot-back);
+  background-size: cover; 
+  background-position: center;
+  /* 去掉边框，改为纯阴影，解决透明边问题 */
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 10; /* 牌堆层级 */
+  transition: opacity 0.3s;
+}
+
+.tarot-deck.shuffling {
+  animation: tarotShuffle 0.9s ease-in-out 1;
+}
+
+@keyframes tarotShuffle {
+  0%   { transform: translate(-50%, -50%) rotate(0deg); }
+  25%  { transform: translate(-55%, -50%) rotate(-5deg); }
+  50%  { transform: translate(-45%, -50%) rotate(5deg); }
+  75%  { transform: translate(-52%, -50%) rotate(-3deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+
+.tarot-cards {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; 
+  z-index: 20; /* 散开后的牌层级更高 */
+}
+
+/* 单张卡牌容器 */
+.tarot-card {
+  position: absolute;
+  left: 50%;
+  top: 50%; 
+  width: 140px;
+  height: 220px;
+  transform-style: preserve-3d; 
+  /* 初始缩小一点 */
+  transform: translate(-50%, -50%) scale(0.96);
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease, filter 0.35s ease;
+  cursor: pointer;
+  pointer-events: auto; /* 关键：开启点击 */
+  
+  /* 解决透明边缘的关键： */
+  background: transparent; 
+  border: none;
+  outline: none;
+}
+
+/* 未选中变暗 */
+.tarot-card.dim {
+  opacity: 0.2; 
+  filter: grayscale(0.5) blur(1px);
+  pointer-events: none;
+}
+
+/* 选中层级最高 */
+.tarot-card.selected {
+  z-index: 200 !important; /* 确保选中翻转时压过一切 */
+  cursor: default;
+}
+
+/* 卡牌正反面 */
+.tarot-face {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; /* 强制撑满 */
+  height: 100%; /* 强制撑满 */
+  border-radius: 12px;
+  backface-visibility: hidden; 
+  overflow: hidden; /* 切掉多余的图 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* 背面 */
+.tarot-back {
+  background-image: var(--tarot-back);
+  background-size: cover; /* 图片撑满 */
+  background-position: center;
+  background-repeat: no-repeat;
+  /* 去掉 border */
+  border: none; 
+}
+
+/* 正面 */
+.tarot-front {
+  background: #fff;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid rgba(0,0,0,0.05); /* 仅留极淡的内描边 */
+}
+
+.tarot-front .t-icon {
+  font-size: 3.5rem;
+  margin-bottom: 10px;
+  display: block;
+}
+.tarot-front .t-title {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 6px;
+}
+.tarot-front .t-desc {
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #666;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tarot-front .t-btn {
+  background: var(--bg-pink);
+  color: #fff;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 99px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(255, 154, 162, 0.4);
+}
+
+.tarot-card.reveal {
+  /* 翻转 */
+  transform: translate(-50%, -50%) scale(1.1) rotateY(180deg) !important;
+}
+
+@media (max-width: 420px) {
+  .tarot-stage { height: 260px; }
+  /* 移动端稍微调小一点牌，避免两边太挤 */
+  .tarot-deck, .tarot-card { width: 110px; height: 180px; }
+  .tarot-front .t-icon { font-size: 2.8rem; }
+}
+
+
 </style>
 </head>
 <body>
@@ -1604,7 +1817,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.2 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.3 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -1701,6 +1914,17 @@ body.variant-common .stat-btn.joy {
                 <img id="eggOut" src="" alt="Capsule Ball">
             </div>
             <div class="gm-caption">命运转一转，看看今天的锚点…</div>
+        </div>
+
+        <!-- Tarot mode layer (v6.3) -->
+        <div id="tarotLayer">
+            <div class="tarot-skip" id="tarotSkipLink" style="display:none;">跳过塔罗，用普通抽卡</div>
+            <div class="tarot-caption" id="tarotCaption">今天让塔罗帮你抽出一张 Anchor 卡。</div>
+            <div class="tarot-subcaption" id="tarotSubCaption">点一下牌堆，开始洗牌。</div>
+            <div class="tarot-stage">
+                <div class="tarot-deck" id="tarotDeck" title="点我开始洗牌"></div>
+                <div class="tarot-cards" id="tarotCards"></div>
+            </div>
         </div>
 
     <!-- 🌅🌙 起飞 / 着陆仪式卡片 -->
@@ -1980,6 +2204,7 @@ body.variant-common .stat-btn.joy {
  		    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；音乐糖；增加每日打卡图。</li>
                 <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”：点击/触控绽放的小互动，短暂停靠后回到抽卡。</li>
                     <li><b>v6.2：</b> 增加“乐器糖”：Kalimba（卡林巴琴）；Chord Pad（和弦击垫）。</li>
+                 <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现（50/50）。</li>
 </ul>
             </div>
         </details>
@@ -4113,6 +4338,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 checkLogExpiry();
         renderList(); renderArchive(); renderLog(); renderHistory(); updateStatsUI();
         setMode('normal');
+        hideTarotLayer();
 
         // 计算“这是你和 Anchor 的第几天”，并视情况弹每日打卡图
         const openDaysCount = initOpenedDays();
@@ -4708,7 +4934,261 @@ function playGachaAnimation(result) {
         } 
     }
     
-    function draw() {
+    
+// === v6.3：抽卡模式调度器（classic / tarot） ===
+const DRAW_MODES = ['classic', 'tarot'];
+let lastDrawMode = 'tarot'; // 让第一次从 classic 开始，之后 classic ↔ tarot 轮流出现
+
+function pickDrawMode() {
+    // v6.3 v2：两种模式轮着来（classic → tarot → classic...）
+    const next = (lastDrawMode === 'classic') ? 'tarot' : 'classic';
+    lastDrawMode = next;
+    return next;
+}
+
+// 把 v6.2 draw() 里“根据筛选/防重复/青蛙优先”等逻辑抽出来，方便塔罗模式复用
+
+function pickTaskByFilters() {
+    const ctx = document.getElementById('selContext').value; 
+    const limitTime = parseInt(document.getElementById('selTime').value); 
+    const todayStr = new Date().toDateString();
+
+    let validPool = db.filter(item => {
+        if (item.inColdStorage) return false;
+        if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
+
+        const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
+        const isFlexible = (tTime === 0);
+        if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
+
+        if (mode === 'vinyl') return item.type === 'vinyl'; 
+        if (mode === 'culture') return item.type === 'culture';
+
+        if (item.type === 'culture' || item.type === 'vinyl') { 
+            if (ctx === 'outdoor') return false; 
+        } else if (item.type === 'sport') { 
+            return true; 
+        } else { 
+            if (ctx === 'desktop') return item.type !== 'outdoor'; 
+            if (ctx === 'indoor')  return item.type === 'indoor'; 
+            if (ctx === 'outdoor') return item.type === 'outdoor'; 
+        }
+        return true;
+    });
+
+    if (validPool.length > 0) {
+        return validPool[Math.floor(Math.random() * validPool.length)];
+    }
+    return null;
+}
+// Tarot flow state
+let tarotState = 'idle'; // idle | shuffling | choose | reveal
+let tarotChosenTask = null;
+let tarotLuckyIndex = 0;
+let tarotRerollLeft = 3;
+
+function hideClassicGachaLayer() {
+    const gacha = document.getElementById('gachaLayer');
+    if (gacha) gacha.style.display = 'none';
+}
+
+function showTarotLayer() {
+    const layer = document.getElementById('tarotLayer');
+    if (layer) layer.style.display = 'flex';
+}
+
+function hideTarotLayer() {
+    const layer = document.getElementById('tarotLayer');
+    const cards = document.getElementById('tarotCards');
+    const deck  = document.getElementById('tarotDeck');
+    const skip  = document.getElementById('tarotSkipLink');
+    if (layer) layer.style.display = 'none';
+    if (cards) cards.innerHTML = '';
+    if (deck) deck.classList.remove('shuffling');
+    if (skip) skip.style.display = 'none';
+    tarotState = 'idle';
+}
+
+function prepareTarotScene(task) {
+    tarotChosenTask = task;
+    tarotLuckyIndex = Math.floor(Math.random() * 7);
+    tarotState = 'idle';
+
+    const caption = document.getElementById('tarotCaption');
+    const sub = document.getElementById('tarotSubCaption');
+    const deck = document.getElementById('tarotDeck');
+    const cards = document.getElementById('tarotCards');
+    const skip = document.getElementById('tarotSkipLink');
+
+    if (caption) caption.textContent = '今天让塔罗帮你抽出一张 Anchor 卡。';
+    if (sub) sub.textContent = '点一下牌堆，开始洗牌。';
+    if (cards) cards.innerHTML = '';
+    
+    // ★ 新增：确保每次开始时，牌堆是可见的
+    if (deck) {
+        deck.style.opacity = '1';
+        deck.classList.remove('shuffling');
+        deck.onclick = () => {
+            if (tarotState !== 'idle') return;
+            startTarotShuffle();
+        };
+    }
+
+    if (skip) {
+        skip.style.display = 'block';
+        skip.onclick = () => {
+            hideTarotLayer();
+            playGachaAnimation(tarotChosenTask);
+        };
+    }
+
+    showTarotLayer();
+}
+
+function startTarotShuffle() {
+    const deck = document.getElementById('tarotDeck');
+    const sub = document.getElementById('tarotSubCaption');
+    if (sub) sub.textContent = '洗牌中…';
+    tarotState = 'shuffling';
+    if (deck) {
+        deck.classList.remove('shuffling');
+        void deck.offsetWidth;
+        deck.classList.add('shuffling');
+    }
+    setTimeout(() => {
+        spreadTarotCards();
+    }, 900);
+}
+
+function spreadTarotCards() {
+    const sub = document.getElementById('tarotSubCaption');
+    const cardsWrap = document.getElementById('tarotCards');
+    const deck = document.getElementById('tarotDeck');
+    
+    if (!cardsWrap) return;
+    if (deck) deck.style.opacity = '0';
+
+    if (sub) sub.textContent = '凭直觉，选一张今天的卡牌。';
+    cardsWrap.innerHTML = '';
+    tarotState = 'choose';
+
+    // 角度调小一点，显得更优雅
+    const angles = [-20, -14, -7, 0, 7, 14, 20];
+    
+    // Y轴基准
+    const baseY = 15; 
+
+    for (let i = 0; i < 7; i++) {
+        const card = document.createElement('div');
+        card.className = 'tarot-card';
+        card.dataset.index = String(i);
+
+        // ★ 修改点：间距从 38 改为 34，防止最右边的牌跑太远
+        const gap = 34; 
+        const x = (i - 3) * gap; 
+        
+        // ★ 修改点：弧度系数 8 -> 6，让它平缓一点，不至于掉出屏幕
+        const y = baseY + Math.pow(Math.abs(i - 3), 1.8) * 6; 
+
+        const a = angles[i];
+
+        // 初始位置
+        card.style.transform = `translate(-50%, -50%) scale(0.5)`;
+        card.style.opacity = '0';
+
+        // 结构
+        card.innerHTML = `
+            <div class="tarot-face tarot-back"></div>
+            <div class="tarot-face tarot-front">
+                <span class="t-icon">✨</span>
+                <div class="t-title">...</div>
+                <div class="t-desc">...</div>
+                <button class="t-btn" type="button">收下</button>
+            </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+            // 阻止冒泡，防止点穿
+            e.stopPropagation();
+            handleTarotCardClick(i);
+        });
+        cardsWrap.appendChild(card);
+
+        // 动画
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${a}deg)`;
+        }, i * 40); 
+    }
+}
+
+function handleTarotCardClick(index) {
+    if (tarotState !== 'choose') return;
+    const cardsWrap = document.getElementById('tarotCards');
+    if (!cardsWrap) return;
+
+    tarotState = 'reveal';
+
+    const cards = Array.from(cardsWrap.querySelectorAll('.tarot-card'));
+    
+    // 1. 其他牌变暗
+    cards.forEach((c, i) => {
+        if (i !== index) c.classList.add('dim');
+    });
+
+    // 2. 选中牌处理
+    const selected = cards[index];
+    if (!selected) return;
+    selected.classList.add('selected');
+    
+    // 3. 填充任务内容（像 ResultCard 那样）
+    // 无论点哪张，其实都是命中 tarotChosenTask（这是命运的安排）
+    const tIcon  = selected.querySelector('.t-icon');
+    const tTitle = selected.querySelector('.t-title');
+    const tDesc  = selected.querySelector('.t-desc');
+    const tBtn   = selected.querySelector('.t-btn');
+
+    if (tarotChosenTask) {
+        if (tIcon) tIcon.textContent = tarotChosenTask.icon || getSmartIcon(tarotChosenTask);
+        if (tTitle) tTitle.textContent = tarotChosenTask.title;
+        // 描述：如果是自定义描述就显示描述，否则显示默认类型文案
+        let d = tarotChosenTask.desc;
+        if (!d || d === '自定义' || d === '系列' || d === '每日任务') d = getDescByType(tarotChosenTask.type);
+        if (tDesc) tDesc.textContent = d;
+    }
+
+    // 4. 按钮逻辑：点击“收下”后，进入主界面
+    if (tBtn) {
+        tBtn.onclick = (e) => {
+            e.stopPropagation(); // 防止冒泡
+            // 隐藏塔罗层
+            hideTarotLayer();
+            // 渲染主结果卡，并标记为“当前任务”
+            currentTask = tarotChosenTask;
+            renderResultCard(tarotChosenTask);
+        };
+    }
+
+    // 5. 执行翻转动画
+    // 稍微延迟一点点，让变暗的动画先走一走
+    setTimeout(() => {
+        selected.classList.add('reveal');
+    }, 50);
+}
+
+function runTarotDrawFlow(result) {
+    // 进入塔罗前：隐藏经典扭蛋层/结果卡
+    const card = document.getElementById('resultCard');
+    if (card) card.style.display = 'none';
+    hideClassicGachaLayer();
+
+    // 初始化换牌次数
+    tarotRerollLeft = 3;
+    prepareTarotScene(result);
+}
+
+
+function draw() {
         const card = document.getElementById('resultCard'); 
         if (card) card.style.display = 'none';
 
@@ -4716,49 +5196,38 @@ function playGachaAnimation(result) {
         const overlay = document.getElementById('ritualOverlay');
         if (overlay) overlay.style.display = 'none';
 
+        // 进入抽卡前，先确保塔罗层被收起（避免残留）
+        hideTarotLayer();
+
         if (mode !== 'sos' && gachaAnimating) return;
 
         setTimeout(() => {
             let result = null;
+
             if (mode === 'sos') { 
                 const r = Math.floor(Math.random() * sosLibrary.length); 
                 result = { ...sosLibrary[r], type: 'sos', time: 0 }; 
             } else {
-                const ctx = document.getElementById('selContext').value; 
-                const limitTime = parseInt(document.getElementById('selTime').value); 
-                const todayStr = new Date().toDateString();
-                let validPool = db.filter(item => {
-                    if (item.inColdStorage) return false;
-                    if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
-                    const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
-                    const isFlexible = (tTime === 0);
-                    if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
-                    if (mode === 'vinyl') return item.type === 'vinyl'; 
-                    if (mode === 'culture') return item.type === 'culture';
-                    if (item.type === 'culture' || item.type === 'vinyl') { 
-                        if (ctx === 'outdoor') return false; 
-                    } else if (item.type === 'sport') { 
-                        return true; 
-                    } else { 
-                        if (ctx === 'desktop') return item.type !== 'outdoor'; 
-                        if (ctx === 'indoor')  return item.type === 'indoor'; 
-                        if (ctx === 'outdoor') return item.type === 'outdoor'; 
-                    }
-                    return true;
-                });
-                if (validPool.length > 0) {
-                    result = validPool[Math.floor(Math.random() * validPool.length)];
-                }
+                result = pickTaskByFilters();
             }
+
+            // 更新当前任务引用（让后续“就它啦/换一个”等主线逻辑保持一致）
             currentTask = result;
+
             const ph = document.getElementById('placeholder');
 
             if (result) {
                 if (ph) ph.style.display = 'none';
+
                 if (mode === 'sos') {
                     renderResultCard(result);
                 } else {
-                    playGachaAnimation(result);
+                    const drawMode = pickDrawMode();
+                    if (drawMode === 'tarot') {
+                        runTarotDrawFlow(result);
+                    } else {
+                        playGachaAnimation(result);
+                    }
                 }
             } else {
                 if (ph) ph.style.display = 'none';
