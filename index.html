@@ -6,8 +6,8 @@
     <title>Anchor</title>
     
     <!-- 图标：继续使用你 GitHub 根目录里的 png 文件 -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1593,7 +1593,7 @@ body.variant-common .stat-btn.joy {
 /* === v6.3 Tarot Draw Mode (Fix Layout) === */
 :root {
   /* 确保这里有你的牌背图 */
-  --tarot-back: url("tarot-back.png");
+  --tarot-back: url("/assets/images/tarot-back.png");
 }
 
 #tarotLayer {
@@ -1910,7 +1910,7 @@ body.variant-common .stat-btn.joy {
         <!-- 扭蛋机层 -->
         <div id="gachaLayer">
             <div class="gacha-stage">
-                <img id="gachaImg" src="gacha-machine.png" alt="Gacha Machine">
+                <img id="gachaImg" src="/assets/images/gacha/gacha-machine.png" alt="Gacha Machine">
                 <img id="eggOut" src="" alt="Capsule Ball">
             </div>
             <div class="gm-caption">命运转一转，看看今天的锚点…</div>
@@ -2365,7 +2365,7 @@ const coloringBgImg = new Image();
 let coloringBgImgLoaded = false;
 
 // 相对路径：和当前 HTML 在同一目录的 coloring_bg.png
-coloringBgImg.src = 'coloring_bg.png';
+coloringBgImg.src = '/assets/images/coloring_bg.png';
 coloringBgImg.onload = function () {
     coloringBgImgLoaded = true;
 };
@@ -2494,20 +2494,20 @@ const MUSIC_CLIPS = [
 ];
 // 每日打卡图图库（相对路径，指向 daily_posters 文件夹）
 const DAILY_POSTER_IMAGES = [
-    'daily_posters/poster01.jpg',
-    'daily_posters/poster02.jpg',
-    'daily_posters/poster03.jpg',
-    'daily_posters/poster04.jpg',
-    'daily_posters/poster05.jpg',
-    'daily_posters/poster06.jpg',
-    'daily_posters/poster07.jpg',
-    'daily_posters/poster08.jpg',
-    'daily_posters/poster09.jpg',
-    'daily_posters/poster10.jpg',
-    'daily_posters/poster11.jpg',
-    'daily_posters/poster12.jpg',
-    'daily_posters/poster13.jpg',
-    'daily_posters/poster14.jpg'
+    '/assets/images/daily_posters/poster01.jpg',
+    '/assets/images/daily_posters/poster02.jpg',
+    '/assets/images/daily_posters/poster03.jpg',
+    '/assets/images/daily_posters/poster04.jpg',
+    '/assets/images/daily_posters/poster05.jpg',
+    '/assets/images/daily_posters/poster06.jpg',
+    '/assets/images/daily_posters/poster07.jpg',
+    '/assets/images/daily_posters/poster08.jpg',
+    '/assets/images/daily_posters/poster09.jpg',
+    '/assets/images/daily_posters/poster10.jpg',
+    '/assets/images/daily_posters/poster11.jpg',
+    '/assets/images/daily_posters/poster12.jpg',
+    '/assets/images/daily_posters/poster13.jpg',
+    '/assets/images/daily_posters/poster14.jpg'
 ];
 
 // 收集所有当前可用的糖类型（去重）：用于“连续两次不能一样”的兜底逻辑
@@ -2525,9 +2525,9 @@ function getAllCandyTypes() {
     return all;
 }
 // 捏气泡用的音效：使用一段外部音频文件（兼容 iOS Safari + 主屏幕模式）
-const BUBBLE_POP_URL = 'bubble-pop-short.mp3';
-const FIREWORK_POP_URL = 'firework-pop.wav';
-const STAR_SHINE_URL  = 'star-shinning.mp3'; // 和 index.html 同目录
+const BUBBLE_POP_URL = '/assets/audio/bubble-pop-short.mp3';
+const FIREWORK_POP_URL = '/assets/audio/firework-pop.wav';
+const STAR_SHINE_URL  = '/assets/audio/star-shinning.mp3'; // 和 index.html 同目录
 const BUBBLE_POP_FALLBACK_DATA = 'data:audio/wav;base64,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';
 
 // WebAudio 兜底（极短“pop”），用于：本地音频缺失/加载失败时仍可发声
@@ -4683,16 +4683,16 @@ function getSmartIcon(item) {
     // 扭蛋球颜色映射
     function getCapsuleSrc(task) {
         if (!task || task.type === 'sos') return null;
-        if (task.isFrog) return "gacha-ball-white.png";
-        if (task.isQuick) return "gacha-ball-yellow.png";
-        if (task.type === 'vinyl') return "gacha-ball-orange.png";
+        if (task.isFrog) return "/assets/images/gacha/gacha-ball-white.png";
+        if (task.isQuick) return "/assets/images/gacha/gacha-ball-yellow.png";
+        if (task.type === 'vinyl') return "/assets/images/gacha/gacha-ball-orange.png";
         if (task.type === 'culture') {
             const t = task.title || "";
-            if (t.includes("影") || t.includes("片")) return "gacha-ball-blue.png";
-            return "gacha-ball-pink.png";
+            if (t.includes("影") || t.includes("片")) return "/assets/images/gacha/gacha-ball-blue.png";
+            return "/assets/images/gacha/gacha-ball-pink.png";
         }
-        if (task.type === 'sport') return "gacha-ball-green.png";
-        return "gacha-ball-purple.png";
+        if (task.type === 'sport') return "/assets/images/gacha/gacha-ball-green.png";
+        return "/assets/images/gacha/gacha-ball-purple.png";
     }
 
     
@@ -4856,7 +4856,7 @@ function playGachaAnimation(result) {
         layer.style.opacity = '1';
         img.style.opacity   = '1';
 
-        const src = getCapsuleSrc(result) || "gacha-ball-pink.png";
+        const src = getCapsuleSrc(result) || "/assets/images/gacha/gacha-ball-pink.png";
         eggOut.src = src;
         eggOut.style.opacity    = 0;
         eggOut.style.animation  = 'none';
