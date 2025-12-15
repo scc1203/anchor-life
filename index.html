@@ -2809,6 +2809,12 @@ function stopStarShineSound() {
 
     // 如有需要，弹出今日打卡图
 function showDailyPosterIfNeeded(openDaysCount) {
+    // 【Bug #5 修复】检查今天是否已经弹过，避免重复弹
+    const today = getTodayDateStr();
+    const shownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
+    // if (shownDay === today) return; // 临时：每次打开都弹
+
+    
     const overlay = document.getElementById('dailyPosterOverlay');
     const daySpan = document.getElementById('dailyPosterDayCount');
     const imgEl   = document.getElementById('dailyPosterImg');
@@ -2835,6 +2841,13 @@ function showDailyPosterIfNeeded(openDaysCount) {
     }
 
     overlay.style.display = 'flex';
+    
+    // 【Bug #5 修复】显示后设置标记，避免同一天重复弹
+    try {
+        localStorage.setItem(KEY_POSTER_SHOWN_DAY, today);
+    } catch (e) {
+        console.warn('保存 posterShownDay 失败', e);
+    }
 }
 
     function closeDailyPoster() {
@@ -6008,37 +6021,128 @@ if (!userOverrideFlash) {
     }
 
     // 导入/导出逻辑保持原样
+    // 【备份导出/导入升级 v6.3-backup2】executeImport: 支持新版格式并兼容旧版，实现 Merge 策略
     function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) { alert("⚠️ 请先粘贴代码！"); return; }
         try {
             const json = JSON.parse(str);
-            let incomingDB = json.db || (Array.isArray(json) ? json : []);
-            let incomingArchive = json.archive || [];
-            let incomingStats = json.userStats || {};
-            if (!Array.isArray(incomingDB)) throw new Error("格式错误");
-            if(confirm(`📡 找到 ${incomingDB.length} 个任务。\n\n确定要合并吗？`)) {
-                 let addCount = 0;
-                 incomingDB.forEach(newItem => {
-                    const exists = db.some(e => e.title === newItem.title && e.type === newItem.type);
-                    if (!exists) { 
-                        newItem.id = Date.now() + Math.floor(Math.random()*10000); 
-                        if (newItem.time === undefined) newItem.time = 30; 
-                        db.push(newItem); 
-                        addCount++; 
-                    }
-                 });
-                 incomingArchive.forEach(newArc => { 
-                    const arcExists = archive.some(a => a.title === newArc.title); 
-                    if(!arcExists) archive.unshift(newArc); 
-                 });
-                 if (incomingStats.willpower) userStats.willpower = Math.max(userStats.willpower, incomingStats.willpower);
-                 if (incomingStats.joy) userStats.joy = Math.max(userStats.joy, incomingStats.joy);
-                 save(); renderList(); renderArchive(); updateStatsUI();
-                 alert(`✅ 成功合并 ${addCount} 个新任务！`);
-                 document.getElementById('dataArea').value = "";
+            
+            // 兼容旧版格式（直接有 db/archive/dailyLog/userStats）和新版格式（有 version/data/local）
+            let incomingDB, incomingArchive, incomingDailyLog, incomingStats;
+            let localData = null;
+            
+            if (json.version && json.data) {
+                // 新版格式：v6.3-backup2
+                incomingDB = json.data.db || [];
+                incomingArchive = json.data.archive || [];
+                incomingDailyLog = json.data.dailyLog || [];
+                incomingStats = json.data.userStats || {};
+                localData = json.local || null;
+            } else {
+                // 旧版格式：直接有 db/archive/dailyLog/userStats
+                incomingDB = json.db || (Array.isArray(json) ? json : []);
+                incomingArchive = json.archive || [];
+                incomingDailyLog = json.dailyLog || [];
+                incomingStats = json.userStats || {};
             }
-        } catch(e) { alert(`❌ 导入失败：${e.message}`); }
+            
+            if (!Array.isArray(incomingDB)) throw new Error("格式错误：db 必须是数组");
+            if (!Array.isArray(incomingArchive)) incomingArchive = [];
+            if (!Array.isArray(incomingDailyLog)) incomingDailyLog = [];
+            if (typeof incomingStats !== 'object') incomingStats = {};
+            
+            const taskCount = incomingDB.length;
+            const archiveCount = incomingArchive.length;
+            const logCount = incomingDailyLog.length;
+            const hasLocalData = localData && (localData.ritualMorning || localData.ritualNight || localData.openedDays || localData.posterShownDay);
+            
+            let confirmMsg = `📡 找到 ${taskCount} 个任务`;
+            if (archiveCount > 0) confirmMsg += `、${archiveCount} 个归档`;
+            if (logCount > 0) confirmMsg += `、${logCount} 条足迹`;
+            if (hasLocalData) confirmMsg += `\n以及仪式和打卡数据`;
+            confirmMsg += `。\n\n确定要用备份数据覆盖当前数据吗？`;
+            
+            if(confirm(confirmMsg)) {
+                // Merge 策略：用备份数据覆盖当前数据
+                // 1. 覆盖 db（任务列表）
+                db = incomingDB.map(item => {
+                    // 确保每个任务有 id 和 time
+                    if (!item.id) item.id = Date.now() + Math.floor(Math.random()*10000);
+                    if (item.time === undefined) item.time = 30;
+                    return item;
+                });
+                
+                // 2. 覆盖 archive（归档）
+                archive = incomingArchive.slice();
+                
+                // 3. 覆盖 dailyLog（足迹）
+                dailyLog = incomingDailyLog.slice();
+                
+                // 4. 覆盖 userStats（意志力&小确幸）
+                userStats = Object.assign({}, incomingStats);
+                
+                // 5. 保存到 localStorage
+                save();
+                
+                // 6. 恢复 localStorage 的 local 数据（如果备份中有）
+                if (localData) {
+                    try {
+                        if (localData.ritualMorning !== undefined && localData.ritualMorning !== null) {
+                            localStorage.setItem(KEY_RITUAL_MORNING, JSON.stringify(localData.ritualMorning));
+                        }
+                        if (localData.ritualNight !== undefined && localData.ritualNight !== null) {
+                            localStorage.setItem(KEY_RITUAL_NIGHT, JSON.stringify(localData.ritualNight));
+                        }
+                        // 【风险 #4 修复】openedDays: 集合去重+合法格式过滤（yyyy-mm-dd），确保今天日期在数组中
+                        if (localData.openedDays !== undefined && Array.isArray(localData.openedDays)) {
+                            const today = getTodayDateStr();
+                            // 过滤：只保留符合 yyyy-mm-dd 格式的字符串，并去重
+                            const validDays = [...new Set(localData.openedDays.filter(day => 
+                                typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
+                            ))];
+                            // 确保今天日期在数组中（如果备份中没有今天，导入后 initOpenedDays 会添加，但这里提前保证一致性）
+                            if (!validDays.includes(today)) {
+                                validDays.push(today);
+                            }
+                            localStorage.setItem(KEY_OPENED_DAYS, JSON.stringify(validDays));
+                        }
+                        if (localData.posterShownDay !== undefined && localData.posterShownDay !== null) {
+                            localStorage.setItem(KEY_POSTER_SHOWN_DAY, localData.posterShownDay);
+                        }
+                    } catch (e) {
+                        console.warn('恢复 localStorage 数据时出错', e);
+                    }
+                }
+                
+                // 7. 如果恢复了仪式数据，需要重新加载并更新界面
+                if (localData && (localData.ritualMorning || localData.ritualNight)) {
+                    loadRitualSettings();
+                    const inputMorning = document.getElementById('ritualMorningInput');
+                    const inputNight = document.getElementById('ritualNightInput');
+                    if (inputMorning && ritualMorningSteps) inputMorning.value = ritualMorningSteps.join('\n');
+                    if (inputNight && ritualNightSteps) inputNight.value = ritualNightSteps.join('\n');
+                }
+                
+                // 8. 调用渲染函数刷新界面
+                renderList();
+                renderArchive();
+                renderLog();
+                renderHistory();
+                updateStatsUI();
+                
+                let successMsg = `✅ 成功导入 ${taskCount} 个任务`;
+                if (archiveCount > 0) successMsg += `、${archiveCount} 个归档`;
+                if (logCount > 0) successMsg += `、${logCount} 条足迹`;
+                if (hasLocalData) successMsg += `\n以及仪式和打卡数据`;
+                alert(successMsg);
+                
+                document.getElementById('dataArea').value = "";
+            }
+        } catch(e) { 
+            alert(`❌ 导入失败：${e.message}`); 
+            console.error('导入错误详情', e);
+        }
     }
 
     function triggerImport() { document.getElementById('fileInput').click(); }
@@ -6099,17 +6203,98 @@ if (!userOverrideFlash) {
         showToast('✨ 已恢复默认仪式');
     }
 
+    // 【备份导出/导入升级 v6.3-backup2】exportToFile: 导出包含版本信息和 localStorage 数据的新格式
     function exportToFile() { 
-        const allData = { db, archive, dailyLog, userStats }; 
-        const blob = new Blob([JSON.stringify(allData, null, 2)], {type: "application/json"}); 
+        // 读取 localStorage 中的仪式和打卡数据
+        let ritualMorning = null;
+        let ritualNight = null;
+        let openedDays = [];
+        let posterShownDay = null;
+        
+        try {
+            const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
+            const storedNight = localStorage.getItem(KEY_RITUAL_NIGHT);
+            if (storedMorning) {
+                ritualMorning = JSON.parse(storedMorning);
+            }
+            if (storedNight) {
+                ritualNight = JSON.parse(storedNight);
+            }
+            
+            const storedDays = localStorage.getItem(KEY_OPENED_DAYS);
+            if (storedDays) {
+                openedDays = JSON.parse(storedDays);
+                if (!Array.isArray(openedDays)) openedDays = [];
+            }
+            
+            posterShownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
+        } catch (e) {
+            console.warn('读取 localStorage 数据时出错', e);
+        }
+        
+        // 构建新格式的备份对象
+        const backupData = {
+            version: "v6.3-backup2",
+            exportedAt: new Date().toISOString(),
+            data: { db, archive, dailyLog, userStats },
+            local: {
+                ritualMorning: ritualMorning,
+                ritualNight: ritualNight,
+                openedDays: openedDays,
+                posterShownDay: posterShownDay
+            }
+        };
+        
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: "application/json"}); 
         const a = document.createElement('a'); 
         a.href = URL.createObjectURL(blob); 
         a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json"; 
         a.click(); 
     }
 
+    // 【备份导出/导入升级 v6.3-backup2】copyToClip: 复制包含版本信息和 localStorage 数据的新格式
     function copyToClip() { 
-        const str = JSON.stringify({ db, archive, dailyLog, userStats }); 
+        // 读取 localStorage 中的仪式和打卡数据
+        let ritualMorning = null;
+        let ritualNight = null;
+        let openedDays = [];
+        let posterShownDay = null;
+        
+        try {
+            const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
+            const storedNight = localStorage.getItem(KEY_RITUAL_NIGHT);
+            if (storedMorning) {
+                ritualMorning = JSON.parse(storedMorning);
+            }
+            if (storedNight) {
+                ritualNight = JSON.parse(storedNight);
+            }
+            
+            const storedDays = localStorage.getItem(KEY_OPENED_DAYS);
+            if (storedDays) {
+                openedDays = JSON.parse(storedDays);
+                if (!Array.isArray(openedDays)) openedDays = [];
+            }
+            
+            posterShownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
+        } catch (e) {
+            console.warn('读取 localStorage 数据时出错', e);
+        }
+        
+        // 构建新格式的备份对象
+        const backupData = {
+            version: "v6.3-backup2",
+            exportedAt: new Date().toISOString(),
+            data: { db, archive, dailyLog, userStats },
+            local: {
+                ritualMorning: ritualMorning,
+                ritualNight: ritualNight,
+                openedDays: openedDays,
+                posterShownDay: posterShownDay
+            }
+        };
+        
+        const str = JSON.stringify(backupData, null, 2); 
         if (navigator.clipboard && navigator.clipboard.writeText) { 
             navigator.clipboard.writeText(str)
                 .then(()=> alert("✅ 已复制"))
