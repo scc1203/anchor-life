@@ -2271,9 +2271,22 @@ body.variant-common .stat-btn.joy {
         </div>
     </div>
 <script>
-    // ===== Anchor Variant Switch =====
-    // 'personal' 显示唱片相关功能；'common' 隐藏唱片相关功能
-    const APP_VARIANT = 'common';
+// ===== Anchor Variant Switch =====
+// 规则：anchor.dawnharbour.com => common；anchor-scc.dawnharbour.com => personal
+function detectVariant() {
+  const host = (location.hostname || '').toLowerCase();
+
+  // 可选：给自己留一个测试后门
+  const qs = new URLSearchParams(location.search);
+  const forced = (qs.get('variant') || qs.get('mode') || '').toLowerCase();
+  if (forced === 'common' || forced === 'personal') return forced;
+
+  if (host.startsWith('anchor-scc.')) return 'personal';
+  return 'common';
+}
+
+const APP_VARIANT = detectVariant();
+
 
     const sosLibrary = [
         { title: "大口喝水", icon: "💧", desc: "感受水流经过食道。" },
@@ -4902,7 +4915,9 @@ function playGachaAnimation(result) {
 
     function handleEnter(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNew(); } }
 
-    function setMode(m) { 
+    function setMode(m) {
+    if (APP_VARIANT === 'common' && m === 'vinyl') m = 'normal';
+    // 下面保持你原来的代码不动
         mode = m; 
         document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active')); 
         const map = { 'normal':0, 'culture':1, 'vinyl':2, 'sos':3 }; 
@@ -6125,6 +6140,12 @@ function applyVariant() {
     if (vinylTag) {
         vinylTag.style.display = (APP_VARIANT === 'common') ? 'none' : '';
     }
+        // 3）标题版本角标：common 显示“通用版”
+    const badge = document.querySelector('.version-badge');
+    if (badge) {
+        const base = badge.textContent.replace(/\s*通用版\s*/g, '').trim(); // 先清掉旧的，避免叠加
+        badge.textContent = (APP_VARIANT === 'common') ? (base + ' 通用版') : base;
+    }
 }
 
 /* --- 页面载入后自动选择筛选默认值 --- */
@@ -6169,4 +6190,3 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
-
