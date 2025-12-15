@@ -1169,6 +1169,19 @@
     background: #f5f5f5;
 }
 
+/* 备份对话框按钮样式 */
+.backup-btn-overwrite {
+    background: #ffecec;
+}
+
+.backup-btn-merge {
+    background: #e7f4ff;
+}
+
+.backup-btn-cancel {
+    background: #f5f5f5;
+}
+
 /* 让整个 03 区下面不要留太多空白 */
 .section-list {
     padding-bottom: 20px;
@@ -2115,6 +2128,26 @@ body.variant-common .stat-btn.joy {
         </div>
     </div>
 
+    <!-- 备份导入选择弹窗：选择 覆盖 / 合并 / 取消 -->
+    <div id="backupDialog" class="cold-dialog-backdrop">
+        <div class="cold-dialog">
+            <div class="cold-dialog-title" id="backupDialogTitle">
+                选择导入方式
+            </div>
+            <div class="cold-dialog-buttons">
+                <button type="button" class="backup-btn-overwrite" onclick="confirmBackupAction('overwrite')">
+                    🔄 覆盖
+                </button>
+                <button type="button" class="backup-btn-merge" onclick="confirmBackupAction('merge')">
+                    🔀 合并（推荐）
+                </button>
+                <button type="button" class="backup-btn-cancel" onclick="confirmBackupAction('cancel')">
+                    ❌ 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
         <!-- 历史记录（最近完成） -->
         <div class="section-history" style="margin-top:12px;">
             <details id="historyDetails">
@@ -2340,6 +2373,8 @@ const APP_VARIANT = detectVariant();
     let recentHistory = [];
     // 冷库操作弹窗：当前要处理哪一条任务
     let pendingColdId = null;
+    // 备份导入：待导入的数据
+    let pendingImportData = null;
 
     function loadRitualSettings() {
         try {
@@ -6021,7 +6056,7 @@ if (!userOverrideFlash) {
     }
 
     // 导入/导出逻辑保持原样
-    // 【备份导出/导入升级 v6.3-backup2】executeImport: 支持新版格式并兼容旧版，实现 Merge 策略
+    // 【备份导出/导入升级 v6.3-backup2】executeImport: 支持新版格式并兼容旧版，显示选择对话框
     function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) { alert("⚠️ 请先粘贴代码！"); return; }
@@ -6057,92 +6092,205 @@ if (!userOverrideFlash) {
             const logCount = incomingDailyLog.length;
             const hasLocalData = localData && (localData.ritualMorning || localData.ritualNight || localData.openedDays || localData.posterShownDay);
             
-            let confirmMsg = `📡 找到 ${taskCount} 个任务`;
-            if (archiveCount > 0) confirmMsg += `、${archiveCount} 个归档`;
-            if (logCount > 0) confirmMsg += `、${logCount} 条足迹`;
-            if (hasLocalData) confirmMsg += `\n以及仪式和打卡数据`;
-            confirmMsg += `。\n\n确定要用备份数据覆盖当前数据吗？`;
+            // 保存待导入的数据
+            pendingImportData = {
+                incomingDB,
+                incomingArchive,
+                incomingDailyLog,
+                incomingStats,
+                localData,
+                taskCount,
+                archiveCount,
+                logCount,
+                hasLocalData
+            };
             
-            if(confirm(confirmMsg)) {
-                // Merge 策略：用备份数据覆盖当前数据
-                // 1. 覆盖 db（任务列表）
-                db = incomingDB.map(item => {
-                    // 确保每个任务有 id 和 time
-                    if (!item.id) item.id = Date.now() + Math.floor(Math.random()*10000);
-                    if (item.time === undefined) item.time = 30;
-                    return item;
-                });
-                
-                // 2. 覆盖 archive（归档）
-                archive = incomingArchive.slice();
-                
-                // 3. 覆盖 dailyLog（足迹）
-                dailyLog = incomingDailyLog.slice();
-                
-                // 4. 覆盖 userStats（意志力&小确幸）
-                userStats = Object.assign({}, incomingStats);
-                
-                // 5. 保存到 localStorage
-                save();
-                
-                // 6. 恢复 localStorage 的 local 数据（如果备份中有）
-                if (localData) {
-                    try {
-                        if (localData.ritualMorning !== undefined && localData.ritualMorning !== null) {
-                            localStorage.setItem(KEY_RITUAL_MORNING, JSON.stringify(localData.ritualMorning));
-                        }
-                        if (localData.ritualNight !== undefined && localData.ritualNight !== null) {
-                            localStorage.setItem(KEY_RITUAL_NIGHT, JSON.stringify(localData.ritualNight));
-                        }
-                        // 【风险 #4 修复】openedDays: 集合去重+合法格式过滤（yyyy-mm-dd），确保今天日期在数组中
-                        if (localData.openedDays !== undefined && Array.isArray(localData.openedDays)) {
-                            const today = getTodayDateStr();
-                            // 过滤：只保留符合 yyyy-mm-dd 格式的字符串，并去重
-                            const validDays = [...new Set(localData.openedDays.filter(day => 
-                                typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
-                            ))];
-                            // 确保今天日期在数组中（如果备份中没有今天，导入后 initOpenedDays 会添加，但这里提前保证一致性）
-                            if (!validDays.includes(today)) {
-                                validDays.push(today);
-                            }
-                            localStorage.setItem(KEY_OPENED_DAYS, JSON.stringify(validDays));
-                        }
-                        if (localData.posterShownDay !== undefined && localData.posterShownDay !== null) {
-                            localStorage.setItem(KEY_POSTER_SHOWN_DAY, localData.posterShownDay);
-                        }
-                    } catch (e) {
-                        console.warn('恢复 localStorage 数据时出错', e);
-                    }
-                }
-                
-                // 7. 如果恢复了仪式数据，需要重新加载并更新界面
-                if (localData && (localData.ritualMorning || localData.ritualNight)) {
-                    loadRitualSettings();
-                    const inputMorning = document.getElementById('ritualMorningInput');
-                    const inputNight = document.getElementById('ritualNightInput');
-                    if (inputMorning && ritualMorningSteps) inputMorning.value = ritualMorningSteps.join('\n');
-                    if (inputNight && ritualNightSteps) inputNight.value = ritualNightSteps.join('\n');
-                }
-                
-                // 8. 调用渲染函数刷新界面
-                renderList();
-                renderArchive();
-                renderLog();
-                renderHistory();
-                updateStatsUI();
-                
-                let successMsg = `✅ 成功导入 ${taskCount} 个任务`;
-                if (archiveCount > 0) successMsg += `、${archiveCount} 个归档`;
-                if (logCount > 0) successMsg += `、${logCount} 条足迹`;
-                if (hasLocalData) successMsg += `\n以及仪式和打卡数据`;
-                alert(successMsg);
-                
-                document.getElementById('dataArea').value = "";
+            // 显示选择对话框
+            let dialogTitle = `📡 找到 ${taskCount} 个任务`;
+            if (archiveCount > 0) dialogTitle += `、${archiveCount} 个归档`;
+            if (logCount > 0) dialogTitle += `、${logCount} 条足迹`;
+            if (hasLocalData) dialogTitle += `\n以及仪式和打卡数据`;
+            dialogTitle += `\n\n请选择导入方式：`;
+            
+            const titleElement = document.getElementById('backupDialogTitle');
+            if (titleElement) {
+                titleElement.textContent = dialogTitle;
+            }
+            
+            const dialog = document.getElementById('backupDialog');
+            if (dialog) {
+                dialog.style.display = 'flex';
             }
         } catch(e) { 
             alert(`❌ 导入失败：${e.message}`); 
             console.error('导入错误详情', e);
         }
+    }
+
+    // 处理备份导入的用户选择：覆盖 / 合并 / 取消
+    function confirmBackupAction(action) {
+        const dialog = document.getElementById('backupDialog');
+        if (dialog) {
+            dialog.style.display = 'none';
+        }
+
+        if (!pendingImportData) return;
+
+        if (action === 'cancel') {
+            // 取消：什么都不做
+            pendingImportData = null;
+            return;
+        }
+
+        const { incomingDB, incomingArchive, incomingDailyLog, incomingStats, localData, taskCount, archiveCount, logCount, hasLocalData } = pendingImportData;
+        pendingImportData = null;
+
+        if (action === 'overwrite') {
+            // 覆盖策略：用备份数据完全替换当前数据
+            // 1. 覆盖 db（任务列表）
+            db = incomingDB.map(item => {
+                // 确保每个任务有 id 和 time
+                if (!item.id) item.id = Date.now() + Math.floor(Math.random()*10000);
+                if (item.time === undefined) item.time = 30;
+                return item;
+            });
+            
+            // 2. 覆盖 archive（归档）
+            archive = incomingArchive.slice();
+            
+            // 3. 覆盖 dailyLog（足迹）
+            dailyLog = incomingDailyLog.slice();
+            
+            // 4. 覆盖 userStats（意志力&小确幸）
+            userStats = Object.assign({}, incomingStats);
+        } else if (action === 'merge') {
+            // 合并策略：合并备份数据和当前数据
+            // 1. 合并 db（任务列表）：基于 id 去重，如果 id 相同则保留备份中的
+            const existingIds = new Set(db.map(item => item.id));
+            const mergedDB = db.slice(); // 先保留现有任务
+            
+            incomingDB.forEach(item => {
+                // 确保每个任务有 id 和 time
+                if (!item.id) item.id = Date.now() + Math.floor(Math.random()*10000);
+                if (item.time === undefined) item.time = 30;
+                
+                const existingIndex = mergedDB.findIndex(existing => existing.id === item.id);
+                if (existingIndex >= 0) {
+                    // id 已存在，用备份数据替换
+                    mergedDB[existingIndex] = item;
+                } else {
+                    // 新任务，添加到列表
+                    mergedDB.push(item);
+                }
+            });
+            db = mergedDB;
+            
+            // 2. 合并 archive（归档）：基于完整对象去重
+            const archiveMap = new Map();
+            archive.forEach(item => {
+                const key = JSON.stringify(item);
+                archiveMap.set(key, item);
+            });
+            incomingArchive.forEach(item => {
+                const key = JSON.stringify(item);
+                archiveMap.set(key, item);
+            });
+            archive = Array.from(archiveMap.values());
+            
+            // 3. 合并 dailyLog（足迹）：基于完整对象去重
+            const logMap = new Map();
+            dailyLog.forEach(item => {
+                const key = JSON.stringify(item);
+                logMap.set(key, item);
+            });
+            incomingDailyLog.forEach(item => {
+                const key = JSON.stringify(item);
+                logMap.set(key, item);
+            });
+            dailyLog = Array.from(logMap.values());
+            
+            // 4. 合并 userStats（意志力&小确幸）：备份数据覆盖现有数据
+            userStats = Object.assign({}, userStats, incomingStats);
+        }
+
+        // 5. 保存到 localStorage
+        save();
+        
+        // 6. 恢复 localStorage 的 local 数据（如果备份中有）
+        if (localData) {
+            try {
+                if (localData.ritualMorning !== undefined && localData.ritualMorning !== null) {
+                    localStorage.setItem(KEY_RITUAL_MORNING, JSON.stringify(localData.ritualMorning));
+                }
+                if (localData.ritualNight !== undefined && localData.ritualNight !== null) {
+                    localStorage.setItem(KEY_RITUAL_NIGHT, JSON.stringify(localData.ritualNight));
+                }
+                // 【风险 #4 修复】openedDays: 集合去重+合法格式过滤（yyyy-mm-dd），确保今天日期在数组中
+                if (localData.openedDays !== undefined && Array.isArray(localData.openedDays)) {
+                    const today = getTodayDateStr();
+                    let validDays;
+                    
+                    if (action === 'merge') {
+                        // 合并模式：合并现有的和备份的 openedDays
+                        let currentDays = [];
+                        try {
+                            const stored = localStorage.getItem(KEY_OPENED_DAYS);
+                            if (stored) {
+                                currentDays = JSON.parse(stored);
+                                if (!Array.isArray(currentDays)) currentDays = [];
+                            }
+                        } catch (e) {
+                            currentDays = [];
+                        }
+                        // 合并两个数组并去重
+                        const mergedDays = [...currentDays, ...localData.openedDays];
+                        validDays = [...new Set(mergedDays.filter(day => 
+                            typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
+                        ))];
+                    } else {
+                        // 覆盖模式：直接用备份的 openedDays
+                        validDays = [...new Set(localData.openedDays.filter(day => 
+                            typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)
+                        ))];
+                    }
+                    
+                    // 确保今天日期在数组中（如果备份中没有今天，导入后 initOpenedDays 会添加，但这里提前保证一致性）
+                    if (!validDays.includes(today)) {
+                        validDays.push(today);
+                    }
+                    localStorage.setItem(KEY_OPENED_DAYS, JSON.stringify(validDays));
+                }
+                if (localData.posterShownDay !== undefined && localData.posterShownDay !== null) {
+                    localStorage.setItem(KEY_POSTER_SHOWN_DAY, localData.posterShownDay);
+                }
+            } catch (e) {
+                console.warn('恢复 localStorage 数据时出错', e);
+            }
+        }
+        
+        // 7. 如果恢复了仪式数据，需要重新加载并更新界面
+        if (localData && (localData.ritualMorning || localData.ritualNight)) {
+            loadRitualSettings();
+            const inputMorning = document.getElementById('ritualMorningInput');
+            const inputNight = document.getElementById('ritualNightInput');
+            if (inputMorning && ritualMorningSteps) inputMorning.value = ritualMorningSteps.join('\n');
+            if (inputNight && ritualNightSteps) inputNight.value = ritualNightSteps.join('\n');
+        }
+        
+        // 8. 调用渲染函数刷新界面
+        renderList();
+        renderArchive();
+        renderLog();
+        renderHistory();
+        updateStatsUI();
+        
+        let successMsg = `✅ 成功${action === 'overwrite' ? '覆盖' : '合并'}导入 ${taskCount} 个任务`;
+        if (archiveCount > 0) successMsg += `、${archiveCount} 个归档`;
+        if (logCount > 0) successMsg += `、${logCount} 条足迹`;
+        if (hasLocalData) successMsg += `\n以及仪式和打卡数据`;
+        alert(successMsg);
+        
+        document.getElementById('dataArea').value = "";
     }
 
     function triggerImport() { document.getElementById('fileInput').click(); }
