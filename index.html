@@ -1814,6 +1814,123 @@ body.variant-common .stat-btn.joy {
   .tarot-front .t-icon { font-size: 2.8rem; }
 }
 
+/* v6.3-edit-buttons-enter：任务操作对话框样式 */
+#taskActionDialog {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.task-dialog-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.task-dialog-box {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  animation: dialogFadeIn 0.2s ease-out;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.task-dialog-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.task-dialog-message {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.task-dialog-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.task-dialog-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.task-dialog-btn-cancel {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.task-dialog-btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+.task-dialog-btn-edit {
+  background: #cfe8ff; /* v6.3-edit-buttons-enter：柔和马卡龙淡蓝 */
+  color: #2f5d90;
+}
+
+.task-dialog-btn-edit:hover {
+  background: #b9dbff;
+}
+
+.task-dialog-btn-complete {
+  background: #d3f3d6; /* v6.3-edit-buttons-enter：柔和马卡龙淡绿 */
+  color: #2d6a3a;
+}
+
+.task-dialog-btn-complete:hover {
+  background: #bff0c4;
+}
+
+@media (max-width: 420px) {
+  .task-dialog-box {
+    padding: 20px;
+  }
+  .task-dialog-buttons {
+    flex-direction: column;
+  }
+  .task-dialog-btn {
+    width: 100%;
+  }
+}
 
 </style>
 </head>
@@ -1940,6 +2057,20 @@ body.variant-common .stat-btn.joy {
             </div>
         </div>
 
+    <!-- v6.3-edit-buttons-enter：任务操作三选项对话框 -->
+    <div id="taskActionDialog" style="display:none;">
+        <div class="task-dialog-overlay" onclick="closeTaskActionDialog()"></div>
+        <div class="task-dialog-box">
+            <div class="task-dialog-title" id="taskDialogTitle">任务操作</div>
+            <div class="task-dialog-message" id="taskDialogMessage"></div>
+            <div class="task-dialog-buttons">
+                <button class="task-dialog-btn task-dialog-btn-cancel" onclick="closeTaskActionDialog()">取消</button>
+                <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">修改</button>
+                <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">完成</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🌅🌙 起飞 / 着陆仪式卡片 -->
         <div id="ritualOverlay">
         <div class="ritual-card">
@@ -1993,7 +2124,7 @@ body.variant-common .stat-btn.joy {
     <textarea id="inpTitle"
       placeholder="输入事项…（支持批量输入）&#10;例：！写导言30m / 整理书桌 / 看好东西…"
       oninput="autoTag()"
-      onkeypress="handleEnter(event)"></textarea>
+      onkeydown="handleEnter(event)"></textarea>
     <button class="btn-add" onclick="addNew()">＋</button>
 </div>
         <div class="input-options">
@@ -2171,15 +2302,15 @@ body.variant-common .stat-btn.joy {
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
                 <div class="manual-h3">💡 核心概念</div>
-                <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让「命运」帮你做决定，你只负责「顺着被推一把」。</p>
+                <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让「命运」帮你做决定。</p>
 
                 <div class="manual-h3">🍬 吃一颗糖（00 区）</div>
                 <p>在真正开始抽卡之前，先「吃一颗糖」。用 1～5 分钟做一点轻松的小事，把自己从发呆 / 拖延状态，缓缓拉回可以行动的轨道。</p>
                 <ul>
-                    <li><b>捏气泡糖：</b> 一整屏小泡泡，随便戳几下出出气，然后点「去抽卡」。</li>
-                    <li><b>涂鸦糖：</b> 像拿蜡笔乱画一样，在空白画布上随便画几笔，不需要好看。</li>
-                    <li><b>涂色糖：</b> 在一张线稿风景图上上色，让大脑慢慢「上线」。</li>
-                    <li><b>音乐糖：</b> 随机播放一首 B 站的小歌，当作今天的开场 BGM。</li>
+                    <li><b>捏气泡糖/烟花星空糖：</b> 一整屏小泡泡，随便戳几下出出气，然后点「去抽卡」。</li>
+                    <li><b>涂鸦糖/涂色糖：</b> 像拿蜡笔乱画一样，在空白画布上随便画几笔，不需要好看。</li>
+                    <li><b>音乐糖/乐器糖：</b> 随机播放一首 B 站的小歌，当作今天的开场 BGM。</li>
+                    <li><b>其他糖：</b> 陆续增加ing。</li>
                 </ul>
                 <p style="font-size:0.78rem; color:#777; margin-top:4px;">
                     吃糖本身不是任务，不需要完成得好，只是一个从「停滞」切换到「可以动一动」的小仪式。
@@ -2189,9 +2320,9 @@ body.variant-common .stat-btn.joy {
                 <p>支持「说人话」和批量粘贴。每行一个任务。</p>
                 <ul>
                     <li><b>自动书影：</b> 输入 <span class="manual-tag">看/读/书/影/剧/追</span> 开头，自动归类为文化，并加书名号。</li>
-                    <li><b>闪电速办：</b> 输入类似 <span class="manual-tag">立刻/马上/顺手/5min</span> 等关键词，自动标记为 <span class="manual-tag">⚡️速办</span>（约 5 分钟）。</li>
-                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">🐸</span> 或 <span class="manual-tag">青蛙</span> 开头，标记为困难但重要的任务。</li>
-                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环，适合刷牙、吃药等日常项目。</li>
+                    <li><b>闪电速办：</b> 输入类似 <span class="manual-tag">洗/刷/理/拆/扔/喝</span> 等关键词，自动标记为 <span class="manual-tag">⚡️速办</span>（5min）。</li>
+                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*/!/重要+空格</span> 开头，标记为困难但重要的<span class="manual-tag">🐸青蛙</span>。</li>
+                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
                 </ul>
 
                 <div class="manual-h3">🎲 抽取逻辑</div>
@@ -2213,11 +2344,11 @@ body.variant-common .stat-btn.joy {
                     <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时，点一下，给自己的克制一点见证。</li>
                     <li><b>✨ 小确幸：</b> 遇到开心的小事时，点一下，为好事留个记号。</li>
                     <li><b>👣 今日足迹：</b> 记录今天的日常流水，次日自动清空。</li>
-                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影 / 剧集。</li>
+                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影 / 书 / 剧集以及 🐸青蛙任务。</li>
                 </ul>
 
                 <div class="manual-h3">🆘 SOS 模式</div>
-                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态，而不是推你去完成高难度任务。</p>
+                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态。</p>
             </div>
         </details>
     </div>
@@ -2237,7 +2368,7 @@ body.variant-common .stat-btn.joy {
  		    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；音乐糖；增加每日打卡图。</li>
                 <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”：点击/触控绽放的小互动，短暂停靠后回到抽卡。</li>
                     <li><b>v6.2：</b> 增加“乐器糖”：Kalimba（卡林巴琴）；Chord Pad（和弦击垫）。</li>
-                 <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现（50/50）。</li>
+                 <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现。</li>
 </ul>
             </div>
         </details>
@@ -4961,7 +5092,25 @@ function playGachaAnimation(result) {
         }, 2000);
     }
 
-    function handleEnter(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNew(); } }
+    // v6.3-edit-buttons-enter：区分移动端和PC端的回车行为
+    function handleEnter(e) {
+        if (e.key !== 'Enter') return;
+        
+        // 检测是否为移动设备
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+                         || window.innerWidth <= 768;
+        
+        if (isMobile) {
+            // 移动端：Enter 就是换行，不拦截
+            return;
+        } else {
+            // PC端：Shift+Enter 换行，单独 Enter 提交
+            if (!e.shiftKey) {
+                e.preventDefault();
+                addNew();
+            }
+        }
+    }
 
     function setMode(m) {
     if (APP_VARIANT === 'common' && m === 'vinyl') m = 'normal';
@@ -5570,8 +5719,15 @@ function openRitual(type) {
         completeTaskCore(currentTask, { silentCard: false });
     }
 
+    // v6.3-edit-buttons-enter：当前对话框要操作的任务
+    let currentDialogTask = null;
+    // v6.3-edit-buttons-enter：编辑状态记录（覆盖原任务用）
+    let editingTaskId = null;
+    let editingTaskOriginal = null;
+
     /**
-     * 列表里手动点击标题完成：
+     * 列表里手动点击标题：
+     * v6.3-edit-buttons-enter：改为弹出三选项对话框（取消/修改/完成）
      * - 日常任务：相当于“今天这条打卡一次”
      * - 一次性任务：完成并移出任务池（青蛙进荣誉殿堂）
      * - 书 / 影 / 剧：相当于“今天看/读/追了一点”，电影会再问是否彻底看完
@@ -5585,24 +5741,96 @@ function openRitual(type) {
         if (!task) return;
         if (task.inColdStorage) return;  // 冷库不支持“直接完成”（双重保护）
 
-        // 2) 弹出第一层确认（防误触）
+        // 2) v6.3-edit-buttons-enter：显示三选项对话框
         let msg;
         if (task.type === 'culture') {
             msg = `「${task.title}」今天有看/读/追一点吗？`;
         } else if (task.recurrence === 'daily') {
-            msg = `要把「${task.title}」标记为今天已完成吗？`;
+            msg = `要对「${task.title}」做什么操作？`;
         } else {
-            msg = `要把「${task.title}」标记为已完成吗？`;
+            msg = `要对「${task.title}」做什么操作？`;
         }
 
-        if (!confirm(msg)) return;
+        showTaskActionDialog(task, msg);
+    }
 
-        // 3) 如果这条正好是当前 card 上的任务：当作正常 finishTask，顺便关卡片
-        const isCurrent = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === id);
+    // v6.3-edit-buttons-enter：显示任务操作对话框
+    function showTaskActionDialog(task, message) {
+        currentDialogTask = task;
+        const dialog = document.getElementById('taskActionDialog');
+        const msgEl = document.getElementById('taskDialogMessage');
+        if (msgEl) msgEl.innerText = message;
+        if (dialog) dialog.style.display = 'flex';
+    }
+
+    // v6.3-edit-buttons-enter：关闭对话框
+    function closeTaskActionDialog() {
+        const dialog = document.getElementById('taskActionDialog');
+        if (dialog) dialog.style.display = 'none';
+        currentDialogTask = null;
+    }
+
+    // v6.3-edit-buttons-enter：处理完成操作
+    function handleTaskComplete() {
+        if (!currentDialogTask) return;
+        const task = currentDialogTask;
+        closeTaskActionDialog();
+        
+        // 如果这条正好是当前 card 上的任务：当作正常 finishTask，顺便关卡片
+        const isCurrent = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
         completeTaskCore(task, { silentCard: !isCurrent });
     }
 
+    // v6.3-edit-buttons-enter：处理修改操作
+    function handleTaskEdit() {
+        if (!currentDialogTask) return;
+        const task = currentDialogTask;
+        closeTaskActionDialog();
+        
+        // v6.3-edit-buttons-enter：记录当前编辑任务，用于提交时覆盖
+        editingTaskId = task.id;
+        try { editingTaskOriginal = JSON.parse(JSON.stringify(task)); } catch(e) { editingTaskOriginal = { ...task }; }
 
+        // v6.3-edit-buttons-enter：把任务属性填回输入区，用户可编辑后再提交
+        const input = document.getElementById('inpTitle');
+        if (input) {
+            input.value = task.title || '';
+            input.focus();
+            const len = input.value.length;
+            try { input.setSelectionRange(len, len); } catch(e) {}
+        }
+
+        // 选中标签（culture 按 subtype/isSeries 优先）
+        const tags = Array.from(document.querySelectorAll('.tag'));
+        const type = task.type;
+        let targetTag = null;
+        if (type === 'culture') {
+            if (task.subtype === 'book') {
+                targetTag = tags.find(t => t.dataset.v === 'culture' && t.dataset.sub === 'book');
+            } else if (task.subtype === 'movie') {
+                targetTag = tags.find(t => t.dataset.v === 'culture' && t.dataset.sub === 'movie');
+            } else if (task.isSeries) {
+                targetTag = tags.find(t => t.dataset.v === 'culture' && t.dataset.sub === 'series');
+            }
+            if (!targetTag) targetTag = tags.find(t => t.dataset.v === 'culture');
+        } else {
+            targetTag = tags.find(t => t.dataset.v === type);
+        }
+        if (!targetTag && tags.length > 0) targetTag = tags[0];
+        if (targetTag) pickTag(targetTag);
+
+        // 同步时间选择
+        const timeSel = document.getElementById('inpTime');
+        if (timeSel && typeof task.time !== 'undefined' && task.time !== null) {
+            timeSel.value = task.time;
+        }
+
+        // 同步每日循环 / 速办开关
+        toggleSwitch('cycle', task.recurrence === 'daily');
+        toggleSwitch('flash', !!task.isQuick);
+
+        // 其他属性（如 isFrog 等）保持在任务对象上，用户提交后沿用
+    }
 
     function recordLog() { renderLog(); }
 
@@ -5788,12 +6016,19 @@ function openRitual(type) {
     function addNew() {
         const rawInput = document.getElementById('inpTitle').value; 
         if(!rawInput || rawInput.trim() === "") return;
-        let lines = rawInput.split('\n').filter(line => line.trim() !== ""); 
-        const type = document.querySelector('.tag.active').dataset.v; 
-        let addedCount = 0; 
-        let batchSubtype = ''; 
 
-        if (lines.length > 0) { 
+        // v6.3-edit-buttons-enter：编辑模式仅取首行并覆盖原任务
+        let lines = rawInput.split('\n').filter(line => line.trim() !== ""); 
+        if (editingTaskId) {
+            lines = [lines.join(' ')].filter(Boolean);
+        }
+        const activeTag = document.querySelector('.tag.active');
+        const type = activeTag.dataset.v; 
+        const manualSubtype = activeTag.dataset.sub || '';
+        let addedCount = 0; 
+        let batchSubtype = manualSubtype || ''; 
+
+        if (!batchSubtype && lines.length > 0) { 
             const firstRaw = lines[0];
             const first = firstRaw.toLowerCase(); 
             const isCleaning = /(理|整理|收拾|擦|扫|拖|洗|换|叠|铺|挂|扔|拆|装|喝)/.test(firstRaw); 
@@ -5912,6 +6147,9 @@ if (!userOverrideFlash) {
             const rawForSeries = title.replace(/^(去|看|读|听|做)\s*/, '').trim();
 
             let isSeries = false;
+            if (type === 'culture' && subtype === 'series') {
+                isSeries = true;
+            }
             if (type === 'culture') {
                 const firstCharSeries = rawForSeries.charAt(0) || '';
 
@@ -5951,14 +6189,35 @@ if (!userOverrideFlash) {
             if (recurrence === 'none' && (title.includes('每天') || title.includes('每日'))) { recurrence = 'daily'; }
             if (recurrence === 'daily') title = title.replace(/每天|每日/g, '').trim();
 
-            db.push({ 
-                id: Date.now() + Math.floor(Math.random() * 10000), 
-                title: title, type: type, subtype: subtype, 
-                desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""), 
-                isSeries: isSeries, time: timeVal, recurrence: recurrence, 
-                isFrog: isFrog, isQuick: isQuick, lastDone: '' 
-            }); 
-            addedCount++;
+            // v6.3-edit-buttons-enter：编辑模式覆盖原任务，保留其他属性（如🐸）
+            if (editingTaskId) {
+                const idx = db.findIndex(t => t.id === editingTaskId);
+                const base = (idx > -1) ? { ...db[idx] } : (editingTaskOriginal ? { ...editingTaskOriginal } : {});
+
+                db[idx] = {
+                    ...base,
+                    id: editingTaskId,
+                    title,
+                    type,
+                    subtype,
+                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""),
+                    isSeries,
+                    time: timeVal,
+                    recurrence,
+                    isFrog: base.isFrog || isFrog,
+                    isQuick: isQuick,
+                };
+                addedCount++;
+            } else {
+                db.push({ 
+                    id: Date.now() + Math.floor(Math.random() * 10000), 
+                    title: title, type: type, subtype: subtype, 
+                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""), 
+                    isSeries: isSeries, time: timeVal, recurrence: recurrence, 
+                    isFrog: isFrog, isQuick: isQuick, lastDone: '' 
+                }); 
+                addedCount++;
+            }
         });
 
         save(); renderList(); 
@@ -5968,6 +6227,8 @@ if (!userOverrideFlash) {
         document.getElementById('timeFeedback').innerText = ""; 
         if(switchState.cycle) toggleSwitch('cycle', false); 
         if(switchState.flash) toggleSwitch('flash', false); 
+        editingTaskId = null;
+        editingTaskOriginal = null;
         showToast(`🎉 存入 ${addedCount} 个任务！`); 
         setTimeout(() => input.placeholder = "输入事项...", 1500);
     }
