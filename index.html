@@ -4654,7 +4654,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             li.className = 'task-item';
             const suffix = log.done ? ' ✅' : '';
             li.innerHTML = `
-                <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                <div style="display:flex;align-items:center;gap:0px;width:100%;font-size:0.9rem;">
                     <span class="footprint-time">${log.timeStr || ''}</span>
                     <span class="footprint-item" style="flex:1;">${log.icon || ''} ${log.title}${suffix}</span>
                     <span style="cursor:pointer;color:#c44;margin-left:auto;" title="删除" onclick="deleteLogEntry(${idx})">🗑️</span>
