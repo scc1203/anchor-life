@@ -4702,25 +4702,39 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
     
 
-function renderLog() {
+    function renderLog() {
         const list = document.getElementById('logList');
         if(!list) return;
         list.innerHTML = "";
         const today = new Date().toDateString();
-        const todaysLogs = dailyLog.filter(log => log.date === today);
-        document.getElementById('logCount').innerText = todaysLogs.length;
-        todaysLogs.forEach(log => {
+        let count = 0;
+        dailyLog.forEach((log, idx) => {
+            if (log.date !== today) return;
+            count++;
             const li = document.createElement('li');
             li.className = 'task-item';
             const suffix = log.done ? ' ✅' : '';
             li.innerHTML = `
-                <div style="display:flex;align-items:center;">
-                    <span class="footprint-time">${log.timeStr}</span>
-                    <span class="footprint-item">${log.icon} ${log.title}${suffix}</span>
+                <div style="display:flex;align-items:center;gap:8px;width:100%;">
+                    <span class="footprint-time">${log.timeStr || ''}</span>
+                    <span class="footprint-item" style="flex:1;">${log.icon || ''} ${log.title}${suffix}</span>
+                    <span style="cursor:pointer;color:#c44;margin-left:auto;" title="删除" onclick="deleteLogEntry(${idx})">🗑️</span>
                 </div>
             `;
             list.appendChild(li);
         });
+        const cntEl = document.getElementById('logCount');
+        if (cntEl) cntEl.innerText = count;
+    }
+
+    // v6.3-edit-buttons-enter：删除今日足迹记录（与荣誉殿堂一致，二次确认）
+    function deleteLogEntry(idx) {
+        if (idx < 0 || idx >= dailyLog.length) return;
+        if (!confirm("确定从今日足迹删除这条记录吗？")) return;
+        dailyLog.splice(idx, 1);
+        save();
+        renderLog();
+        renderHistory();
     }
 
     function renderHistory() {
@@ -4972,6 +4986,21 @@ function renderResultCard(result) {
         }
         currentStatus = 'anchor';
         anchorStartTime = Date.now();
+
+        // v6.3-edit-buttons-enter：就它啦后写入今日足迹（未完成）
+        const dt = new Date();
+        const timeStr = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
+        dailyLog.unshift({
+            title: currentTask.title,
+            icon: currentTask.icon || getSmartIcon(currentTask),
+            timeStr,
+            date: dt.toDateString(),
+            done: false,
+            taskId: currentTask.id
+        });
+        save();
+        renderLog();
+        renderHistory();
     }
 
     function handlePrimaryAction() {
@@ -4993,24 +5022,6 @@ function renderResultCard(result) {
         if (!currentTask) { 
             draw();
             return;
-        }
-        if (currentTask.type !== 'sos' && currentStatus === 'anchor' && anchorStartTime) {
-            const now = Date.now();
-            const elapsed = now - anchorStartTime;
-            if (elapsed >= 30000) {
-                const dt = new Date();
-                const timeStr = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-                dailyLog.unshift({
-                    title: currentTask.title,
-                    icon: currentTask.icon || getSmartIcon(currentTask),
-                    timeStr: timeStr,
-                    date: dt.toDateString(),
-                    done: false
-                });
-                save();
-                renderLog();
-                renderHistory();
-            }
         }
         currentTask = null;
         currentStatus = 'idle';
@@ -5610,17 +5621,32 @@ function openRitual(type) {
             return;
         }
 
-        // 写入「今日足迹 / 历史记录」
+        // 写入「今日足迹 / 历史记录」：如果已有“就它啦”记录则标记为完成，否则补一条完成记录
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
 
-        dailyLog.unshift({
-            title: task.title,
-            icon: task.icon || getSmartIcon(task),
-            timeStr: timeStr,
-            date: now.toDateString(),
-            done: true
-        });
+        let marked = false;
+        for (let i = 0; i < dailyLog.length; i++) {
+            const log = dailyLog[i];
+            if (log.date === now.toDateString() && log.taskId === task.id) {
+                log.done = true;
+                log.title = task.title;
+                log.icon = task.icon || getSmartIcon(task);
+                log.timeStr = log.timeStr || timeStr;
+                marked = true;
+                break;
+            }
+        }
+        if (!marked) {
+            dailyLog.unshift({
+                title: task.title,
+                icon: task.icon || getSmartIcon(task),
+                timeStr: timeStr,
+                date: now.toDateString(),
+                done: true,
+                taskId: task.id
+            });
+        }
 
         // 1）每日循环任务：只打卡，不出任务池
         if (task.recurrence === 'daily') {
