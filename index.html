@@ -2157,6 +2157,7 @@ body.variant-common .stat-btn.joy {
   font-size: 0.95rem;
   outline: none;
   transition: border-color 0.2s;
+  max-width: 200px; /* 限制最大宽度，给时间选择器留出空间 */
 }
 
 .memory-input-bookmark:focus {
@@ -2184,7 +2185,7 @@ body.variant-common .stat-btn.joy {
   background: #fff;
   cursor: pointer;
   outline: none;
-  min-width: 60px;
+  min-width: 70px; /* 增加最小宽度以容纳"h"标识 */
 }
 
 .memory-time-select:focus {
@@ -2261,17 +2262,34 @@ body.variant-common .stat-btn.joy {
   }
   
   .memory-panel-row1 {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .memory-input-bookmark {
+    flex: 0 1 auto;
+    max-width: 45%; /* 移动端书签输入框占约45%宽度 */
+    min-width: 120px;
   }
   
   .memory-separator {
-    display: none;
+    font-size: 0.8rem;
+    padding: 0 2px;
+    flex-shrink: 0;
   }
   
   .memory-time-picker {
-    width: 100%;
-    justify-content: center;
+    flex: 0 1 auto;
+    min-width: 140px; /* 确保时间选择器有足够空间 */
+    justify-content: flex-start;
+  }
+  
+  .memory-time-select {
+    min-width: 65px;
+    padding: 8px 8px;
+    font-size: 0.9rem;
   }
 }
 
@@ -2448,30 +2466,30 @@ body.variant-common .stat-btn.joy {
                 <span class="memory-separator">/ 本次时长：</span>
                 <div class="memory-time-picker">
                     <select id="memoryHours" class="memory-time-select">
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
-                        <option value="11">11</option>
-                        <option value="12">12</option>
-                        <option value="13">13</option>
-                        <option value="14">14</option>
-                        <option value="15">15</option>
-                        <option value="16">16</option>
-                        <option value="17">17</option>
-                        <option value="18">18</option>
-                        <option value="19">19</option>
-                        <option value="20">20</option>
-                        <option value="21">21</option>
-                        <option value="22">22</option>
-                        <option value="23">23</option>
+                        <option value="0">0h</option>
+                        <option value="1">1h</option>
+                        <option value="2">2h</option>
+                        <option value="3">3h</option>
+                        <option value="4">4h</option>
+                        <option value="5">5h</option>
+                        <option value="6">6h</option>
+                        <option value="7">7h</option>
+                        <option value="8">8h</option>
+                        <option value="9">9h</option>
+                        <option value="10">10h</option>
+                        <option value="11">11h</option>
+                        <option value="12">12h</option>
+                        <option value="13">13h</option>
+                        <option value="14">14h</option>
+                        <option value="15">15h</option>
+                        <option value="16">16h</option>
+                        <option value="17">17h</option>
+                        <option value="18">18h</option>
+                        <option value="19">19h</option>
+                        <option value="20">20h</option>
+                        <option value="21">21h</option>
+                        <option value="22">22h</option>
+                        <option value="23">23h</option>
                     </select>
                     <span style="margin:0 4px;">:</span>
                     <select id="memoryMinutes" class="memory-time-select">
