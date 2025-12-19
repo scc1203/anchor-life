@@ -1192,7 +1192,7 @@
 }
         .manual-content { padding: 0 15px 20px 15px; border-top: 1px solid #eee; font-size: 0.85rem; }
         .manual-h3 { font-weight: bold; color: #333; margin: 15px 0 5px 0; }
-        .manual-tag { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 0 2px; }
+        .manual-tag { background: #eee; color: #666; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 0 2px; }
 /* 让 03 区里的历史记录卡片，和前面四块卡片风格一致 */
 .section-history {
     margin-top: 8px;           /* 跟 HTML 里的 8px 对齐 */
@@ -5269,18 +5269,18 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                         } else {
                             timeDisplay = `${mins}m`;
                         }
-                        memoryInfo += ` ⏱ +${timeDisplay}`;
+                        memoryInfo += ` <span class="manual-tag">⏱ +${timeDisplay}</span>`;
                     }
                     // 显示书签
                     if (displayBookmark) {
-                        memoryInfo += ` 🔖 ${displayBookmark}`;
+                        memoryInfo += ` <span class="manual-tag">🔖 ${displayBookmark}</span>`;
                     }
                     // 显示备注
                     if (displayNote) {
                         const notePreview = displayNote.split('\n')[0].substring(0, 15);
                         const noteFull = displayNote;
                         const noteId = `note_${log._index || Math.random()}`;
-                        memoryInfo += ` <span class="note-preview" data-note-id="${noteId}" data-note-full="${noteFull.replace(/"/g, '&quot;')}" style="color:#999;font-size:0.75rem;cursor:pointer;" onclick="toggleNotePreview('${noteId}')">📝 ${notePreview}${notePreview.length >= 15 ? '...' : ''}</span>`;
+                        memoryInfo += ` <span class="manual-tag note-preview" data-note-id="${noteId}" data-note-full="${noteFull.replace(/"/g, '&quot;')}" style="cursor:pointer;" onclick="toggleNotePreview('${noteId}')">📝 ${notePreview}${notePreview.length >= 15 ? '...' : ''}</span>`;
                     }
                 }
                 
