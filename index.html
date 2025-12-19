@@ -2060,6 +2060,190 @@ body.variant-common .stat-btn.joy {
   background: #bff0c4;
 }
 
+.task-dialog-btn-memory {
+  background: #e8d5ff; /* v6.5：柔和马卡龙淡紫 */
+  color: #6b4a7c;
+}
+
+.task-dialog-btn-memory:hover {
+  background: #d8c5ef;
+}
+
+/* v6.5：备注按钮呼吸动画 */
+@keyframes memoryBtnBreathe {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+/* v6.5：记忆面板样式 */
+#memoryPanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.memory-panel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.memory-panel-content {
+  position: relative;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 24px 30px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 2;
+  animation: memoryPanelSlideUp 0.3s ease-out;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+@keyframes memoryPanelSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.memory-panel-handle {
+  width: 40px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+  cursor: pointer;
+}
+
+.memory-panel-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.memory-panel-row1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.memory-input-bookmark {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.memory-input-bookmark:focus {
+  border-bottom-color: #75B79E;
+}
+
+.memory-separator {
+  font-size: 0.9rem;
+  color: #999;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.memory-time-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.memory-time-select {
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  min-width: 60px;
+}
+
+.memory-time-select:focus {
+  border-color: #75B79E;
+}
+
+.memory-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+
+.memory-textarea:focus {
+  border-color: #75B79E;
+}
+
+.memory-panel-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.memory-btn-save,
+.memory-btn-clear {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.memory-btn-save {
+  background: #75B79E;
+  color: #fff;
+}
+
+.memory-btn-save:hover {
+  background: #65a78e;
+}
+
+.memory-btn-clear {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.memory-btn-clear:hover {
+  background: #e0e0e0;
+}
+
 @media (max-width: 420px) {
   .task-dialog-box {
     padding: 20px;
@@ -2069,6 +2253,25 @@ body.variant-common .stat-btn.joy {
   }
   .task-dialog-btn {
     width: 100%;
+  }
+  
+  .memory-panel-content {
+    padding: 16px 20px 24px;
+    max-height: 85vh;
+  }
+  
+  .memory-panel-row1 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .memory-separator {
+    display: none;
+  }
+  
+  .memory-time-picker {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -2087,7 +2290,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.4 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.5 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -2225,9 +2428,76 @@ body.variant-common .stat-btn.joy {
             <div class="task-dialog-title" id="taskDialogTitle">任务操作</div>
             <div class="task-dialog-message" id="taskDialogMessage"></div>
             <div class="task-dialog-buttons">
-                <button class="task-dialog-btn task-dialog-btn-cancel" onclick="closeTaskActionDialog()">取消</button>
                 <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">修改</button>
+                <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">记忆</button>
                 <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">完成</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- v6.5：记忆面板（底部滑出） -->
+    <div id="memoryPanel" style="display:none;">
+        <div class="memory-panel-overlay" onclick="closeMemoryPanel()"></div>
+        <div class="memory-panel-content">
+            <div class="memory-panel-handle" onclick="closeMemoryPanel()"></div>
+            <div class="memory-panel-title">记忆面板</div>
+            
+            <!-- 第一行：书签 + 时间选择器 -->
+            <div class="memory-panel-row1">
+                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="记录坐标（如：P120 / S2E5）" />
+                <span class="memory-separator">/ 本次时长：</span>
+                <div class="memory-time-picker">
+                    <select id="memoryHours" class="memory-time-select">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                        <option value="13">13</option>
+                        <option value="14">14</option>
+                        <option value="15">15</option>
+                        <option value="16">16</option>
+                        <option value="17">17</option>
+                        <option value="18">18</option>
+                        <option value="19">19</option>
+                        <option value="20">20</option>
+                        <option value="21">21</option>
+                        <option value="22">22</option>
+                        <option value="23">23</option>
+                    </select>
+                    <span style="margin:0 4px;">:</span>
+                    <select id="memoryMinutes" class="memory-time-select">
+                        <option value="0">00</option>
+                        <option value="5">05</option>
+                        <option value="10">10</option>
+                        <option value="15">15</option>
+                        <option value="20">20</option>
+                        <option value="25">25</option>
+                        <option value="30">30</option>
+                        <option value="35">35</option>
+                        <option value="40">40</option>
+                        <option value="45">45</option>
+                        <option value="50">50</option>
+                        <option value="55">55</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- 第二行：自由备注 -->
+            <textarea id="memoryNote" class="memory-textarea" placeholder="吐槽、链接、评价、提醒…"></textarea>
+            
+            <!-- 底部按钮 -->
+            <div class="memory-panel-buttons">
+                <button class="memory-btn-clear" id="memoryBtnClear" onclick="clearMemoryPanel()" style="display:none;">清空</button>
+                <button class="memory-btn-save" onclick="saveMemoryPanel()">保存</button>
             </div>
         </div>
     </div>
@@ -2260,13 +2530,15 @@ body.variant-common .stat-btn.joy {
 
 
         <!-- 结果卡片 -->
-        <div id="resultCard" class="card">
+        <div id="resultCard" class="card" style="position:relative;">
             <div id="rStatus">📌 锚点 · ING...</div>
             <span class="card-icon" id="rIcon">🎁</span>
             <div class="card-title">
                 <span id="rTitle"></span>
                 <span id="rBadge"></span>
             </div>
+            <button id="btnMemory" onclick="openMemoryPanel()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.9);border:none;border-radius:6px;font-size:0.85rem;cursor:pointer;padding:6px 10px;color:#666;animation:memoryBtnBreathe 3s ease-in-out infinite;" onmouseover="this.style.animation='none';this.style.opacity='1'" onmouseout="this.style.animation='memoryBtnBreathe 3s ease-in-out infinite';this.style.opacity=''" title="记忆">📝备注</button>
+            <div id="rProgress" style="font-size:0.85rem;color:#999;margin-top:4px;margin-bottom:8px;min-height:1.2rem;"></div>
             <div class="card-desc" id="rDesc"></div>
             <div class="card-time" id="rTime"></div>
             <div id="rIngPulse">正在进行中 · · ·</div>
@@ -2531,6 +2803,7 @@ body.variant-common .stat-btn.joy {
                     <li><b>v6.2：</b> 增加“乐器糖”：Kalimba（卡林巴琴）；Chord Pad（和弦击垫）。</li>
                  <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现。</li>
                  <li><b>v6.4：</b> 新增能量丸偏好筛选：Up高能模式（不出现剧集）；Anchor模式；Down休息时刻（不出现重要🐸任务）。</li>
+                 <li><b>v6.5：</b> 新增记忆功能：点击结果卡片📝备注或任务库 & 媒体库里的任务名称，可打开记忆面板，记录本次任务的坐标、时长以及备注。</li>
 </ul>
             </div>
         </details>
@@ -2693,7 +2966,8 @@ const APP_VARIANT = detectVariant();
 
     let mode = 'normal';
     // v6.4 能量模式：'uptime' | 'anchor' | 'downtime'
-    let energyMode = localStorage.getItem('energyMode') || 'anchor';
+    // v6.5：每次刷新页面都重置为 anchor 中间档
+    let energyMode = 'anchor';
     let currentTask = null;
     let currentStatus = 'idle';
     let anchorStartTime = null;
@@ -4712,6 +4986,8 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (inputNight)   inputNight.value   = ritualNightSteps.join('\n');
 
         // v6.4 初始化能量药丸 UI
+        // v6.5：每次刷新页面都重置为 anchor 中间档
+        energyMode = 'anchor';
         updateEnergyPillUI();
 });
 
@@ -4792,18 +5068,24 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             }
 
             // ⭐ 标题是否可点击（冷库不点，日常 & 媒体可点）
+            // v6.5：添加 4px 角标提示
+            const hasMemory = (item.bookmarkText && item.bookmarkText.trim()) || 
+                             (item.totalMinutes && item.totalMinutes > 0) || 
+                             (item.noteText && item.noteText.trim());
+            const memoryDot = hasMemory ? '<span style="position:absolute;top:-2px;right:-8px;width:4px;height:4px;background:#6b9bd1;border-radius:50%;"></span>' : '';
+            
             let titleSpanHtml;
             if (isCold) {
                 // 冷库里只展示，不提供“直接完成”
-                titleSpanHtml = `<span style="font-size:0.9rem;color:#555;">${item.title}</span>`;
+                titleSpanHtml = `<span style="position:relative;font-size:0.9rem;color:#555;">${item.title}${memoryDot}</span>`;
             } else {
                 // 日常任务库 & 媒体库里的标题：可点击手动完成
                 titleSpanHtml = `
                     <span
-                        style="font-size:0.9rem;color:#555;cursor:pointer;"
+                        style="position:relative;font-size:0.9rem;color:#555;cursor:pointer;"
                         title="点击标记今天已完成"
                         onclick="manualCompleteFromList(${item.id})"
-                    >${item.title}</span>
+                    >${item.title}${memoryDot}</span>
                 `;
             }
 
@@ -4914,10 +5196,10 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             return;
         }
         const byDate = {};
-        dailyLog.forEach(log => {
+        dailyLog.forEach((log, idx) => {
             if (!log.date) return;
             if (!byDate[log.date]) byDate[log.date] = [];
-            byDate[log.date].push(log);
+            byDate[log.date].push({ ...log, _index: idx });
         });
         const dateKeys = Object.keys(byDate).sort((a,b) => new Date(b) - new Date(a));
         const maxDays = 30;
@@ -4929,7 +5211,62 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:2px;">${dateLabel}</div>`;
             dayLogs.forEach(log => {
                 const suffix = log.done ? ' ✅' : '';
-                htmlStr += `<div style="font-size:0.8rem; color:#444;">${log.icon || ''} ${log.title}${suffix}</div>`;
+                
+                // v6.5：检查任务库中对应任务的当前记忆状态（跟随任务最新状态显示）
+                let currentBookmark = null;
+                let currentTotalMinutes = 0;
+                let currentNote = null;
+                
+                // 如果有taskId，查找任务库中对应任务的当前状态
+                if (log.taskId) {
+                    const currentTask = db.find(t => t.id === log.taskId);
+                    if (currentTask) {
+                        currentBookmark = currentTask.bookmarkText && currentTask.bookmarkText.trim() ? currentTask.bookmarkText : null;
+                        currentTotalMinutes = currentTask.totalMinutes || 0;
+                        currentNote = currentTask.noteText && currentTask.noteText.trim() ? currentTask.noteText : null;
+                    }
+                }
+                
+                // 优先使用任务当前状态，如果没有则使用快照
+                const displayBookmark = currentBookmark || (log.bookmarkSnapshot && log.bookmarkSnapshot.trim() ? log.bookmarkSnapshot : null);
+                const displayTotalMinutes = currentTotalMinutes > 0 ? currentTotalMinutes : 0;
+                const displayNote = currentNote || (log.noteSnapshot && log.noteSnapshot.trim() ? log.noteSnapshot : null);
+                const displayLastAddMinutes = log.lastAddMinutes && log.lastAddMinutes > 0 ? log.lastAddMinutes : null;
+                
+                // 显示记忆参数（不管有没有✅，只要有记忆参数就显示）
+                let memoryInfo = "";
+                const hasMemory = displayLastAddMinutes || displayBookmark || displayTotalMinutes > 0 || displayNote;
+                
+                if (hasMemory) {
+                    // 显示本次投入时长（如果有）
+                    if (displayLastAddMinutes) {
+                        const hours = Math.floor(displayLastAddMinutes / 60);
+                        const mins = displayLastAddMinutes % 60;
+                        let timeDisplay = "";
+                        if (hours > 0) {
+                            timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                        } else {
+                            timeDisplay = `${mins}m`;
+                        }
+                        memoryInfo += ` ⏱ +${timeDisplay}`;
+                    }
+                    // 显示书签
+                    if (displayBookmark) {
+                        memoryInfo += ` 🔖 ${displayBookmark}`;
+                    }
+                    // 显示备注
+                    if (displayNote) {
+                        const notePreview = displayNote.split('\n')[0].substring(0, 15);
+                        const noteFull = displayNote;
+                        const noteId = `note_${log._index || Math.random()}`;
+                        memoryInfo += ` <span class="note-preview" data-note-id="${noteId}" data-note-full="${noteFull.replace(/"/g, '&quot;')}" style="color:#999;font-size:0.75rem;cursor:pointer;" onclick="toggleNotePreview('${noteId}')">📝 ${notePreview}${notePreview.length >= 15 ? '...' : ''}</span>`;
+                    }
+                }
+                
+                htmlStr += `<div style="font-size:0.8rem; color:#444; display:flex; align-items:center; gap:4px; margin-bottom:2px;">
+                    <span style="flex:1;">${log.icon || ''} ${log.title}${suffix}</span>
+                    <span style="font-size:0.75rem; color:#999;">${memoryInfo}</span>
+                </div>`;
             });
             htmlStr += `</div>`;
         });
@@ -4937,6 +5274,28 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             container.innerHTML = `<p style="font-size:0.8rem; color:#777;">最近暂无完成记录。</p>`;
         } else {
             container.innerHTML = htmlStr;
+        }
+    }
+
+    // v6.5：展开/收起备注预览
+    function toggleNotePreview(noteId) {
+        const el = document.querySelector(`[data-note-id="${noteId}"]`);
+        if (!el) return;
+        
+        const isExpanded = el.dataset.expanded === 'true';
+        const noteFull = el.dataset.noteFull || '';
+        
+        if (isExpanded) {
+            // 收起
+            const notePreview = noteFull.split('\n')[0].substring(0, 15);
+            el.innerHTML = `📝 ${notePreview}${notePreview.length >= 15 ? '...' : ''}`;
+            el.dataset.expanded = 'false';
+            el.style.whiteSpace = 'nowrap';
+        } else {
+            // 展开
+            el.innerHTML = `📝 ${noteFull.replace(/\n/g, '<br>')}`;
+            el.dataset.expanded = 'true';
+            el.style.whiteSpace = 'normal';
         }
     }
 
@@ -5117,6 +5476,36 @@ function renderResultCard(result) {
             else                            timeStr = `⏱️ ${result.time || 30} min`;
             if (timeEl) timeEl.innerText = timeStr;
 
+            // v6.5：显示进度提示行（书签和累计时长）
+            const progressEl = document.getElementById('rProgress');
+            if (progressEl) {
+                let progressHtml = "";
+                const hasBookmark = result.bookmarkText && result.bookmarkText.trim();
+                const hasTotal = result.totalMinutes && result.totalMinutes > 0;
+                
+                if (hasBookmark || hasTotal) {
+                    if (hasBookmark) {
+                        progressHtml += `🔖 ${result.bookmarkText}`;
+                    }
+                    if (hasBookmark && hasTotal) {
+                        progressHtml += " · ";
+                    }
+                    if (hasTotal) {
+                        const totalMins = result.totalMinutes;
+                        let timeDisplay = "";
+                        if (totalMins < 60) {
+                            timeDisplay = `${totalMins}m`;
+                        } else {
+                            const hours = Math.floor(totalMins / 60);
+                            const mins = totalMins % 60;
+                            timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                        }
+                        progressHtml += `⏱ 总计 ${timeDisplay}`;
+                    }
+                }
+                progressEl.innerHTML = progressHtml;
+            }
+
             if (statusEl) statusEl.style.display = 'none';
             if (ingEl) ingEl.style.display = 'none';
             if (changeBtn) changeBtn.style.display = 'inline-block';
@@ -5192,6 +5581,32 @@ function renderResultCard(result) {
             draw();
             return;
         }
+        
+        // v6.5：如果当前任务有历史记录（未完成状态），更新记忆数据
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const taskId = currentTask.id;
+        
+        // 查找任务在 db 中的最新状态
+        const taskInDb = db.find(t => t.id === taskId);
+        if (taskInDb) {
+            // 查找并更新历史记录
+            for (let i = 0; i < dailyLog.length; i++) {
+                const log = dailyLog[i];
+                if (log.date === todayStr && log.taskId === taskId && !log.done) {
+                    // 更新记忆数据到历史记录
+                    log.bookmarkSnapshot = taskInDb.bookmarkText || '';
+                    log.noteSnapshot = taskInDb.noteText || '';
+                    if (taskInDb.lastAddMinutes && taskInDb.lastAddMinutes > 0) {
+                        log.lastAddMinutes = taskInDb.lastAddMinutes;
+                    }
+                    save();
+                    renderHistory();
+                    break;
+                }
+            }
+        }
+        
         currentTask = null;
         currentStatus = 'idle';
         anchorStartTime = null;
@@ -6006,14 +6421,26 @@ function openRitual(type) {
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
 
+        // v6.5：保存书签和备注快照（使用任务的最新状态）
+        // 如果任务在 db 中，使用 db 中的最新状态；否则使用传入的 task
+        const taskInDb = db.find(t => t.id === task.id);
+        const finalTask = taskInDb || task;
+        const bookmarkSnapshot = finalTask.bookmarkText || '';
+        const noteSnapshot = finalTask.noteText || '';
+        const lastAddMinutes = finalTask.lastAddMinutes || 0;
+
         let marked = false;
         for (let i = 0; i < dailyLog.length; i++) {
             const log = dailyLog[i];
             if (log.date === now.toDateString() && log.taskId === task.id) {
                 log.done = true;
-                log.title = task.title;
-                log.icon = task.icon || getSmartIcon(task);
+                log.title = finalTask.title;
+                log.icon = finalTask.icon || getSmartIcon(finalTask);
                 log.timeStr = log.timeStr || timeStr;
+                // v6.5：保存快照（使用最新状态）
+                log.bookmarkSnapshot = bookmarkSnapshot;
+                log.noteSnapshot = noteSnapshot;
+                log.lastAddMinutes = lastAddMinutes;
                 marked = true;
                 break;
             }
@@ -6025,7 +6452,11 @@ function openRitual(type) {
                 timeStr: timeStr,
                 date: now.toDateString(),
                 done: true,
-                taskId: task.id
+                taskId: task.id,
+                // v6.5：保存快照
+                bookmarkSnapshot: bookmarkSnapshot,
+                noteSnapshot: noteSnapshot,
+                lastAddMinutes: lastAddMinutes
             });
         }
 
@@ -6237,6 +6668,275 @@ function openRitual(type) {
         toggleSwitch('flash', !!task.isQuick);
 
         // 其他属性（如 isFrog 等）保持在任务对象上，用户提交后沿用
+    }
+
+    // v6.5：处理记忆操作（从任务操作菜单）
+    function handleTaskMemory() {
+        if (!currentDialogTask) return;
+        const task = currentDialogTask;
+        closeTaskActionDialog();
+        openMemoryPanel(task);
+    }
+
+    // v6.5：当前正在编辑记忆的任务
+    let currentMemoryTask = null;
+    let memoryOriginalState = {};
+
+    // v6.5：打开记忆面板
+    function openMemoryPanel(task) {
+        // 如果没有传入 task，使用 currentTask
+        if (!task) task = currentTask;
+        if (!task) return;
+
+        currentMemoryTask = task;
+        
+        // 保存原始状态（用于差异化保存）
+        memoryOriginalState = {
+            bookmarkText: task.bookmarkText || '',
+            totalMinutes: task.totalMinutes || 0,
+            noteText: task.noteText || ''
+        };
+
+        const panel = document.getElementById('memoryPanel');
+        const bookmarkInput = document.getElementById('memoryBookmark');
+        const hoursSelect = document.getElementById('memoryHours');
+        const minutesSelect = document.getElementById('memoryMinutes');
+        const noteTextarea = document.getElementById('memoryNote');
+        const clearBtn = document.getElementById('memoryBtnClear');
+
+        if (!panel) return;
+
+        // 加载数据
+        if (bookmarkInput) {
+            bookmarkInput.value = task.bookmarkText || '';
+            // 设置占位符
+            const placeholder = getBookmarkPlaceholder(task);
+            bookmarkInput.placeholder = placeholder;
+        }
+        if (hoursSelect) hoursSelect.value = '0';
+        if (minutesSelect) minutesSelect.value = '0';
+        if (noteTextarea) noteTextarea.value = task.noteText || '';
+
+        // 显示/隐藏清空按钮
+        if (clearBtn) {
+            const hasContent = (task.bookmarkText && task.bookmarkText.trim()) || 
+                              (task.noteText && task.noteText.trim());
+            clearBtn.style.display = hasContent ? 'block' : 'none';
+        }
+
+        // 显示面板
+        panel.style.display = 'flex';
+
+        // PC 端：书签输入框 Enter 保存
+        if (bookmarkInput) {
+            bookmarkInput.onkeydown = function(e) {
+                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    saveMemoryPanel();
+                }
+            };
+        }
+
+        // PC 端：备注 textarea Ctrl/Cmd + Enter 保存
+        if (noteTextarea) {
+            noteTextarea.onkeydown = function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    saveMemoryPanel();
+                }
+            };
+        }
+    }
+
+    // v6.5：关闭记忆面板
+    function closeMemoryPanel() {
+        const panel = document.getElementById('memoryPanel');
+        if (panel) panel.style.display = 'none';
+        currentMemoryTask = null;
+        memoryOriginalState = {};
+    }
+
+    // v6.5：获取书签占位符
+    function getBookmarkPlaceholder(task) {
+        if (!task) return "记录坐标（可选）";
+        
+        if (task.type === 'culture') {
+            if (task.subtype === 'book') {
+                return "P120 / Ch.3";
+            } else if (task.subtype === 'movie') {
+                return "00:42:10";
+            } else if (task.isSeries) {
+                return "S2E5 / E07";
+            }
+        } else if (task.type === 'sport') {
+            return "3组/5个/8次";
+        }
+        
+        return "记录坐标（可选）";
+    }
+
+    // v6.5：保存记忆面板
+    function saveMemoryPanel() {
+        if (!currentMemoryTask) return;
+
+        const bookmarkInput = document.getElementById('memoryBookmark');
+        const hoursSelect = document.getElementById('memoryHours');
+        const minutesSelect = document.getElementById('memoryMinutes');
+        const noteTextarea = document.getElementById('memoryNote');
+
+        if (!bookmarkInput || !hoursSelect || !minutesSelect || !noteTextarea) return;
+
+        // 找到任务在 db 中的索引
+        const taskIndex = db.findIndex(t => t.id === currentMemoryTask.id);
+        if (taskIndex === -1) return;
+
+        const task = db[taskIndex];
+        let hasChanges = false;
+
+        // 1. 保存书签（覆盖式）
+        const newBookmark = bookmarkInput.value.trim();
+        if (newBookmark !== memoryOriginalState.bookmarkText) {
+            if (newBookmark) {
+                task.bookmarkText = newBookmark;
+                task.bookmarkUpdatedAt = Date.now();
+                hasChanges = true;
+            }
+            // 如果为空且用户未明确清空，不覆盖（已在 clearMemoryPanel 中处理）
+        }
+
+        // 2. 保存累计时长（累加式）
+        const hours = parseInt(hoursSelect.value) || 0;
+        const minutes = parseInt(minutesSelect.value) || 0;
+        const addMinutes = hours * 60 + minutes;
+        
+        if (addMinutes > 0) {
+            task.totalMinutes = (task.totalMinutes || 0) + addMinutes;
+            task.lastAddMinutes = addMinutes;
+            task.totalUpdatedAt = Date.now();
+            hasChanges = true;
+            
+            // 重置选择器
+            hoursSelect.value = '0';
+            minutesSelect.value = '0';
+        }
+
+        // 3. 保存备注（覆盖式）
+        const newNote = noteTextarea.value.trim();
+        if (newNote !== memoryOriginalState.noteText) {
+            if (newNote) {
+                task.noteText = newNote;
+                task.noteUpdatedAt = Date.now();
+                hasChanges = true;
+            }
+            // 如果为空且用户未明确清空，不覆盖
+        }
+
+        if (hasChanges) {
+            save();
+            // 更新 currentTask 如果它是同一个任务（只更新记忆数据，不刷新整个卡片）
+            if (currentTask && currentTask.id === task.id) {
+                // 同步记忆数据到 currentTask
+                currentTask.bookmarkText = task.bookmarkText;
+                currentTask.bookmarkUpdatedAt = task.bookmarkUpdatedAt;
+                currentTask.totalMinutes = task.totalMinutes;
+                currentTask.lastAddMinutes = task.lastAddMinutes;
+                currentTask.totalUpdatedAt = task.totalUpdatedAt;
+                currentTask.noteText = task.noteText;
+                currentTask.noteUpdatedAt = task.noteUpdatedAt;
+                
+                // 只更新进度提示行，不刷新整个卡片
+                const progressEl = document.getElementById('rProgress');
+                if (progressEl) {
+                    let progressHtml = "";
+                    const hasBookmark = currentTask.bookmarkText && currentTask.bookmarkText.trim();
+                    const hasTotal = currentTask.totalMinutes && currentTask.totalMinutes > 0;
+                    
+                    if (hasBookmark || hasTotal) {
+                        if (hasBookmark) {
+                            progressHtml += `🔖 ${currentTask.bookmarkText}`;
+                        }
+                        if (hasBookmark && hasTotal) {
+                            progressHtml += " · ";
+                        }
+                        if (hasTotal) {
+                            const totalMins = currentTask.totalMinutes;
+                            let timeDisplay = "";
+                            if (totalMins < 60) {
+                                timeDisplay = `${totalMins}m`;
+                            } else {
+                                const hours = Math.floor(totalMins / 60);
+                                const mins = totalMins % 60;
+                                timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                            }
+                            progressHtml += `⏱ 总计 ${timeDisplay}`;
+                        }
+                    }
+                    progressEl.innerHTML = progressHtml;
+                }
+            }
+            
+            // v6.5：更新历史记录中的记忆数据（如果任务已经有历史记录）
+            const now = new Date();
+            const todayStr = now.toDateString();
+            for (let i = 0; i < dailyLog.length; i++) {
+                const log = dailyLog[i];
+                if (log.date === todayStr && log.taskId === task.id) {
+                    // 更新记忆数据到历史记录
+                    log.bookmarkSnapshot = task.bookmarkText || '';
+                    log.noteSnapshot = task.noteText || '';
+                    if (task.lastAddMinutes && task.lastAddMinutes > 0) {
+                        log.lastAddMinutes = task.lastAddMinutes;
+                    }
+                    save();
+                    renderHistory();
+                    break;
+                }
+            }
+            
+            // 更新列表显示
+            renderList();
+            showToast("✅ 记忆已保存");
+        }
+
+        closeMemoryPanel();
+    }
+
+    // v6.5：清空记忆面板
+    function clearMemoryPanel() {
+        if (!currentMemoryTask) return;
+        if (!confirm("确定要清空书签和备注吗？（累计时长不会被清空）")) return;
+
+        const taskIndex = db.findIndex(t => t.id === currentMemoryTask.id);
+        if (taskIndex === -1) return;
+
+        const task = db[taskIndex];
+        let hasChanges = false;
+
+        // 清空书签
+        if (task.bookmarkText) {
+            task.bookmarkText = '';
+            task.bookmarkUpdatedAt = Date.now();
+            hasChanges = true;
+        }
+
+        // 清空备注
+        if (task.noteText) {
+            task.noteText = '';
+            task.noteUpdatedAt = Date.now();
+            hasChanges = true;
+        }
+
+        if (hasChanges) {
+            save();
+            if (currentTask && currentTask.id === task.id) {
+                currentTask = task;
+                renderResultCard(currentTask);
+            }
+            renderList();
+            showToast("✅ 已清空");
+        }
+
+        closeMemoryPanel();
     }
 
     function recordLog() { renderLog(); }
