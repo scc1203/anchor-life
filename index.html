@@ -682,6 +682,146 @@
             position: relative;
             z-index: 10;
         }
+
+        /* v6.4 能量药丸样式 */
+        .energy-pill {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(90deg, #FFB7B2, #A0E7E5);
+            border-radius: 999px;
+            position: relative;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: background 0.4s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+        }
+
+        .energy-pill-zone {
+            flex: 1;
+            position: relative;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .energy-pill.uptime {
+            background: #FF9AA2;
+        }
+
+        .energy-pill.anchor {
+            background: linear-gradient(90deg, #FFB7B2, #A0E7E5);
+        }
+
+        .energy-pill.downtime {
+            background: #A0E7E5;
+        }
+
+        .energy-pill-slider {
+            position: absolute;
+            top: 4px;
+            width: calc(33.333% - 8px);
+            height: calc(100% - 8px);
+            background: rgba(255,255,255,0.95);
+            border-radius: 999px;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #555;
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        .energy-pill.uptime .energy-pill-slider {
+            left: 4px;
+        }
+
+        .energy-pill.anchor .energy-pill-slider {
+            left: calc(33.333% + 2px);
+        }
+
+        .energy-pill.downtime .energy-pill-slider {
+            left: calc(66.666%);
+        }
+
+        .energy-pill-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            transition: opacity 0.3s;
+        }
+
+        .label-text {
+            transition: opacity 0.3s;
+        }
+
+        /* uptime 模式：只隐藏第一个区域（uptime）的文字部分，图标正常显示 */
+        .energy-pill.uptime .energy-pill-zone:first-child .label-text {
+            opacity: 0;
+        }
+
+        /* anchor 模式：所有区域标签文字都正常显示 */
+        .energy-pill.anchor .energy-pill-labels {
+            opacity: 1;
+        }
+
+        /* downtime 模式：只隐藏第三个区域（downtime）的文字部分，图标正常显示 */
+        .energy-pill.downtime .energy-pill-zone:last-child .label-text {
+            opacity: 0;
+        }
+
+        .energy-hint {
+            font-size: 0.75rem;
+            color: #6b7a99;
+            text-align: center;
+            margin-bottom: 8px;
+            min-height: 18px;
+            transition: opacity 0.3s;
+        }
+
+        .filter-drawer-toggle {
+            font-size: 0.7rem;
+            color: #90A4AE;
+            cursor: pointer;
+            text-align: center;
+            margin-bottom: 8px;
+            padding: 4px;
+            transition: opacity 0.3s, transform 0.2s;
+            user-select: none;
+        }
+
+        .filter-drawer-toggle:hover {
+            color: #607D8B;
+        }
+
+        .filter-drawer-toggle.breathing {
+            animation: breathe 3s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        #filterDrawer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #filterDrawer.expanded {
+            max-height: 500px;
+        }
         .filter-label {
             font-size: 0.8rem;
             color: #6b7a99;
@@ -1947,7 +2087,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.3 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.4 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -2004,31 +2144,52 @@ body.variant-common .stat-btn.joy {
     </div>
 </div>
         <div class="section-filter" id="filterSec">
-        <div id="controls-normal" class="control-group">
-            <div class="select-wrapper">
-                <select id="selContext">
-                    <option value="desktop">💻 书桌前</option>
-                    <option value="indoor">🏠 室内/家</option>
-                    <option value="outdoor">🌳 户外</option>
-                </select>
+        <!-- v6.4 能量药丸：第一层常驻 -->
+        <div class="energy-pill anchor" id="energyPill">
+            <div class="energy-pill-slider" id="energyPillSlider">⚓</div>
+            <div class="energy-pill-zone" onclick="setEnergyMode('uptime')">
+                <div class="energy-pill-labels"><span class="label-icon">☀️</span><span class="label-text">Uptime</span></div>
             </div>
-            <div class="select-wrapper">
-                <select id="selTime">
-                    <option value="15">⏱️ 15min以内</option>
-                    <option value="30" selected>⏱️ 30min左右</option>
-                    <option value="60">⏱️ 1小时+</option>
-                    <option value="120">⏱️ 2小时+</option>
-                </select>
+            <div class="energy-pill-zone" onclick="setEnergyMode('anchor')">
+                <div class="energy-pill-labels">⚓</div>
+            </div>
+            <div class="energy-pill-zone" onclick="setEnergyMode('downtime')">
+                <div class="energy-pill-labels"><span class="label-icon">☁️</span><span class="label-text">Downtime</span></div>
             </div>
         </div>
-        <div id="controls-sos" class="control-group" style="display:none; color: #555; font-size:0.9rem;">
-            <span>🍃 允许自己暂时停下来...</span>
-        </div>
-        <div class="mode-tabs">
-            <div class="mode-tab active" onclick="setMode('normal')">🔮 混合/全域</div>
-            <div class="mode-tab" onclick="setMode('culture')">📖 只看书影</div>
-            <div class="mode-tab" id="mode-tab-vinyl" onclick="setMode('vinyl')">💿 只听唱片</div>
-            <div class="mode-tab" onclick="setMode('sos')" style="color:#d9534f">🆘 SOS</div>
+        <div class="energy-hint" id="energyHint">交给 Anchor，下一步我来决定。</div>
+        
+        <!-- 高级筛选按钮 -->
+        <div class="filter-drawer-toggle" id="filterDrawerToggle" onclick="toggleFilterDrawer()">🔽 高级筛选</div>
+        
+        <!-- v6.4 高级筛选抽屉：第二层折叠 -->
+        <div id="filterDrawer">
+            <div id="controls-normal" class="control-group">
+                <div class="select-wrapper">
+                    <select id="selContext">
+                        <option value="desktop">💻 书桌前</option>
+                        <option value="indoor">🏠 室内/家</option>
+                        <option value="outdoor">🌳 户外</option>
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <select id="selTime">
+                        <option value="15">⏱️ 15min以内</option>
+                        <option value="30" selected>⏱️ 30min左右</option>
+                        <option value="60">⏱️ 1小时+</option>
+                        <option value="120">⏱️ 2小时+</option>
+                    </select>
+                </div>
+            </div>
+            <div id="controls-sos" class="control-group" style="display:none; color: #555; font-size:0.9rem;">
+                <span>🍃 允许自己暂时停下来...</span>
+            </div>
+            <div class="mode-tabs">
+                <div class="mode-tab active" onclick="setMode('normal')">🔮 混合/全域</div>
+                <div class="mode-tab" onclick="setMode('culture')">📖 只看书影</div>
+                <div class="mode-tab" id="mode-tab-vinyl" onclick="setMode('vinyl')">💿 只听唱片</div>
+                <div class="mode-tab" onclick="setMode('sos')" style="color:#d9534f">🆘 SOS</div>
+            </div>
         </div>
     </div>
     <button class="btn-main" onclick="draw()" id="mainBtn">抽取任务</button>
@@ -2369,6 +2530,7 @@ body.variant-common .stat-btn.joy {
                 <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”：点击/触控绽放的小互动，短暂停靠后回到抽卡。</li>
                     <li><b>v6.2：</b> 增加“乐器糖”：Kalimba（卡林巴琴）；Chord Pad（和弦击垫）。</li>
                  <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现。</li>
+                 <li><b>v6.4：</b> 新增能量丸偏好筛选：Up高能模式（不出现剧集）；Anchor模式；Down休息时刻（不出现重要🐸任务）。</li>
 </ul>
             </div>
         </details>
@@ -2530,11 +2692,15 @@ const APP_VARIANT = detectVariant();
     }
 
     let mode = 'normal';
+    // v6.4 能量模式：'uptime' | 'anchor' | 'downtime'
+    let energyMode = localStorage.getItem('energyMode') || 'anchor';
     let currentTask = null;
     let currentStatus = 'idle';
     let anchorStartTime = null;
     let switchState = { cycle: false, flash: false };
     let gachaAnimating = false;
+    // v6.4 抽屉展开状态
+    let filterDrawerExpanded = false;
     // 标记本次打开过程中，是否已经“吃过糖”（只是控制按钮变淡，不当作任务）
     let candyEatenThisSession = false;
 // 记录上一次抽到的是哪一颗糖（bubble / doodle / 将来 coloring / music 等）
@@ -4544,6 +4710,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const inputNight   = document.getElementById('ritualNightInput');
         if (inputMorning) inputMorning.value = ritualMorningSteps.join('\n');
         if (inputNight)   inputNight.value   = ritualNightSteps.join('\n');
+
+        // v6.4 初始化能量药丸 UI
+        updateEnergyPillUI();
 });
 
         // 🌅🌙 仪式步骤：勾选时给文字加上划线
@@ -5123,38 +5292,119 @@ function playGachaAnimation(result) {
         }
     }
 
+    // v6.4 能量药丸切换函数（点击对应区域直接切换到指定模式）
+    function setEnergyMode(mode) {
+        if (energyMode === mode) return;
+        
+        energyMode = mode;
+        
+        // 保存到 localStorage
+        localStorage.setItem('energyMode', energyMode);
+        
+        // 更新 UI
+        updateEnergyPillUI();
+        
+        // 如果切换到左右档（Uptime/Downtime），自动收起抽屉（暗示能量模式接管一切）
+        if (energyMode === 'uptime' || energyMode === 'downtime') {
+            if (filterDrawerExpanded) {
+                toggleFilterDrawer(false);
+            }
+        }
+    }
+
+    // v6.4 更新能量药丸 UI
+    function updateEnergyPillUI() {
+        const pill = document.getElementById('energyPill');
+        const slider = document.getElementById('energyPillSlider');
+        const hint = document.getElementById('energyHint');
+        
+        if (!pill || !slider || !hint) return;
+        
+        // 移除所有模式类
+        pill.classList.remove('uptime', 'anchor', 'downtime');
+        pill.classList.add(energyMode);
+        
+        // 更新滑块图标：uptime 只显示 ☀️，anchor 显示 ⚓，downtime 只显示 ☁️
+        const icons = { 'uptime': '☀️', 'anchor': '⚓', 'downtime': '☁️' };
+        slider.textContent = icons[energyMode];
+        
+        // 更新提示语
+        const hints = {
+            'uptime': ' 🔥 高能推进：趁现在状态好，去解决那只“青蛙”',
+            'anchor': '⚓ 随机漫步：减少纠结，把下一步交给概率。',
+            'downtime': ' 🔋 安静蓄能：允许自己停下来，享受低功耗时刻。'
+        };
+        hint.textContent = hints[energyMode];
+        
+        // Anchor 模式下，高级筛选按钮呼吸提醒
+        const toggleBtn = document.getElementById('filterDrawerToggle');
+        if (toggleBtn) {
+            if (energyMode === 'anchor' && !filterDrawerExpanded) {
+                toggleBtn.classList.add('breathing');
+            } else {
+                toggleBtn.classList.remove('breathing');
+            }
+        }
+    }
+
+    // v6.4 切换高级筛选抽屉
+    function toggleFilterDrawer(forceState) {
+        const drawer = document.getElementById('filterDrawer');
+        const toggleBtn = document.getElementById('filterDrawerToggle');
+        
+        if (!drawer) return;
+        
+        // 如果传入了 forceState，使用它；否则切换状态
+        if (forceState !== undefined) {
+            filterDrawerExpanded = forceState;
+        } else {
+            filterDrawerExpanded = !filterDrawerExpanded;
+        }
+        
+        if (filterDrawerExpanded) {
+            drawer.classList.add('expanded');
+            if (toggleBtn) toggleBtn.textContent = '🔼 收起筛选';
+        } else {
+            drawer.classList.remove('expanded');
+            if (toggleBtn) toggleBtn.textContent = '🔽 高级筛选';
+        }
+        
+        // 更新呼吸提醒
+        updateEnergyPillUI();
+    }
+
     function setMode(m) {
     if (APP_VARIANT === 'common' && m === 'vinyl') m = 'normal';
     // 下面保持你原来的代码不动
-        mode = m; 
-        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active')); 
-        const map = { 'normal':0, 'culture':1, 'vinyl':2, 'sos':3 }; 
-        if(map[m] !== undefined) document.querySelectorAll('.mode-tab')[map[m]].classList.add('active'); 
+        mode = m;
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        const map = { 'normal':0, 'culture':1, 'vinyl':2, 'sos':3 };
+        if(map[m] !== undefined) document.querySelectorAll('.mode-tab')[map[m]].classList.add('active');
 
-        const filter = document.getElementById('filterSec'); 
-        const display = document.getElementById('displaySec'); 
-        const normCtl = document.getElementById('controls-normal'); 
-        const sosCtl = document.getElementById('controls-sos'); 
-        const btn = document.getElementById('mainBtn'); 
+        const filter = document.getElementById('filterSec');
+        const display = document.getElementById('displaySec');
+        const normCtl = document.getElementById('controls-normal');
+        const sosCtl = document.getElementById('controls-sos');
+        const btn = document.getElementById('mainBtn');
 
-        if(m === 'sos') { 
-            filter.style.background = 'var(--bg-sos)'; 
-            display.style.background = '#F3E5F5'; 
-            normCtl.style.display = 'none'; 
-            sosCtl.style.display = 'flex'; 
-            btn.innerText = "🚑 救救我"; 
-            btn.style.background = "#957DAD"; 
-        } else { 
+        if(m === 'sos') {
+            filter.style.background = 'var(--bg-sos)';
+            display.style.background = '#F3E5F5';
+            normCtl.style.display = 'none';
+            sosCtl.style.display = 'flex';
+            btn.innerText = "🚑 救救我";
+            btn.style.background = "#957DAD";
+        } else {
             /* 清除内联背景，使用 CSS 中的渐变背景 */
-            filter.style.background = ''; 
-            display.style.background = ''; 
-            normCtl.style.display = 'flex'; 
-            sosCtl.style.display = 'none'; 
-            btn.style.background = "#FF9AA2"; 
-            if(m === 'vinyl') btn.innerText = "💿 挑唱片"; 
-            else if(m === 'culture') btn.innerText = "🎬 精神食粮"; 
-            else btn.innerText = "🔮 帮我选 (混合)"; 
-        } 
+            filter.style.background = '';
+            display.style.background = '';
+            normCtl.style.display = 'flex';
+            sosCtl.style.display = 'none';
+            btn.style.background = "#FF9AA2";
+            if(m === 'vinyl') btn.innerText = "💿 挑唱片";
+            else if(m === 'culture') btn.innerText = "🎬 精神食粮";
+            else btn.innerText = "🔮 帮我选 (混合)";
+        }
     }
     
     
@@ -5171,38 +5421,169 @@ function pickDrawMode() {
 
 // 把 v6.2 draw() 里“根据筛选/防重复/青蛙优先”等逻辑抽出来，方便塔罗模式复用
 
+// v6.4 重写 pickTaskByFilters：实现能量药丸筛选逻辑
 function pickTaskByFilters() {
-    const ctx = document.getElementById('selContext').value; 
-    const limitTime = parseInt(document.getElementById('selTime').value); 
+    const ctx = document.getElementById('selContext').value;
+    const limitTime = parseInt(document.getElementById('selTime').value);
     const todayStr = new Date().toDateString();
 
+    // Step 1: 物理铁律过滤（Hard Filters）
     let validPool = db.filter(item => {
-        if (item.inColdStorage) return false;
+        // 冷宫任务必须排除
+        if (item.inColdStorage === true) return false;
+        
+        // 日常任务：如果今天已完成，跳过
         if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
-
-        const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
-        const isFlexible = (tTime === 0);
-        if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
-
-        if (mode === 'vinyl') return item.type === 'vinyl'; 
-        if (mode === 'culture') return item.type === 'culture';
-
-        if (item.type === 'culture' || item.type === 'vinyl') { 
-            if (ctx === 'outdoor') return false; 
-        } else if (item.type === 'sport') { 
-            return true; 
-        } else { 
-            if (ctx === 'desktop') return item.type !== 'outdoor'; 
-            if (ctx === 'indoor')  return item.type === 'indoor'; 
-            if (ctx === 'outdoor') return item.type === 'outdoor'; 
-        }
+        
         return true;
     });
 
-    if (validPool.length > 0) {
-        return validPool[Math.floor(Math.random() * validPool.length)];
+    // Step 2: 模式分支策略（Mode Strategy）
+    if (energyMode === 'anchor') {
+        // 分支 A：中间档 (Anchor) - 完全沿用 v6.3 的逻辑
+        validPool = validPool.filter(item => {
+            const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
+            const isFlexible = (tTime === 0);
+            
+            // 时长限制
+            if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
+
+            // mode 过滤（vinyl/culture）
+            if (mode === 'vinyl') return item.type === 'vinyl';
+            if (mode === 'culture') return item.type === 'culture';
+
+            // 地点过滤
+            if (item.type === 'culture' || item.type === 'vinyl') {
+                if (ctx === 'outdoor') return false;
+            } else if (item.type === 'sport') {
+                return true;
+            } else {
+                if (ctx === 'desktop') return item.type !== 'outdoor';
+                if (ctx === 'indoor')  return item.type === 'indoor';
+                if (ctx === 'outdoor') return item.type === 'outdoor';
+            }
+            return true;
+        });
+    } else {
+        // 分支 B：左右档 (Uptime / Downtime) - 智能接管
+        const ctxEl = document.getElementById('selContext');
+        const userSelectedContext = ctxEl ? ctxEl.value : 'desktop';
+        
+        // 如果抽屉未展开，忽略地点限制，全域搜索；如果展开，尊重用户选择
+        const shouldRespectLocation = filterDrawerExpanded;
+        
+        validPool = validPool.filter(item => {
+            // 时长：忽略下拉框限制（Uptime/Downtime 模式下允许所有时长）
+            
+            // mode 过滤（vinyl/culture）仍然生效
+            if (mode === 'vinyl') return item.type === 'vinyl';
+            if (mode === 'culture') return item.type === 'culture';
+
+            // 地点过滤
+            if (!shouldRespectLocation) {
+                // 未展开抽屉：忽略地点限制，全域搜索（但户外时仅禁 vinyl，允许 culture:book/series）
+                if (item.type === 'vinyl' && userSelectedContext === 'outdoor') return false;
+                return true;
+            } else {
+                // 已展开抽屉：尊重用户选择的地点
+                if (item.type === 'culture' || item.type === 'vinyl') {
+                    // 户外场景：允许 culture（包括 book/series），仅禁 vinyl
+                    if (userSelectedContext === 'outdoor') {
+                        return item.type !== 'vinyl'; // culture 允许，vinyl 禁止
+                    }
+                    // 其他地点（desktop/indoor）：culture 和 vinyl 都允许
+                    return true;
+                } else if (item.type === 'sport') {
+                    return true; // sport 在所有地点都允许
+                } else {
+                    // 普通任务类型：按地点筛选
+                    if (userSelectedContext === 'desktop') return item.type !== 'outdoor';
+                    if (userSelectedContext === 'indoor')  return item.type === 'indoor';
+                    if (userSelectedContext === 'outdoor') return item.type === 'outdoor';
+                }
+            }
+            return true;
+        });
     }
-    return null;
+
+    // Step 3: 加权随机 (Weighted Randomness)
+    if (validPool.length === 0) {
+        // 兜底：如果 Uptime/Downtime 模式下过滤结果为空，降级为 Anchor 模式
+        if (energyMode === 'uptime' || energyMode === 'downtime') {
+            const originalMode = energyMode;
+            energyMode = 'anchor';
+            const fallbackResult = pickTaskByFilters();
+            energyMode = originalMode;
+            if (fallbackResult) {
+                if (typeof showToast === 'function') {
+                    showToast('当前模式无合适任务，已自动混合抽取');
+                }
+                return fallbackResult;
+            }
+        }
+        return null;
+    }
+
+    // 计算权重
+    const weightedPool = validPool.map(item => {
+        let weight = 10; // 基础分
+
+        if (energyMode === 'uptime') {
+            // 🔴 推进模式 (Uptime)
+            if (item.isFrog === true) weight *= 100; // 绝对优先
+            else if (item.type === 'desktop') weight *= 20;
+            else if (item.subtype === 'book') weight *= 15;
+            else if (item.type === 'sport') weight *= 10;
+            else if (item.type === 'indoor') weight *= 5;
+            else if (item.subtype === 'movie') weight *= 2;
+            
+            // 屏蔽项
+            if (item.isSeries === true || item.type === 'vinyl' || item.type === 'sos') weight = 0;
+        } else if (energyMode === 'downtime') {
+            // 🔵 蓄能模式 (Downtime)
+            if (item.isSeries === true) weight *= 30;
+            else if (item.subtype === 'movie') weight *= 20;
+            else if (item.type === 'vinyl') weight *= 20;
+            else if (item.type === 'outdoor') weight *= 15;
+            else if (item.type === 'indoor' && item.isQuick === true) weight *= 10;
+            else if (item.subtype === 'book') weight *= 8;
+            
+            // 屏蔽项
+            if (item.isFrog === true) weight = 0;
+        }
+        // ⚪️ 锚定模式 (Anchor)：所有任务权重 x1 (均匀随机)，已经在上面处理
+
+        return { item, weight };
+    }).filter(entry => entry.weight > 0);
+
+    if (weightedPool.length === 0) {
+        // 再次兜底
+        if (energyMode === 'uptime' || energyMode === 'downtime') {
+            const originalMode = energyMode;
+            energyMode = 'anchor';
+            const fallbackResult = pickTaskByFilters();
+            energyMode = originalMode;
+            if (fallbackResult && typeof showToast === 'function') {
+                showToast('当前模式无合适任务，已自动混合抽取');
+            }
+            return fallbackResult;
+        }
+        return null;
+    }
+
+    // 按权重随机选择
+    const totalWeight = weightedPool.reduce((sum, entry) => sum + entry.weight, 0);
+    let random = Math.random() * totalWeight;
+    
+    for (const entry of weightedPool) {
+        random -= entry.weight;
+        if (random <= 0) {
+            return entry.item;
+        }
+    }
+
+    // 最后的兜底
+    return weightedPool[0].item;
 }
 // Tarot flow state
 let tarotState = 'idle'; // idle | shuffling | choose | reveal
