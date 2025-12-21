@@ -20,7 +20,7 @@
             --bg-pink: #FFE2E2; /* 更柔和的粉色，适合作为大面积背景 */
             --bg-sos:  #E8DFF5;
             --bg-setting: #F0F4F8;
-            --bg-footer: #F8F3FF; /* 04区：更淡的薰衣草马卡龙背景，减弱存在感 */
+            --bg-footer: #FBF7FF; /* 04区：更淡的薰衣草马卡龙背景，减弱存在感 */
             --text-main: #5D5C61;
             --gold: #D4AF37;
             --sport-green: #B5EAD7;
@@ -1113,11 +1113,17 @@
         
         /* 04 区：用户手册 & 数据方舟 统一背景 */
         .section-footer-area {
-            background-color: var(--bg-footer);
-            padding: 10px 16px 20px;
-            margin-top: 0;
-        }
-        
+  background-color: var(--bg-footer);
+  padding: 14px 16px 22px;
+  margin-top: 12px;
+  border-radius: 18px;
+
+  /* 关键：让标题 + 四张卡真正“同组”在一个紫底里 */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
         /* 04区卡片统一风格：用户手册 / 最近更新 / 数据方舟 */
         .section-footer-area .section-manual,
         .section-footer-area .section-updates,
@@ -2295,6 +2301,99 @@ body.variant-common .stat-btn.joy {
     font-size: 0.85rem; /* 稍小的字体 */
   }
 }
+/* =========================
+   v6.6 修复：04区整体底色 + 卡片白底一致 + 逻辑词典层级 + +/-
+   目标：
+   1) 04区（section-footer-area）整块为淡紫色底
+   2) 四张卡片（用户手册/更新日志/起飞着陆编辑/数据方舟）全部白底一致
+   3) “逻辑词典”展开后，内部词条（更深一层 details）视觉上更小一级
+   4) 折叠显示 “+”，展开显示 “-”
+   ========================= */
+   .section-footer-area{
+  background: var(--bg-footer) !important; /* 04区整块淡紫色底 */
+  border-radius: 16px;
+  padding: 14px 16px 22px;
+}
+
+/* 04区四张卡片：统一白底、统一阴影与圆角 */
+.section-footer-area .section-manual,
+.section-footer-area .section-updates,
+.section-footer-area .section-settings{
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04) !important;
+}
+
+/* 避免继承到全局 section-settings 的灰底 */
+.section-footer-area .section-settings{
+  background: #ffffff !important;
+}
+
+/* 04区卡片标题（第一层 summary） */
+.section-footer-area > .section-manual > details > summary,
+.section-footer-area > .section-updates > details > summary,
+.section-footer-area > .section-settings > details > summary{
+  padding: 10px 8px !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  border-bottom: 1px solid rgba(0,0,0,0.06) !important;
+}
+
+/* 用户手册内容区整体字号略小一点，阅读更顺 */
+.section-footer-area .manual-content{
+  padding: 8px 10px 12px !important;
+  font-size: 0.88rem;
+}
+
+/* 第二层：用户手册内的折叠块（如：抽签装置 / 记忆模块 / 智能输入词典 等） */
+.section-footer-area .manual-content > details{
+  background: rgba(0,0,0,0.02);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 12px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.section-footer-area .manual-content > details > summary{
+  padding: 10px 12px !important;
+  font-size: 0.90rem !important;
+  font-weight: 650 !important;
+}
+
+/* 第三层：逻辑词典展开后的“词条/概念”——比“逻辑词典”再小一级 */
+.section-footer-area .manual-content details details{
+  background: rgba(255,255,255,0.72);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 12px;
+  margin: 8px 12px 0;
+  overflow: hidden;
+}
+
+.section-footer-area .manual-content details details > summary{
+  padding: 9px 10px !important;
+  font-size: 0.84rem !important;
+  font-weight: 600 !important;
+}
+
+/* 04区专用：折叠 + / 展开 -（覆盖全局，确保行为一致） */
+.section-footer-area summary{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-footer-area summary::after{
+  content: '+';
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #9a9a9a;
+  margin-left: 10px;
+}
+
+.section-footer-area details[open] > summary::after{
+  content: '-';
+}
 
 </style>
 </head>
@@ -2747,67 +2846,218 @@ body.variant-common .stat-btn.joy {
     </div>
 
     <!-- 用户手册 & 数据方舟 -->
-    <div class="section-footer-area">
-        <div class="section-footer-header">
-            <div class="section-title">04 · 用户手册 & 数据方舟</div>
-        </div>
+    <!-- 04 区：统一淡紫底色 + 4 张同类卡片 -->
+    <div class="section-footer-area" id="sec04">
+        <div class="section-title">04 · 用户手册 & 数据方舟</div>
+
+          <!-- ① 用户手册 & 逻辑词典（默认展开） -->
         <div class="section-manual">
-        <details>
+          <details open>
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
-                <div class="manual-h3">💡 核心概念</div>
-                <p>Anchor 是一个帮你对抗无序、找回生活掌控感的工具。把想做的事丢进去，让「命运」帮你做决定。</p>
 
-                <div class="manual-h3">🍬 吃一颗糖（00 区）</div>
-                <p>在真正开始抽卡之前，先「吃一颗糖」。用 1～5 分钟做一点轻松的小事，把自己从发呆 / 拖延状态，缓缓拉回可以行动的轨道。</p>
-                <ul>
-                    <li><b>捏气泡糖/烟花星空糖：</b> 一整屏小泡泡，随便戳几下出出气，然后点「去抽卡」。</li>
-                    <li><b>涂鸦糖/涂色糖：</b> 像拿蜡笔乱画一样，在空白画布上随便画几笔，不需要好看。</li>
-                    <li><b>音乐糖/乐器糖：</b> 随机播放一首 B 站的小歌，当作今天的开场 BGM。</li>
-                    <li><b>其他糖：</b> 陆续增加ing。</li>
+        <div class="manual-h3">🚀 3 分钟上手（按区走一遍）</div>
+        <ol style="margin-top:6px; padding-left:18px; line-height:1.65;">
+          <li>
+            <b> 02 · 新任务入库：</b>
+            把打算做的事输入进去（可批量输入）。
+            可选 <span class="manual-tag">🏷️标签</span>、<span class="manual-tag">📍地点</span>、<span class="manual-tag">⏳时长</span>；
+            <span class="manual-tag">🔁 每日循环</span>。
+          </li>
+          <li>
+            <b> 00 · 吃一颗糖：</b>
+            先做 30 秒“轻动作”（🫧气泡 / 🖍️涂鸦 / 🎵音乐等），从停滞切到可行动。
+          </li>
+          <li>
+            <b> 01 · 抽签装置：</b>
+            点击 <span class="manual-tag">🔮 帮我选</span>抽取下一个任务。
+            抽到后只做一个决定：<span class="manual-tag">✅ 完成</span> / <span class="manual-tag">🔁 换一个</span>。
+          </li>
+          <li>
+            <b>（可选）📝 记忆：</b>
+            抽到结果卡右上角点 <span class="manual-tag">📝 备注</span>，记录书签/时长/吐槽（不强制填）。
+          </li>
+          <li>
+            <b> 03 · 任务库 & 记录：</b>
+            需要手动处理时，在 <b>任务库/媒体库</b> 点击任务名称，会弹出
+            <span class="manual-tag">完成</span> /
+            <span class="manual-tag">修改</span> /
+            <span class="manual-tag">记忆</span>。
+          </li>
+          <li>
+            <b> 04 · 数据方舟：</b>
+            定期 <span class="manual-tag">📥 导出</span> 备份；换设备或误删时用 <span class="manual-tag">📤 导入</span> 恢复。
+          </li>
+        </ol>
+      
+        <!-- 逻辑词典总折叠：里面再分条目 -->
+        <details style="margin-top:12px;">
+          <summary><b>📚 逻辑词典（点我展开）</b></summary>
+      
+          <div style="margin-top:10px;">
+
+
+            <details style="margin-top:8px;">
+              <summary><b>🎴 01 · 抽签装置（筛选 + 抽卡）</b></summary>
+              <div style="margin-top:8px;">
+                <ul style="margin-top:6px; line-height:1.7;">
+                    <li><b><span class="manual-tag">☀️ Uptime（推进）</span>：</b> 更偏“推进、清单、关键任务”。通常不会推剧集/唱片/SOS；如果你有 <span class="manual-tag">🐸 青蛙</span>，会明显更优先。</li>
+                    <li><b><span class="manual-tag">⚓ Anchor（均衡）</span>：</b> 最“公平”的混合抽取，适合大多数时刻。</li>
+                    <li><b><span class="manual-tag">☁️ Downtime（休息）</span>：</b> 更偏“轻松、输入、恢复”。通常不会推 <span class="manual-tag">🐸 青蛙</span>；更容易出现剧集/电影/唱片等。</li>
+                  <li>
+                    <b><span class="manual-tag">🔽 高级筛选</span>：</b>
+                    只在你想控制变量时再开（避免把抽卡变成填写表格）。
+                  </li>
                 </ul>
-                <p style="font-size:0.78rem; color:#777; margin-top:4px;">
-                    吃糖本身不是任务，不需要完成得好，只是一个从「停滞」切换到「可以动一动」的小仪式。
+              </div>
+            </details>
+      
+            <details style="margin-top:8px;">
+              <summary><b>📝 记忆模块（书签 / 本次投入 / 自由备注）</b></summary>
+              <div style="margin-top:8px;">
+                <p style="margin:0 0 6px 0; font-size:0.9rem;">
+                  入口只有两个：<b>① 抽卡结果卡右上角「📝 备注」</b>；<b>② 任务库/媒体库点任务名 →「📝 记忆」</b>。
                 </p>
-
-                <div class="manual-h3">⌨️ 智能输入</div>
-                <p>支持「说人话」和批量粘贴。每行一个任务。</p>
-                <ul>
-                    <li><b>自动书影：</b> 输入 <span class="manual-tag">看/读/书/影/剧/追</span> 开头，自动归类为文化，并加书名号。</li>
-                    <li><b>闪电速办：</b> 输入类似 <span class="manual-tag">洗/刷/理/拆/扔/喝</span> 等关键词，自动标记为 <span class="manual-tag">⚡️速办</span>（5min）。</li>
-                    <li><b>青蛙任务：</b> 输入 <span class="manual-tag">*/!/重要+空格</span> 开头，标记为困难但重要的<span class="manual-tag">🐸青蛙</span>。</li>
-                    <li><b>每日循环：</b> 输入 <span class="manual-tag">每天/每日</span>，自动开启循环。</li>
+      
+                <div style="margin-top:6px;">
+                  <div style="font-weight:bold; margin-bottom:4px;">一、📍书签进度（坐标型，覆盖最新）</div>
+                  <ul style="margin-top:4px; line-height:1.7;">
+                    <li>适合：书页数、剧集集数、电影时间点。</li>
+                    <li>写法示例：<span class="manual-tag">P120</span> / <span class="manual-tag">S2E5</span> / <span class="manual-tag">00:42:10</span></li>
+                    <li>规则：每次保存会<b>覆盖</b>上一次书签；下次抽到该任务，会提示“上次进度”。</li>
+                  </ul>
+      
+                  <div style="font-weight:bold; margin:10px 0 4px 0;">二、⏳本次投入时长（累积型，加总）</div>
+                  <ul style="margin-top:4px; line-height:1.7;">
+                    <li>适合：练习/学习/项目推进等“投入越多越有成就”的事。</li>
+                    <li>用法：在时长选择器里选 <span class="manual-tag">0h 45m</span> 这类值，然后保存。</li>
+                    <li>规则：每次保存都会<b>累积到总时长</b>；结果卡会显示“累计总时长”（若你开启了显示）。</li>
+                  </ul>
+      
+                  <div style="font-weight:bold; margin:10px 0 4px 0;">三、🗒️自由备注（主观型，可写链接/评价/提醒）</div>
+                  <ul style="margin-top:4px; line-height:1.7;">
+                    <li>适合：吐槽、复盘一句话、材料链接、下次怎么继续。</li>
+                    <li>显示策略：列表区不展开（避免拥挤）；抽到/点记忆时再看。</li>
+                  </ul>
+      
+                  <p style="margin-top:8px; font-size:0.82rem; color:#777;">
+                    设计原则：不强迫你每次填写。记忆只在“你需要上下文时”出现。
+                  </p>
+                </div>
+              </div>
+            </details>
+      
+            <details style="margin-top:8px;">
+              <summary><b>🗂️ 03 · 任务库 / 媒体库（如何操作一条任务）</b></summary>
+              <div style="margin-top:8px;">
+                <ul style="margin-top:6px; line-height:1.7;">
+                  <li><b>点击任务名称：</b>弹出操作菜单（<span class="manual-tag">✅ 完成</span> / <span class="manual-tag">✏️ 修改</span> / <span class="manual-tag">📝 记忆</span>）。</li>
+                  <li><b>✅ 完成：</b>进入 <span class="manual-tag">👣 今日足迹</span> 与 <span class="manual-tag">📅 历史记录</span>。</li>
+                  <li><b>✏️ 修改：</b>改标题、标签、时长、循环等（用于纠错与维护任务库）。</li>
+                  <li><b>📝 记忆：</b>同抽卡页的记忆面板，用来补进度/时长/备注。</li>
                 </ul>
-
-                <div class="manual-h3">🎲 抽取逻辑</div>
-                <ul>
-                    <li><b>混合模式：</b> 根据当下时间、地点，从所有库中随机抽取。</li>
-                    <li><b>青蛙优先：</b> 在书桌前且时间充足时，大概率优先推「青蛙任务」。</li>
-                    <li><b>防重复：</b> 最近刚抽过的任务，短时间内不会再出现。</li>
+              </div>
+            </details>
+      
+            <details style="margin-top:8px;">
+              <summary><b>⌨️ 智能输入词典（少点点点，多说人话）</b></summary>
+              <div style="margin-top:8px;">
+                <p style="margin:0 0 6px 0;">
+                  支持批量粘贴：<b>每行一个任务</b>。系统会根据关键词自动补标签/建议时长等。
+                </p>
+                <ul style="margin-top:6px; line-height:1.7;">
+                  <li>
+                    <b>🎬📖 书影剧自动归类：</b>
+                    用 <span class="manual-tag">看/读/书/影/剧/追</span> 开头会走文化逻辑（自动书名号等）。
+                  </li>
+                  <li>
+                    <b>⚡️ 速办任务：</b>
+                    输入<span class="manual-tag">洗/刷/理/拆/扔/喝</span>等 ，会建议 <span class="manual-tag">⚡️ 速办</span>（5m 级别）。
+                  </li>
+                  <li>
+                    <b>🐸 青蛙任务：</b>
+                    用 <span class="manual-tag">*/!/重要 + 空格</span> 开头，标记为更难但更重要的一类（更容易在 ☀️Uptime 出现）。
+                  </li>
+                  <li>
+                    <b>🔁 每日循环：</b>
+                    输入含 <span class="manual-tag">每天/每日</span>，自动开启循环（适合习惯/保底任务）。
+                  </li>
                 </ul>
-
-                <div class="manual-h3">🧊 冷库 & 仪式</div>
-                <ul>
-                    <li><b>🧊 冷库：</b> 一时不想面对的任务，可以收入冷库，抽卡时不会被抽到；需要时再赦免回库或彻底删除。</li>
-                    <li><b>🌅 起床起飞：</b> 早晨的固定启动流程（起身、开灯、喝水、走到书桌…），写在「起飞仪式」里，每天照着走一遍，减少决策消耗。</li>
-                    <li><b>🌙 睡前着陆：</b> 晚上的收尾仪式（充电、吃药、关灯、写一句明天想做的事），帮你把一天缓缓落地。</li>
+                <p style="margin-top:6px; font-size:0.82rem; color:#777;">
+                  建议：先“粗糙入库”，再靠抽卡推进；不要在入库阶段把自己卡死在完美分类。
+                </p>
+              </div>
+            </details>
+      
+            <details style="margin-top:8px;">
+              <summary><b>🧊 冷库（暂时退场，不再被抽到）</b></summary>
+              <div style="margin-top:8px;">
+                <ul style="margin-top:6px; line-height:1.7;">
+                  <li>适合：当前阶段不想碰、但又不舍得删的任务。</li>
+                  <li>进入冷库后：不会被抽到；你可以在冷库里 <span class="manual-tag">♻️ 赦免回库</span> 或 <span class="manual-tag">🗑️ 彻底删除</span>。</li>
                 </ul>
-
-                <div class="manual-h3">📊 计数器与归档</div>
-                <ul>
-                    <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时，点一下，给自己的克制一点见证。</li>
-                    <li><b>✨ 小确幸：</b> 遇到开心的小事时，点一下，为好事留个记号。</li>
-                    <li><b>👣 今日足迹：</b> 记录今天的日常流水，次日自动清空。</li>
-                    <li><b>🏆 荣誉殿堂：</b> 永久保存读完的书和看过的电影 / 书 / 剧集以及 🐸青蛙任务。</li>
+              </div>
+            </details>
+      
+            <details style="margin-top:8px;">
+              <summary><b>📅 今日足迹 & 历史记录（记录会显示什么）</b></summary>
+              <div style="margin-top:8px;">
+                <ul style="margin-top:6px; line-height:1.7;">
+                  <li><b><span class="manual-tag">👣 今日足迹</span>：</b>只保留当天完成的清单，方便“今天我做过什么”。</li>
+                  <li><b><span class="manual-tag">🏆 荣誉殿堂</span>：</b> 更偏“永久里程碑”：看完/读完/追完的文化内容，以及重要任务的完成记录会沉淀在这里。</li>
+                  <li><b><span class="manual-tag">📅 历史记录</span>：</b>按日期汇总完成记录，适合回顾与复盘。</li>
+                  <li><b><span class="manual-tag">📝 记忆显示</span></b>：</b>
+                    如果你在完成/抽卡时记录了「⏳本次时长 / 📍书签进度 / 🗒️备注」，
+                    历史记录会把它们跟在该条任务后面（过长会只显示第一行/截断）。
+                  </li>
                 </ul>
+                
+              </div>
+            </details>
+      
+            <details style="margin-top:8px;">
+              <summary><b>🌅 起飞 / 🌙 着陆 / 🆘 SOS（低门槛重启）</b></summary>
+              <div style="margin-top:8px;">
+                <ul style="margin-top:6px; line-height:1.7;">
+                  <li><b><span class="manual-tag">🌅 起床起飞</span>：</b>开始一天/开始一段工作时，用一套固定动作把状态拉起来。</li>
+                  <li><b><span class="manual-tag">🌙 睡前着陆</span>：</b>睡前或结束时，用一套固定动作把大脑慢慢关机。</li>
+                  <li><b>怎么编辑：</b> 页面底部有 <span class="manual-tag">📝 起飞 / 着陆仪式编辑</span>，每行一个步骤；留空会自动恢复默认模板。</li>
+                  <li><b><span class="manual-tag">🆘 SOS</span>：</b>只给“最小动作”（呼吸/喝水/伸展等），目的是止损与重启，不是逼你高强度推进。</li>
+                </ul>
+              </div>
+            </details>
+      
 
-                <div class="manual-h3">🆘 SOS 模式</div>
-                <p>当你感到身心宕机、无法思考时使用。它只提供极低门槛的微行动（如深呼吸、喝水），帮你重启状态。</p>
-            </div>
+            <details style="margin-top:8px;">
+                <summary><b>📊 计数器：🛡️ 意志力 / ✨ 小确幸</b></summary>
+                <div style="margin-top:8px;">
+                  <ul style="margin-top:6px; line-height:1.7;">
+                        <li><b>🛡️ 意志力：</b> 想做坏习惯但忍住时点一下，给“克制”留证据。</li>
+                        <li><b>✨ 小确幸：</b> 遇到开心小事点一下，给“好事”留记号。</li>
+                        <li><b>用法建议：</b> 不要当 KPI；它更像“你在活着”的低摩擦记录。</li>
+                      </ul>
+                </div>
+              </details>
+
+            <details style="margin-top:10px;">
+              <summary><b>📡 数据方舟（备份 / 导入 / 容量说明）</b></summary>
+              <div style="margin-top:8px;">
+                <ul style="margin-top:6px; line-height:1.7;">
+                  <li><b>建议频率：</b>每周或每次大版本更新前，<span class="manual-tag">📥 导出</span> 一次备份（JSON）。</li>
+                  <li><b>换设备 / 误删：</b>用 <span class="manual-tag">📤 导入</span> 恢复。</li>
+                  <li><b>容量提示：</b>本项目数据存在浏览器 localStorage，空间有限；历史记录越长、备注越多，占用越快。</li>
+                </ul>
+                
+              </div>
+            </details>
+      
+          </div>
         </details>
-    </div>
+      
+      </div>
+</details>
+</div>
 
-    
     <div class="section-updates">
         <details>
             <summary>📑 更新日志</summary>
