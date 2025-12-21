@@ -1111,18 +1111,6 @@
 
         /* 说明书 & 设置区 */
         
-        /* 04 区：用户手册 & 数据方舟 统一背景 */
-        .section-footer-area {
-  background-color: var(--bg-footer);
-  padding: 14px 16px 22px;
-  margin-top: 12px;
-  border-radius: 18px;
-
-  /* 关键：让标题 + 四张卡真正“同组”在一个紫底里 */
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
         /* 04区卡片统一风格：用户手册 / 最近更新 / 数据方舟 */
         .section-footer-area .section-manual,
@@ -2416,8 +2404,6 @@ body.variant-common .stat-btn.joy {
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
-       <div class="stats-and-candy-wrapper">
-    <!-- 念头计数器 + 00 区包裹 -->
 <div class="stats-and-candy-wrapper">
     <!-- 念头计数器 -->
     <div class="stats-bar">
@@ -3384,7 +3370,7 @@ const MUSIC_CLIPS = [
         bvid: 'BV14knez5E4x'
     }
 ];
-// 每日打卡图图库（相对路径，指向 daily_posters 文件夹）
+// 每日打卡图图库（优化：添加预加载机制）
 const DAILY_POSTER_IMAGES = [
     '/assets/images/daily_posters/poster01.jpg',
     '/assets/images/daily_posters/poster02.jpg',
@@ -3401,6 +3387,14 @@ const DAILY_POSTER_IMAGES = [
     '/assets/images/daily_posters/poster13.jpg',
     '/assets/images/daily_posters/poster14.jpg'
 ];
+
+// 预加载打卡图（在页面加载时提前加载，避免显示时才开始加载）
+function preloadDailyPosters() {
+    DAILY_POSTER_IMAGES.forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+}
 
 // 收集所有当前可用的糖类型（去重）：用于“连续两次不能一样”的兜底逻辑
 function getAllCandyTypes() {
@@ -3686,7 +3680,7 @@ function stopStarShineSound() {
         return arr.length;
     }
 
-    // 如有需要，弹出今日打卡图
+    // 如有需要，弹出今日打卡图（优化：添加图片预加载和错误处理）
 function showDailyPosterIfNeeded(openDaysCount) {
     // 【Bug #5 修复】检查今天是否已经弹过，避免重复弹
     const today = getTodayDateStr();
@@ -3716,12 +3710,51 @@ function showDailyPosterIfNeeded(openDaysCount) {
     // 按天数在图库里选一张图
     if (imgEl && Array.isArray(DAILY_POSTER_IMAGES) && DAILY_POSTER_IMAGES.length > 0) {
         const idx = (openDaysCount - 1) % DAILY_POSTER_IMAGES.length;
-        imgEl.src = DAILY_POSTER_IMAGES[idx];
+        const imageUrl = DAILY_POSTER_IMAGES[idx];
+        
+        // 优化：预加载图片，等待加载完成后再显示弹窗
+        const preloadImg = new Image();
+        
+        // 设置超时时间（10秒），避免无限等待
+        let loadTimeout = setTimeout(() => {
+            console.warn('打卡图加载超时，直接显示弹窗');
+            imgEl.src = imageUrl; // 即使超时也尝试设置，可能已经缓存了
+            imgEl.style.opacity = '0.5'; // 降低透明度提示可能未完全加载
+            overlay.style.display = 'flex';
+            markPosterShown(today);
+        }, 10000);
+        
+        // 图片加载成功
+        preloadImg.onload = function() {
+            clearTimeout(loadTimeout);
+            imgEl.src = imageUrl;
+            imgEl.style.opacity = '1'; // 确保完全显示
+            overlay.style.display = 'flex';
+            markPosterShown(today);
+        };
+        
+        // 图片加载失败
+        preloadImg.onerror = function() {
+            clearTimeout(loadTimeout);
+            console.warn('打卡图加载失败:', imageUrl);
+            // 尝试使用占位图或隐藏图片元素
+            imgEl.style.display = 'none';
+            // 仍然显示弹窗，但隐藏图片
+            overlay.style.display = 'flex';
+            markPosterShown(today);
+        };
+        
+        // 开始加载图片
+        preloadImg.src = imageUrl;
+    } else {
+        // 如果没有图片，直接显示弹窗
+        overlay.style.display = 'flex';
+        markPosterShown(today);
     }
+}
 
-    overlay.style.display = 'flex';
-    
-    // 【Bug #5 修复】显示后设置标记，避免同一天重复弹
+// 辅助函数：标记打卡图已显示
+function markPosterShown(today) {
     try {
         localStorage.setItem(KEY_POSTER_SHOWN_DAY, today);
     } catch (e) {
@@ -5231,6 +5264,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     let userOverrideFlash = false;
 
     document.addEventListener('DOMContentLoaded', () => {
+        // 页面加载时预加载打卡图（延迟执行，避免阻塞主要资源）
+        setTimeout(preloadDailyPosters, 500);
+        
         // 先读取可能存在的自定义仪式
         loadRitualSettings();
         if(db.length === 0 && archive.length === 0) {
@@ -8136,7 +8172,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <div id="dailyPosterOverlay" class="daily-poster-overlay">
         <div class="daily-poster-card">
 <div class="daily-poster-image">
-    <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图">
+    <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" loading="lazy" style="opacity: 0; transition: opacity 0.3s;">
     <div class="daily-poster-caption">
         <div class="daily-poster-day">
             这是你和 Anchor 的第
