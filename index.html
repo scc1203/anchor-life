@@ -2331,9 +2331,10 @@ body.variant-common .stat-btn.joy {
 }
 
 /* 04区卡片标题（第一层 summary） */
-.section-footer-area > .section-manual > details > summary,
-.section-footer-area > .section-updates > details > summary,
-.section-footer-area > .section-settings > details > summary{
+/* 优化：简化选择器，减少浏览器匹配复杂度 */
+.section-footer-area .section-manual details summary,
+.section-footer-area .section-updates details summary,
+.section-footer-area .section-settings details summary{
   padding: 10px 8px !important;
   font-size: 0.95rem !important;
   font-weight: 700 !important;
@@ -2361,7 +2362,8 @@ body.variant-common .stat-btn.joy {
   font-weight: 650 !important;
 }
 
-/* 第三层：逻辑词典展开后的“词条/概念”——比“逻辑词典”再小一级 */
+/* 第三层：逻辑词典展开后的"词条/概念"——比"逻辑词典"再小一级 */
+/* 优化：使用更具体的选择器，减少浏览器匹配复杂度 */
 .section-footer-area .manual-content details details{
   background: rgba(255,255,255,0.72);
   border: 1px solid rgba(0,0,0,0.05);
@@ -2370,7 +2372,7 @@ body.variant-common .stat-btn.joy {
   overflow: hidden;
 }
 
-.section-footer-area .manual-content details details > summary{
+.section-footer-area .manual-content details details summary{
   padding: 9px 10px !important;
   font-size: 0.84rem !important;
   font-weight: 600 !important;
@@ -2850,9 +2852,9 @@ body.variant-common .stat-btn.joy {
     <div class="section-footer-area" id="sec04">
         <div class="section-title">04 · 用户手册 & 数据方舟</div>
 
-          <!-- ① 用户手册 & 逻辑词典（默认展开） -->
+          <!-- ① 用户手册 & 逻辑词典（默认折叠，优化性能） -->
         <div class="section-manual">
-          <details open>
+          <details>
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
 
