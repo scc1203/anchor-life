@@ -3389,10 +3389,63 @@ const DAILY_POSTER_IMAGES = [
 ];
 
 // 预加载打卡图（在页面加载时提前加载，避免显示时才开始加载）
+// 使用 Map 记录每个图片的加载状态
+const posterLoadCache = new Map();
+
 function preloadDailyPosters() {
     DAILY_POSTER_IMAGES.forEach(url => {
+        // 检查是否已经在缓存中
+        if (posterLoadCache.has(url)) {
+            return; // 已经加载过，跳过
+        }
+        
         const img = new Image();
+        const loadPromise = new Promise((resolve, reject) => {
+            img.onload = () => {
+                posterLoadCache.set(url, { loaded: true, img: img });
+                resolve(img);
+            };
+            img.onerror = () => {
+                posterLoadCache.set(url, { loaded: false, error: true });
+                reject(new Error('Failed to load: ' + url));
+            };
+        });
+        
+        // 开始加载
         img.src = url;
+        posterLoadCache.set(url, { loading: true, promise: loadPromise });
+    });
+}
+
+// 检查图片是否已加载完成（从缓存或重新加载）
+function ensurePosterLoaded(imageUrl) {
+    return new Promise((resolve, reject) => {
+        // 先检查缓存
+        const cached = posterLoadCache.get(imageUrl);
+        
+        if (cached && cached.loaded && cached.img) {
+            // 已经在缓存中且加载完成
+            resolve(cached.img);
+            return;
+        }
+        
+        if (cached && cached.loading && cached.promise) {
+            // 正在加载中，等待完成
+            cached.promise.then(resolve).catch(reject);
+            return;
+        }
+        
+        // 缓存中没有，开始加载
+        const img = new Image();
+        img.onload = () => {
+            posterLoadCache.set(imageUrl, { loaded: true, img: img });
+            resolve(img);
+        };
+        img.onerror = () => {
+            posterLoadCache.set(imageUrl, { loaded: false, error: true });
+            reject(new Error('Failed to load: ' + imageUrl));
+        };
+        img.src = imageUrl;
     });
 }
 
@@ -3712,40 +3765,63 @@ function showDailyPosterIfNeeded(openDaysCount) {
         const idx = (openDaysCount - 1) % DAILY_POSTER_IMAGES.length;
         const imageUrl = DAILY_POSTER_IMAGES[idx];
         
-        // 优化：预加载图片，等待加载完成后再显示弹窗
-        const preloadImg = new Image();
-        
-        // 设置超时时间（10秒），避免无限等待
-        let loadTimeout = setTimeout(() => {
-            console.warn('打卡图加载超时，直接显示弹窗');
-            imgEl.src = imageUrl; // 即使超时也尝试设置，可能已经缓存了
-            imgEl.style.opacity = '0.5'; // 降低透明度提示可能未完全加载
+        // 优化：确保图片加载完成后再显示弹窗
+        // 设置超时时间（5秒），避免无限等待
+        const loadTimeout = setTimeout(() => {
+            console.warn('打卡图加载超时，直接显示弹窗（可能显示空白）');
+            imgEl.src = imageUrl; // 即使超时也尝试设置
+            imgEl.style.opacity = '0.3'; // 降低透明度提示可能未完全加载
             overlay.style.display = 'flex';
             markPosterShown(today);
-        }, 10000);
+        }, 5000);
         
-        // 图片加载成功
-        preloadImg.onload = function() {
-            clearTimeout(loadTimeout);
-            imgEl.src = imageUrl;
-            imgEl.style.opacity = '1'; // 确保完全显示
-            overlay.style.display = 'flex';
-            markPosterShown(today);
-        };
-        
-        // 图片加载失败
-        preloadImg.onerror = function() {
-            clearTimeout(loadTimeout);
-            console.warn('打卡图加载失败:', imageUrl);
-            // 尝试使用占位图或隐藏图片元素
-            imgEl.style.display = 'none';
-            // 仍然显示弹窗，但隐藏图片
-            overlay.style.display = 'flex';
-            markPosterShown(today);
-        };
-        
-        // 开始加载图片
-        preloadImg.src = imageUrl;
+        // 使用改进的加载函数
+        ensurePosterLoaded(imageUrl)
+            .then((loadedImg) => {
+                clearTimeout(loadTimeout);
+                // 图片已完全加载，设置 src
+                imgEl.src = imageUrl;
+                imgEl.style.display = 'block';
+                
+                // 使用更可靠的方法：等待图片在 img 元素中完全加载
+                const showPoster = () => {
+                    imgEl.style.opacity = '1';
+                    overlay.style.display = 'flex';
+                    markPosterShown(today);
+                };
+                
+                // 检查图片是否已经在浏览器缓存中
+                if (imgEl.complete && imgEl.naturalHeight !== 0) {
+                    // 图片已经在缓存中，立即显示
+                    showPoster();
+                } else {
+                    // 等待图片加载完成
+                    const imgLoadHandler = () => {
+                        showPoster();
+                        imgEl.removeEventListener('load', imgLoadHandler);
+                        imgEl.removeEventListener('error', imgErrorHandler);
+                    };
+                    const imgErrorHandler = () => {
+                        clearTimeout(loadTimeout);
+                        console.warn('打卡图在 img 元素中加载失败:', imageUrl);
+                        imgEl.style.display = 'none';
+                        overlay.style.display = 'flex';
+                        markPosterShown(today);
+                        imgEl.removeEventListener('load', imgLoadHandler);
+                        imgEl.removeEventListener('error', imgErrorHandler);
+                    };
+                    imgEl.addEventListener('load', imgLoadHandler, { once: true });
+                    imgEl.addEventListener('error', imgErrorHandler, { once: true });
+                }
+            })
+            .catch((error) => {
+                clearTimeout(loadTimeout);
+                console.warn('打卡图加载失败:', imageUrl, error);
+                // 加载失败，隐藏图片但显示弹窗
+                imgEl.style.display = 'none';
+                overlay.style.display = 'flex';
+                markPosterShown(today);
+            });
     } else {
         // 如果没有图片，直接显示弹窗
         overlay.style.display = 'flex';
@@ -5263,9 +5339,15 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     // 标记用户是否手动覆盖速办
     let userOverrideFlash = false;
 
+    // 立即开始预加载打卡图（不等待 DOMContentLoaded，更早开始加载）
+    // 使用 requestIdleCallback 或 setTimeout 避免阻塞关键资源
+    if (window.requestIdleCallback) {
+        requestIdleCallback(() => preloadDailyPosters(), { timeout: 1000 });
+    } else {
+        setTimeout(preloadDailyPosters, 100);
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
-        // 页面加载时预加载打卡图（延迟执行，避免阻塞主要资源）
-        setTimeout(preloadDailyPosters, 500);
         
         // 先读取可能存在的自定义仪式
         loadRitualSettings();
@@ -8172,7 +8254,7 @@ document.addEventListener("DOMContentLoaded", function() {
     <div id="dailyPosterOverlay" class="daily-poster-overlay">
         <div class="daily-poster-card">
 <div class="daily-poster-image">
-    <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" loading="lazy" style="opacity: 0; transition: opacity 0.3s;">
+    <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" style="opacity: 0; transition: opacity 0.3s; display: block;">
     <div class="daily-poster-caption">
         <div class="daily-poster-day">
             这是你和 Anchor 的第
