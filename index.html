@@ -2538,7 +2538,7 @@ body.variant-common .stat-btn.joy {
             <div class="task-dialog-buttons">
                 <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">修改</button>
                 <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">记忆</button>
-                <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">完成</button>
+                <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉去做</button>
             </div>
         </div>
     </div>
@@ -6310,6 +6310,99 @@ function pickDrawMode() {
 
 // 把 v6.2 draw() 里“根据筛选/防重复/青蛙优先”等逻辑抽出来，方便塔罗模式复用
 
+// ============================================================
+// 🛡️ 智能冷却引擎 (Smart Cooldown Engine) — v6.6
+// ============================================================
+// Why: 防止用户一天内连续抽到高刺激的影视剧任务，
+//      通过"隐形管家"在后台悄悄调节抽卡池，无需用户感知。
+// What: 纯函数，接收候选池 + 今日足迹 + 当前模式，
+//       返回经过冷却规则净化后的候选池。
+//
+// 🔮 未来扩展点 (Future Config Entry):
+//   - 这里是未来的配置入口：将 COOLDOWN_RULES 暴露为用户可自定义的开关，
+//     让用户选择哪些类别需要冷却、冷却阈值是多少。
+//   - 可扩展为: { movie: { enabled: true, maxPerDay: 1 },
+//                 series: { enabled: true, maxPerDay: 1 },
+//                 vinyl: { enabled: false } }
+// ============================================================
+function applySmartCooldown(pool, log, currentMode) {
+
+    // 【意图接管 — Intent Override】
+    // Why: 如果用户主动选了"只看书影"(culture)，说明用户此刻明确想要影视剧内容，
+    //      冷却引擎必须让路，把控制权完整交还给用户。
+    // 🔮 这里是未来的配置入口：将来如果新增其他"用户意图覆盖"的模式，在此处扩展。
+    if (currentMode === 'culture') {
+        return pool;
+    }
+
+    const todayStr = new Date().toDateString();
+
+    // --- 冷却规则 #1：影视剧类 (Movie / Series Cooldown) ---
+    // What: 扫描今日足迹，检查是否已有"已完成"的影视剧任务。
+    // Why: 影视剧是高刺激、高时间消耗的活动，一天看一部/一集就够了，
+    //      把剩余机会留给书籍、运动、桌面任务等更均衡的选项。
+    //
+    // 🔮 这里是未来的配置入口：
+    //   将来改为从用户配置读取，例如:
+    //   { category: 'movie', enabled: userPrefs.cooldown.movie, maxPerDay: 1 }
+    const hasCompletedMovieOrSeries = log.some(entry => {
+        // 只看今天的记录
+        if (entry.date !== todayStr) return false;
+        // 只看已完成的记录（done: true）
+        if (!entry.done) return false;
+
+        // 检测方式 1（主要）：直接看足迹的 icon 字段
+        // Why: icon 在足迹写入时已确定，是最可靠的判据；
+        //      🎬 = 电影，📺 = 剧集，两者都属于"影视剧"大类。
+        if (entry.icon === '🎬' || entry.icon === '📺') return true;
+
+        // 检测方式 2（防御性兜底）：通过 taskId 回溯候选池中的原任务对象
+        // Why: 防止极端边缘情况（如旧版数据 icon 缺失），
+        //      回到候选池找原始任务，检查其 subtype / isSeries 属性。
+        if (entry.taskId) {
+            const originalTask = pool.find(t => t.id === entry.taskId);
+            if (originalTask) {
+                if (originalTask.subtype === 'movie' || originalTask.isSeries === true) return true;
+            }
+        }
+
+        return false;
+    });
+
+    // 今天没有已完成的影视剧 → 冷却不生效，原样返回
+    if (!hasCompletedMovieOrSeries) {
+        return pool;
+    }
+
+    // --- 执行冷却：从候选池中移除影视剧类任务 ---
+    // What: 过滤掉 subtype='movie' / isSeries=true / icon 为 🎬📺 的任务。
+    // Why: 今天已经享用过影视剧了，把抽卡机会让给其他类型，实现全天活动均衡。
+    const cooledPool = pool.filter(item => {
+        // 明确标记为电影的任务
+        if (item.subtype === 'movie') return false;
+        // 明确标记为剧集/系列的任务
+        if (item.isSeries === true) return false;
+
+        // 兜底：有些 culture 任务没有明确 subtype，但 getSmartIcon 会判定为影视
+        // Why: addNew 时可能没走到 subtype 赋值分支，但图标逻辑会正确归类
+        if (item.type === 'culture') {
+            const icon = item.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(item) : '');
+            if (icon === '🎬' || icon === '📺') return false;
+        }
+
+        return true;
+    });
+
+    // 安全兜底：如果冷却后池子为空，退回原池
+    // Why: 冷却是"锦上添花"而非"强制约束"，绝不能因为它导致用户抽不出任何任务。
+    //      极端场景：用户任务池里全是影视剧 → 冷却后为空 → 必须退回原池。
+    if (cooledPool.length === 0) {
+        return pool;
+    }
+
+    return cooledPool;
+}
+
 // v6.4 重写 pickTaskByFilters：实现能量药丸筛选逻辑
 function pickTaskByFilters() {
     const ctx = document.getElementById('selContext').value;
@@ -6326,6 +6419,14 @@ function pickTaskByFilters() {
         
         return true;
     });
+
+    // Step 1.5: 智能冷却 (Smart Cooldown) — 隐形管家
+    // Why: 在物理铁律之后、模式策略之前，悄悄移除今天已有同类完成记录的高刺激任务。
+    //      此处独立调用纯函数，与上下文完全解耦，方便未来扩展更多冷却规则。
+    // 🔮 这里是未来的配置入口：将来可在此处串联多个冷却规则，如:
+    //   validPool = applyCooldown_Vinyl(validPool, dailyLog, mode);
+    //   validPool = applyCooldown_Sport(validPool, dailyLog, mode);
+    validPool = applySmartCooldown(validPool, dailyLog, mode);
 
     // Step 2: 模式分支策略（Mode Strategy）
     if (energyMode === 'anchor') {
@@ -7083,14 +7184,37 @@ function openRitual(type) {
     }
 
     // v6.3-edit-buttons-enter：处理完成操作
+    // v6.6 "主动登台"：从任务库点击 👉去做，让任务登上 01 区主舞台并进入进行中状态。
+    // Why: 相比原来的"静默完成"，给用户一个完整的"选中 → 锚定 → 执行"仪式感流程，
+    //       同时复用已有的 renderResultCard + setCardAsAnchor 链路，确保足迹/心跳一致。
     function handleTaskComplete() {
         if (!currentDialogTask) return;
         const task = currentDialogTask;
+
+        // Step 1: 关闭三选项对话框，释放 UI
         closeTaskActionDialog();
-        
-        // 如果这条正好是当前 card 上的任务：当作正常 finishTask，顺便关卡片
-        const isCurrent = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
-        completeTaskCore(task, { silentCard: !isCurrent });
+
+        // Step 2: 将选中的任务提升为全局当前任务
+        // Why: renderResultCard 和 setCardAsAnchor 都依赖 currentTask 全局变量，
+        //      必须在调用它们之前完成赋值。
+        currentTask = task;
+
+        // Step 3: 在 01 区渲染这张任务卡片（展示任务信息、按钮等）
+        renderResultCard(currentTask);
+
+        // Step 4: 将卡片状态切换为"📌 锚点 · ING..."
+        // Why: setCardAsAnchor 内部会：
+        //   - 设置 currentStatus = 'anchor'
+        //   - 启动心跳动画 (rIngPulse)
+        //   - 记录 anchorStartTime
+        //   - 在 dailyLog 中写入一条 done:false 的足迹
+        setCardAsAnchor();
+
+        // Step 5: 平滑滚动到 01 区，让用户视线聚焦到主舞台
+        const hero = document.querySelector('.hero-wrapper');
+        if (hero) {
+            hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     // v6.3-edit-buttons-enter：处理修改操作
