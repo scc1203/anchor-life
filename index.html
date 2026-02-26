@@ -7200,6 +7200,8 @@ function openRitual(type) {
         currentTask = task;
 
         // Step 3: 在 01 区渲染这张任务卡片（展示任务信息、按钮等）
+        const ph = document.getElementById('placeholder');
+        if (ph) ph.style.display = 'none';
         renderResultCard(currentTask);
 
         // Step 4: 将卡片状态切换为"📌 锚点 · ING..."
