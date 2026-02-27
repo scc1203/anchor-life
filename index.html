@@ -2505,6 +2505,37 @@ html.onboarding-lock {
   color: #c5b8d5;
   text-align: right;
 }
+
+/* ============================================================
+   v6.6.3 静音多巴胺 (Quiet Dopamine) — 视觉反馈系统
+   ============================================================ */
+
+/* 卡片呼吸光晕：用于 culture / vinyl 休闲任务卡片 */
+/* Why: 柔和的粉色脉动暗示"这是享受时间"，降低用户的罪恶感 */
+@keyframes relaxAura {
+  0%   { box-shadow: 0 16px 40px rgba(0,0,0,0.10); }
+  50%  { box-shadow: 0 16px 50px rgba(255,182,185,0.4); }
+  100% { box-shadow: 0 16px 40px rgba(0,0,0,0.10); }
+}
+.card-relax-aura {
+  animation: relaxAura 3s ease-in-out infinite !important;
+}
+
+/* 青蛙任务完成时的极简彩纸 */
+/* Why: 只为最难的任务提供克制的视觉嘉奖，不喧宾夺主 */
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(150px) rotate(360deg); opacity: 0; }
+}
+.quiet-confetti {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confettiFall 2.5s ease-out forwards;
+}
 </style>
 </head>
 <body>
@@ -2520,7 +2551,7 @@ html.onboarding-lock {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.6.2 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.6.3 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3189,6 +3220,7 @@ html.onboarding-lock {
                     <li><b>v6.5：</b> 新增记忆功能：点击结果卡片📝备注或任务库 & 媒体库里的任务名称，可打开记忆面板，记录本次任务的坐标、时长以及备注。</li>
                     <li><b>v6.6.1：</b> 增加智能冷却算法基础（影视类每日一次）；任务篮任务主动上台增加仪式感。</li>
                     <li><b>v6.6.2：</b> 新手引导（首次打开三步聚光灯）；每日日签飞天收纳动画；右上角🌁按钮手动打开日签。</li>
+                    <li><b>v6.6.3：</b> 静音多巴胺反馈系统：书影/唱片卡片呼吸光晕 + 蓄能文案；完成任务触觉震动；青蛙任务完成彩纸嘉奖。</li>
                 </ul>
             </div>
         </details>
@@ -6189,6 +6221,18 @@ function renderResultCard(result) {
             }
             let displayDesc = result.desc;
             if (!displayDesc || displayDesc === "自定义") displayDesc = getDescByType(result.type);
+
+            // v6.6.3 静音多巴胺：对 culture / vinyl 给予心理许可文案 + 呼吸光晕
+            // Why: 用户抽到休闲任务时常有"我是不是在摸鱼"的罪恶感，
+            //      用温柔文案 + 视觉暗示告诉他们：这是你应得的。
+            const isRelaxType = (result.type === 'culture' || result.type === 'vinyl');
+            if (isRelaxType) {
+                displayDesc = '✨ 放下顾虑去享受吧，这是你应得的。';
+                if (card) card.classList.add('card-relax-aura');
+            } else {
+                if (card) card.classList.remove('card-relax-aura');
+            }
+
             if (descEl) descEl.innerText = displayDesc || "";
             if (iconEl) iconEl.innerText = result.icon || getSmartIcon(result);
 
@@ -6254,9 +6298,14 @@ function renderResultCard(result) {
         const statusEl = document.getElementById('rStatus');
         const primaryBtn = document.getElementById('btnPrimary');
         const ingEl = document.getElementById('rIngPulse');
+
+        // v6.6.3 静音多巴胺：休闲任务用"蓄能"文案替代"锚点"
+        // Why: "锚点"暗示任务/执行，对 culture/vinyl 来说语气太硬；
+        //      "蓄能·享受ING"传递"你在充电而非偷懒"的信号。
+        const isRelax = (currentTask.type === 'culture' || currentTask.type === 'vinyl');
         if (statusEl) {
             statusEl.style.display = 'block';
-            statusEl.innerText = '📌 锚点 · ING...';
+            statusEl.innerText = isRelax ? '✨ 蓄能 · 享受ING...' : '📌 锚点 · ING...';
         }
         if (ingEl) {
             ingEl.style.display = 'block';
@@ -7210,6 +7259,40 @@ function openRitual(type) {
 }
    
 
+    // ============================================================
+    // v6.6.3 静音多巴胺 — 物理触觉 & 视觉嘉奖工具函数
+    // ============================================================
+
+    // 安全震动：兼容不支持 vibrate API 的设备（桌面/旧 iOS 等）
+    // What: 接受数字或数组模式，静默失败不抛异常
+    function safeVibrate(pattern) {
+        try {
+            if (navigator && typeof navigator.vibrate === 'function') {
+                navigator.vibrate(pattern || [15, 30, 15]);
+            }
+        } catch (e) { /* 不支持就跳过 */ }
+    }
+
+    // 青蛙彩纸：12 片马卡龙色纸片从屏幕上半部飘落
+    // Why: 只在最难的任务完成时才出现，克制的视觉奖励而非铺天盖地的庆祝
+    function spawnQuietConfetti() {
+        const colors = ['#FFB6B9', '#A8E6CF', '#FDFD96', '#B5DEFF', '#FFDAC1', '#D5AAFF'];
+        const count  = 12;
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = 'quiet-confetti';
+            el.style.left       = (10 + Math.random() * 80) + '%';
+            el.style.top        = (5 + Math.random() * 25) + '%';
+            el.style.background = colors[Math.floor(Math.random() * colors.length)];
+            // 每片有微量偏移的持续时间，避免齐刷刷的机械感
+            el.style.animationDuration = (2.0 + Math.random() * 1.0) + 's';
+            el.style.animationDelay    = (Math.random() * 0.4) + 's';
+            document.body.appendChild(el);
+            // 动画结束后从 DOM 移除，不留垃圾节点
+            setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 3500);
+        }
+    }
+
     /**
      * 通用完成逻辑核心：
      * - task: 要完成的任务对象（可以来自 currentTask，也可以来自列表 db）
@@ -7357,15 +7440,24 @@ function openRitual(type) {
             renderList();
             renderArchive();
             showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
+
+            // v6.6.3 静音多巴胺：青蛙任务完成 → 极简彩纸嘉奖
+            if (task.isFrog) {
+                spawnQuietConfetti();
+            }
         }
 
         // 统一刷新足迹 & 历史
         renderLog();
         if (typeof renderHistory === 'function') renderHistory();
 
+        // v6.6.3 静音多巴胺：完成任务时触发一声轻快长振
+        safeVibrate([20, 40, 60]);
+
         // 非 silent 模式下，收起卡片 & 清空锚点状态
         if (!silent) {
             if (card) card.style.display = 'none';
+            if (card) card.classList.remove('card-relax-aura'); // 收起时移除光晕
             if (statusEl) statusEl.style.display = 'none';
             if (ingEl) ingEl.style.display = 'none';
             currentTask = null;
@@ -7457,6 +7549,9 @@ function openRitual(type) {
         //   - 记录 anchorStartTime
         //   - 在 dailyLog 中写入一条 done:false 的足迹
         setCardAsAnchor();
+
+        // v6.6.3 静音多巴胺：主动上台时轻触觉，代表锚点稳稳扎下
+        safeVibrate([15, 30, 15]);
 
         // Step 5: 平滑滚动到 01 区，让用户视线聚焦到主舞台
         const hero = document.querySelector('.hero-wrapper');
