@@ -61,6 +61,28 @@
         .version-badge { background: #81C784; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px; }
         .btn-icon { cursor: pointer; font-size: 1.2rem; opacity: 0.6; }
 
+        /* v6.6.2：header 右上角小按钮（🌁日签） */
+        .header-btn-mini {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 5px 5px;
+            border-radius: 6px;
+            border: none;
+            background: #eee;
+            color: #888;
+            font-size: 0.72rem;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: opacity 0.2s, background 0.2s;
+            line-height: 1;
+        }
+        .header-btn-mini:active {
+            background: #ddd;
+            opacity: 1;
+        }
+
 	/* 包住念头计数器 + 00 区的一整块包装 */
 	.stats-and-candy-wrapper {
    	 position: relative;
@@ -2385,6 +2407,104 @@ body.variant-common .stat-btn.joy {
   content: '-';
 }
 
+/* ============================================================
+   v6.6.1 新手引导 (Onboarding) — 纯原生实现，不依赖任何外部库
+   Why: 第一次打开 Anchor 的用户面对多功能页面容易迷失，
+        通过聚光灯遮罩 + 浮动文案，用最低侵入方式引导三个核心区域。
+   ============================================================ */
+
+/* 引导期间锁死页面滚动：加在 body 上，引导结束后移除 */
+/* Why: 防止用户在引导过程中滑动页面，导致高亮元素和 tooltip 的相对位置错乱 */
+body.onboarding-lock {
+  overflow: hidden !important;
+  touch-action: none !important;   /* 禁止触摸滚动 (移动端) */
+}
+body.onboarding-lock html,
+html.onboarding-lock {
+  overflow: hidden !important;
+}
+
+/* 全屏半透明黑底遮罩：默认隐藏，引导开始时显示 */
+.onboarding-overlay {
+  display: none;           /* 默认不可见，由 JS 控制 */
+  position: fixed;
+  inset: 0;                /* 等同于 top/right/bottom/left: 0 */
+  background: rgba(0, 0, 0, 0.62);
+  z-index: 10000;
+  /* Why: cursor pointer 告知用户"可点击推进"，降低认知负担 */
+  cursor: pointer;
+  /* 淡入过渡，避免突兀切换 */
+  transition: opacity 0.3s ease;
+}
+
+/* 被聚光灯选中的目标元素：z-index 提权 + 白色光晕 */
+/* Why: !important 是对抗页面内其他样式的必要手段，确保高亮元素
+        一定能穿透遮罩层，不被其他样式覆盖 */
+.onboarding-highlight {
+  position: relative !important;
+  z-index: 10001 !important;
+  /* 柔和白色发光阴影：对应马卡龙白 / 暖调，不刺眼 */
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.9),
+    0 0 24px 8px rgba(255, 255, 255, 0.45) !important;
+  border-radius: 12px !important;  /* 保持和页面圆角风格一致 */
+  /* 高亮过渡：给元素赋予"被选中"的呼吸感 */
+  transition: box-shadow 0.3s ease, border-radius 0.3s ease;
+}
+
+/* 浮动引导文案框：白底圆角，马卡龙色文字 */
+/* Why: 不用 fixed 而用 absolute，是为了让 JS 可以基于
+        目标元素的 getBoundingClientRect 灵活定位 */
+.onboarding-tooltip {
+  position: fixed;         /* fixed 方便用 top/left 直接定位到视口坐标 */
+  z-index: 10002;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  max-width: 280px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
+  /* 马卡龙配色文字：与全站 --accent 保持一致 */
+  color: #5a4a6a;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  pointer-events: none;    /* Why: tooltip 本身不拦截点击，让点击穿透到 overlay */
+  /* 弹出动画：从微小缩放渐显，温柔不突兀 */
+  animation: tooltipPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 文案框底部的小三角箭头（向上，指向被高亮的元素方向） */
+.onboarding-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 24px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+}
+
+/* tooltip 出现时的弹性弹出关键帧 */
+@keyframes tooltipPop {
+  from { opacity: 0; transform: scale(0.88) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* 步骤进度指示器（显示"第 1 步 / 共 3 步"），嵌在 tooltip 内 */
+.onboarding-step-counter {
+  font-size: 0.75rem;
+  color: #b0a0c0;          /* 淡雅灰紫，不抢文案焦点 */
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* "点击任意位置继续" 提示行 */
+.onboarding-hint {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: #c5b8d5;
+  text-align: right;
+}
 </style>
 </head>
 <body>
@@ -2400,8 +2520,12 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.6.1 通用版</span></div>
-        <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.6.2 通用版</span></div>
+        <!-- v6.6.2：右侧按钮组 -->
+        <div style="display:flex; align-items:center; gap:8px;">
+            <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
+            <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
+        </div>
     </div>
 
 <div class="stats-and-candy-wrapper">
@@ -3064,6 +3188,7 @@ body.variant-common .stat-btn.joy {
                     <li><b>v6.4：</b> 新增能量丸偏好筛选：Up高能模式（不出现剧集）；Anchor模式；Down休息时刻（不出现重要🐸任务）。</li>
                     <li><b>v6.5：</b> 新增记忆功能：点击结果卡片📝备注或任务库 & 媒体库里的任务名称，可打开记忆面板，记录本次任务的坐标、时长以及备注。</li>
                     <li><b>v6.6.1：</b> 增加智能冷却算法基础（影视类每日一次）；任务篮任务主动上台增加仪式感。</li>
+                    <li><b>v6.6.2：</b> 新手引导（首次打开三步聚光灯）；每日日签飞天收纳动画；右上角🌁按钮手动打开日签。</li>
                 </ul>
             </div>
         </details>
@@ -3824,7 +3949,27 @@ function showDailyPosterIfNeeded(openDaysCount) {
     const shownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
     // if (shownDay === today) return; // 临时：每次打开都弹
 
-    
+    // v6.6.2 防弹窗打架：如果新手引导尚未完成（localStorage 中没有 visited 标记），
+    // 延迟打卡图的弹出，让引导优先完成后再展示。
+    // Why: 新手引导的 overlay(z:10000) 和打卡图的 overlay(z:999) 同时出现会互相遮挡，
+    //      体验非常混乱。引导有绝对优先权——新用户先学会操作，再看日签。
+    const VISITED_KEY = 'anchor_visited_v66';
+    if (!localStorage.getItem(VISITED_KEY)) {
+        // 引导还没走完 → 监听引导完成后再弹打卡图
+        // Why: 使用 storage 事件不跨 tab 可靠，改用轮询 500ms 检测 key 写入，
+        //      最多等 30s（60次），避免无限等待。
+        let pollCount = 0;
+        const pollId = setInterval(() => {
+            pollCount++;
+            if (localStorage.getItem(VISITED_KEY) || pollCount > 60) {
+                clearInterval(pollId);
+                // 引导结束后再弹打卡图（微延迟 300ms，避免和引导关闭动画撞帧）
+                setTimeout(() => showDailyPosterIfNeeded(openDaysCount), 300);
+            }
+        }, 500);
+        return; // 先退出，等引导完成后重新调用自己
+    }
+
     const overlay = document.getElementById('dailyPosterOverlay');
     const daySpan = document.getElementById('dailyPosterDayCount');
     const imgEl   = document.getElementById('dailyPosterImg');
@@ -3922,24 +4067,125 @@ function markPosterShown(today) {
     }
 }
 
-    function closeDailyPoster() {
+    // v6.6.2 飞天收纳动画 — setTimeout 定时版（避免 transitionend 多属性触发导致卡顿）
+    // 动画流程：Phase 1 原地缩小 (280ms) → Phase 2 飞向 🌁日签 按钮 (420ms)
+    function closeDailyPoster(callback) {
         const overlay = document.getElementById('dailyPosterOverlay');
-        if (overlay) overlay.style.display = 'none';
-    }
+        const card    = overlay ? overlay.querySelector('.daily-poster-card') : null;
 
-    function dailyPosterEatCandy() {
-        // 关闭弹窗 → 打开 00 区并随机来一颗糖
-        closeDailyPoster();
-        openCandyEngine();
-    }
-
-    function dailyPosterSkipToGacha() {
-        // 关闭弹窗 → 平滑滚动到 01 区抽卡机
-        closeDailyPoster();
-        const hero = document.querySelector('.hero-wrapper');
-        if (hero && hero.scrollIntoView) {
-            hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (!overlay || !card) {
+            if (overlay) overlay.style.display = 'none';
+            if (typeof callback === 'function') callback();
+            return;
         }
+
+        const cleanup = () => {
+            overlay.style.display = 'none';
+            overlay.style.pointerEvents = '';
+            card.style.willChange  = '';
+            card.style.transition  = '';
+            card.style.transform   = '';
+            card.style.opacity     = '';
+            overlay.style.transition = '';
+            overlay.style.background = '';
+            if (typeof callback === 'function') callback();
+        };
+
+        // 坐标计算：飞行终点 = 🌁日签 按钮中心
+        const targetBtn = document.getElementById('btnDailyPoster');
+        const cardRect  = card.getBoundingClientRect();
+        let targetX, targetY;
+        if (targetBtn) {
+            const r = targetBtn.getBoundingClientRect();
+            targetX = r.left + r.width / 2;
+            targetY = r.top  + r.height / 2;
+        } else {
+            targetX = window.innerWidth - 50;
+            targetY = 20;
+        }
+        const dx = targetX - (cardRect.left + cardRect.width / 2);
+        const dy = targetY - (cardRect.top  + cardRect.height / 2);
+
+        // 禁止动画中重复点击
+        overlay.style.pointerEvents = 'none';
+        // 提示 GPU 合成，避免主线程重排导致掉帧
+        card.style.willChange = 'transform, opacity';
+
+        // === Phase 1 (280ms)：原地缩小到 40%，遮罩淡出 ===
+        requestAnimationFrame(() => {
+            overlay.style.transition = 'background 0.28s ease';
+            overlay.style.background = 'rgba(0,0,0,0)';
+
+            card.style.transition = 'transform 0.28s ease-in-out, opacity 0.28s ease';
+            card.style.transform  = 'scale(0.35)';
+            card.style.opacity    = '0.8';
+        });
+
+        // === Phase 2 (420ms)：飞向右上角 🌁 按钮 ===
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                card.style.transition = 'transform 0.42s cubic-bezier(0.4, 0, 0.15, 1), opacity 0.36s ease-out';
+                card.style.transform  = `translate(${dx}px, ${dy}px) scale(0.03)`;
+                card.style.opacity    = '0';
+            });
+        }, 290);
+
+        // === 收尾：Phase 1 (290) + Phase 2 (430) ≈ 720ms，给 750ms ===
+        setTimeout(() => {
+            cleanup();
+        }, 750);
+    }
+
+    // v6.6.2：适配"先吃颗糖"按钮 — 飞天收纳后再打开糖果引擎
+    function dailyPosterEatCandy() {
+        closeDailyPoster(() => {
+            openCandyEngine();
+        });
+    }
+
+    // v6.6.2：适配"直接抽卡"按钮 — 飞天收纳后平滑滚动到 01 区
+    function dailyPosterSkipToGacha() {
+        closeDailyPoster(() => {
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    }
+
+    // v6.6.2：手动打开日签（从 header 右上角 🌁 按钮触发）
+    // Why: 用户可能想回顾今天的打卡图，或者错过了自动弹出的那一次。
+    //      手动打开不受"每日一次"限制，但会复用已有的 showDailyPosterIfNeeded 里
+    //      设置好的图片/天数/日期文案（因为页面加载时已经填好了）。
+    function openDailyPosterManual() {
+        const overlay = document.getElementById('dailyPosterOverlay');
+        if (!overlay) return;
+
+        // 确保数据已填充：如果天数显示为默认值"1"但已经过了很多天，重新算
+        const daySpan = document.getElementById('dailyPosterDayCount');
+        const imgEl   = document.getElementById('dailyPosterImg');
+        const dateEl  = document.getElementById('dailyPosterDate');
+        const openDaysCount = initOpenedDays ? initOpenedDays() : 1;
+
+        if (daySpan) daySpan.textContent = openDaysCount;
+
+        // 更新日期文案
+        if (dateEl) {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            dateEl.textContent = `${y}.${m}.${d} | 像一次短暂停靠，看看今天走到了哪里。`;
+        }
+
+        // 更新图片（按天数轮换）
+        if (imgEl && Array.isArray(DAILY_POSTER_IMAGES) && DAILY_POSTER_IMAGES.length > 0) {
+            const idx = (openDaysCount - 1) % DAILY_POSTER_IMAGES.length;
+            imgEl.src = DAILY_POSTER_IMAGES[idx];
+            imgEl.style.opacity = '1';
+            imgEl.style.display = 'block';
+        }
+
+        // 直接显示（手动打开不需要等图片加载）
+        overlay.style.display = 'flex';
     }
 
     // --- 00 区 · 吃糖盲盒引擎 ---
@@ -6220,9 +6466,9 @@ function playGachaAnimation(result) {
         
         // 更新提示语
         const hints = {
-            'uptime': ' 🔥 高能推进：趁现在状态好，去解决那只“青蛙”',
-            'anchor': '⚓ 随机漫步：减少纠结，把下一步交给概率。',
-            'downtime': ' 🔋 安静蓄能：允许自己停下来，享受低功耗时刻。'
+            'uptime': ' 🔥 高能推进：趁现在状态好，高歌猛进',
+            'anchor': '⚓ 随机漫步：默认状态，劳逸结合',
+            'downtime': ' 🔋 安静蓄能：累了就选这个，安心休息。'
         };
         hint.textContent = hints[energyMode];
         
@@ -8456,6 +8702,229 @@ document.addEventListener("DOMContentLoaded", function() {
     if (time) time.value = "120";    // 2小时+
 });
 
+// ============================================================
+// v6.6.1 新手引导 (Onboarding)
+// ============================================================
+// Why: 新用户第一次看到多功能页面时，容易不知道从哪里开始。
+//      通过轻量的聚光灯 + 文案三步走，温柔指出"输入 → 抽卡 → 吃糖"
+//      三个核心操作，之后永久不再打扰。
+//
+// 设计原则：
+//   1. 读 localStorage 做新/老用户判断，绝不打扰已用过的用户
+//   2. 纯原生 JS，不引入任何外部库
+//   3. 点击任意位置推进，不强制用户看完（关遮罩也会写入 visited）
+// ============================================================
+function initOnboarding() {
+
+    // --- 守卫：老用户直接跳出 ---
+    // Why: 'anchor_visited_v66' 是这个版本的专属 key，
+    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
+    const VISITED_KEY = 'anchor_visited_v66';
+    if (localStorage.getItem(VISITED_KEY)) return;
+
+    // --- 三步引导配置 ---
+    // 🔮 未来扩展点：将 steps 抽出为配置对象，新增步骤只需加数组条目。
+    const steps = [
+        {
+            // Step 1：任务输入区——核心起点
+            targetId: 'inpTitle',
+            text: '📍 <b>第 1 步：清空大脑。</b><br>把今天想做的事全写在这里，一行一个<br>（例：看电影 / 整理桌面），存入任务库。'
+        },
+        {
+            // Step 2：抽卡按钮——核心动作
+            targetId: 'mainBtn',
+            text: '🎲 <b>第 2 步：交出决定权。</b><br>不用纠结下一步做什么，直接点这里。系统会像扭蛋一样，随机为你抽出一张待办卡片。'
+        },
+        {
+            // Step 3：糖果按钮——情绪出口
+            targetId: 'candyButton',
+            text: '🍬 <b>紧急出口：</b><br>如果此刻什么都不想做，先点这里「吃颗糖」（捏泡泡 / 涂鸦 / 听歌）。别有压力，玩够了、回血了，再去抽卡行动。'
+        }
+    ];
+
+    let currentStep = 0;
+    let lastTarget  = null;
+
+    const overlay = document.getElementById('onboardingOverlay');
+    const tooltip = document.getElementById('onboardingTooltip');
+
+    if (!overlay || !tooltip) return;
+
+    // --- 滚动锁 ---
+    // Why: 引导期间锁死页面滚动，防止用户手指/滚轮滑动导致
+    //      高亮元素和 tooltip 的相对位置错乱。
+    // What: 同时锁 CSS overflow + wheel 事件 + touchmove 事件，三管齐下
+    //       覆盖桌面端滚轮、移动端触摸、键盘 Page/Arrow 等所有滚动途径。
+    function preventScroll(e) { e.preventDefault(); }
+
+    function lockScroll() {
+        document.body.classList.add('onboarding-lock');
+        document.documentElement.classList.add('onboarding-lock');
+        // wheel + touchmove 必须 passive:false 才能 preventDefault
+        document.addEventListener('wheel',     preventScroll, { passive: false });
+        document.addEventListener('touchmove', preventScroll, { passive: false });
+    }
+
+    function unlockScroll() {
+        document.body.classList.remove('onboarding-lock');
+        document.documentElement.classList.remove('onboarding-lock');
+        document.removeEventListener('wheel',     preventScroll);
+        document.removeEventListener('touchmove', preventScroll);
+    }
+
+    // --- 核心：渲染某一步 ---
+    function showStep(index) {
+
+        if (index >= steps.length) {
+            finishOnboarding();
+            return;
+        }
+
+        const step   = steps[index];
+        const target = document.getElementById(step.targetId);
+
+        if (lastTarget) {
+            lastTarget.classList.remove('onboarding-highlight');
+            lastTarget = null;
+        }
+
+        if (!target) {
+            currentStep++;
+            showStep(currentStep);
+            return;
+        }
+
+        // --- 滚动到目标元素 ---
+        // 第 1→2 步特殊处理：用平滑滚动，让用户看到页面上下的空间关系。
+        // 其余步骤用瞬间跳转，保持节奏紧凑。
+        const needSmoothScroll = (index === 1);
+
+        // 先隐藏 tooltip，避免滚动期间位置错乱
+        tooltip.style.display = 'none';
+
+        unlockScroll();
+        target.scrollIntoView({
+            behavior: needSmoothScroll ? 'smooth' : 'auto',
+            block: 'center'
+        });
+
+        if (needSmoothScroll) {
+            // 平滑滚动需要等滚动结束后再锁住 + 定位 tooltip。
+            // 用 rAF 轮询检测滚动是否停止（连续两帧 scrollY 不变 = 停了）。
+            let lastY = window.scrollY;
+            let stableFrames = 0;
+            const waitForScrollEnd = () => {
+                const nowY = window.scrollY;
+                if (nowY === lastY) {
+                    stableFrames++;
+                } else {
+                    stableFrames = 0;
+                    lastY = nowY;
+                }
+                // 连续 3 帧不动 ≈ 滚动已停止
+                if (stableFrames >= 3) {
+                    lockScroll();
+                    positionAndShowTooltip(target, index, step);
+                } else {
+                    requestAnimationFrame(waitForScrollEnd);
+                }
+            };
+            // 给 smooth scroll 一点启动时间再开始检测
+            setTimeout(() => requestAnimationFrame(waitForScrollEnd), 60);
+            // 兜底：最多等 800ms，防止极端情况卡住
+            setTimeout(() => {
+                if (tooltip.style.display === 'none') {
+                    lockScroll();
+                    positionAndShowTooltip(target, index, step);
+                }
+            }, 800);
+        } else {
+            lockScroll();
+            positionAndShowTooltip(target, index, step);
+        }
+
+        target.classList.add('onboarding-highlight');
+        lastTarget = target;
+    }
+
+    // --- tooltip 定位与显示（从 showStep 中抽出，供同步/异步两条路径复用）---
+    function positionAndShowTooltip(target, index, step) {
+        const rect = target.getBoundingClientRect();
+
+        const TOOLTIP_WIDTH  = 290;
+        const TOOLTIP_OFFSET = 16;
+
+        let left = rect.left;
+        if (left + TOOLTIP_WIDTH > window.innerWidth - 12) {
+            left = window.innerWidth - TOOLTIP_WIDTH - 12;
+        }
+        if (left < 12) left = 12;
+
+        const spaceBelow = window.innerHeight - rect.bottom;
+        let top;
+        let arrowOnTop = true;
+
+        if (spaceBelow > 130) {
+            top = rect.bottom + TOOLTIP_OFFSET;
+            arrowOnTop = true;
+        } else {
+            top = rect.top - 100 - TOOLTIP_OFFSET;
+            if (top < 12) top = 12;
+            arrowOnTop = false;
+        }
+
+        tooltip.innerHTML = `
+            <div class="onboarding-step-counter">第 ${index + 1} 步 / 共 ${steps.length} 步</div>
+            ${step.text}
+            <div class="onboarding-hint">点击任意位置继续 →</div>
+        `;
+
+        tooltip.style.display  = 'none';
+        tooltip.style.left     = left + 'px';
+        tooltip.style.top      = top  + 'px';
+        tooltip.style.maxWidth = TOOLTIP_WIDTH + 'px';
+        tooltip.dataset.arrowDir = arrowOnTop ? 'up' : 'down';
+
+        requestAnimationFrame(() => {
+            tooltip.style.display = 'block';
+            tooltip.style.animation = 'none';
+            void tooltip.offsetWidth;
+            tooltip.style.animation  = '';
+        });
+    }
+
+    // --- 引导结束：清理 + 解锁滚动 + 写入 visited ---
+    function finishOnboarding() {
+        if (lastTarget) {
+            lastTarget.classList.remove('onboarding-highlight');
+            lastTarget = null;
+        }
+        overlay.style.display = 'none';
+        tooltip.style.display = 'none';
+        unlockScroll();
+        localStorage.setItem(VISITED_KEY, 'true');
+    }
+
+    function handleOverlayClick() {
+        currentStep++;
+        showStep(currentStep);
+    }
+    overlay.addEventListener('click', handleOverlayClick);
+
+    // --- 启动 ---
+    setTimeout(() => {
+        overlay.style.display = 'block';
+        lockScroll();
+        showStep(0);
+    }, 400);
+}
+
+// 在最后一个 DOMContentLoaded 中调用 initOnboarding
+// Why: 放在最后确保所有 DOM 元素已渲染完毕，getBoundingClientRect 能拿到真实位置
+document.addEventListener("DOMContentLoaded", function() {
+    initOnboarding();
+});
+
 
 </script>
     <!-- 每日打卡图弹窗（默认隐藏） -->
@@ -8487,6 +8956,13 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
     </div>
+
+    <!-- v6.6.1 新手引导：遮罩层（点击推进步骤）-->
+    <!-- Why: 空容器，全部内容由 JS 动态注入，保持 HTML 干净 -->
+    <div id="onboardingOverlay" class="onboarding-overlay"></div>
+
+    <!-- v6.6.1 新手引导：浮动文案框（内容由 JS 填充）-->
+    <div id="onboardingTooltip" class="onboarding-tooltip" style="display:none;"></div>
 
 </body>
 </html>
