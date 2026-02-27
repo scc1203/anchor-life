@@ -4067,8 +4067,8 @@ function markPosterShown(today) {
     }
 }
 
-    // v6.6.2 飞天收纳动画 — setTimeout 定时版（避免 transitionend 多属性触发导致卡顿）
-    // 动画流程：Phase 1 原地缩小 (280ms) → Phase 2 飞向 🌁日签 按钮 (420ms)
+    // v6.6.2 飞天收纳动画 — setTimeout 定时版
+    // 动画流程：Phase 1 原地缩小 (220ms) → 无缝衔接 → Phase 2 飞向 🌁日签 按钮 (380ms)
     function closeDailyPoster(callback) {
         const overlay = document.getElementById('dailyPosterOverlay');
         const card    = overlay ? overlay.querySelector('.daily-poster-card') : null;
@@ -4111,29 +4111,30 @@ function markPosterShown(today) {
         // 提示 GPU 合成，避免主线程重排导致掉帧
         card.style.willChange = 'transform, opacity';
 
-        // === Phase 1 (280ms)：原地缩小到 40%，遮罩淡出 ===
+        // === Phase 1 (220ms)：原地缩小，遮罩淡出 ===
         requestAnimationFrame(() => {
-            overlay.style.transition = 'background 0.28s ease';
+            overlay.style.transition = 'background 0.22s ease';
             overlay.style.background = 'rgba(0,0,0,0)';
 
-            card.style.transition = 'transform 0.28s ease-in-out, opacity 0.28s ease';
+            card.style.transition = 'transform 0.22s ease-in, opacity 0.22s ease';
             card.style.transform  = 'scale(0.35)';
             card.style.opacity    = '0.8';
         });
 
-        // === Phase 2 (420ms)：飞向右上角 🌁 按钮 ===
+        // === Phase 2 (380ms)：紧接着飞向右上角 🌁 按钮 ===
+        // 在 Phase 1 结束前 10ms 就启动 Phase 2，让缩小和飞行无缝衔接
         setTimeout(() => {
             requestAnimationFrame(() => {
-                card.style.transition = 'transform 0.42s cubic-bezier(0.4, 0, 0.15, 1), opacity 0.36s ease-out';
+                card.style.transition = 'transform 0.38s cubic-bezier(0.4, 0, 0.15, 1), opacity 0.32s ease-out';
                 card.style.transform  = `translate(${dx}px, ${dy}px) scale(0.03)`;
                 card.style.opacity    = '0';
             });
-        }, 290);
+        }, 210);
 
-        // === 收尾：Phase 1 (290) + Phase 2 (430) ≈ 720ms，给 750ms ===
+        // === 收尾：210 + 380 ≈ 590ms，给 620ms ===
         setTimeout(() => {
             cleanup();
-        }, 750);
+        }, 620);
     }
 
     // v6.6.2：适配"先吃颗糖"按钮 — 飞天收纳后再打开糖果引擎
@@ -8728,7 +8729,7 @@ function initOnboarding() {
         {
             // Step 1：任务输入区——核心起点
             targetId: 'inpTitle',
-            text: '📍 <b>第 1 步：清空大脑。</b><br>把今天想做的事全写在这里，一行一个<br>（例：看电影 / 整理桌面），存入任务库。'
+            text: '📍 <b>第 1 步：清空大脑。</b><br>把最近想做的事全写在这里，一行一个<br>（例：看电影 / 整理桌面），存入任务库。'
         },
         {
             // Step 2：抽卡按钮——核心动作
