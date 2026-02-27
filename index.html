@@ -2522,14 +2522,14 @@ html.onboarding-lock {
 
 /* 青蛙任务完成时的彩纸 */
 @keyframes confettiFall {
-  0%   { transform: translateY(0) rotate(0deg) scale(1);   opacity: 1; }
-  70%  { opacity: 0.7; }
-  100% { transform: translateY(200px) rotate(480deg) scale(0.4); opacity: 0; }
+  0%   { transform: translateY(0)     rotate(0deg);   opacity: 1; }
+  100% { transform: translateY(200px) rotate(360deg);  opacity: 0; }
 }
 .quiet-confetti {
   position: fixed;
   pointer-events: none;
   z-index: 9999;
+  will-change: transform, opacity;  /* GPU 合成，避免主线程重排掉帧 */
 }
 /* 方形纸片 */
 .quiet-confetti--square {
@@ -7318,7 +7318,7 @@ function openRitual(type) {
             // 每片随机持续时间 2.8~4.2s + 随机延迟 0~0.6s，避免齐刷刷的机械感
             const dur   = (2.8 + Math.random() * 1.4);
             const delay = (Math.random() * 0.6);
-            el.style.animation = `confettiFall ${dur}s ease-out ${delay}s forwards`;
+            el.style.animation = `confettiFall ${dur}s linear ${delay}s forwards`;
 
             document.body.appendChild(el);
             setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, (dur + delay) * 1000 + 500);
