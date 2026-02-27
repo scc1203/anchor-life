@@ -2385,6 +2385,93 @@ body.variant-common .stat-btn.joy {
   content: '-';
 }
 
+/* ============================================================
+   v6.6.1 新手引导 (Onboarding) — 纯原生实现，不依赖任何外部库
+   Why: 第一次打开 Anchor 的用户面对多功能页面容易迷失，
+        通过聚光灯遮罩 + 浮动文案，用最低侵入方式引导三个核心区域。
+   ============================================================ */
+
+/* 全屏半透明黑底遮罩：默认隐藏，引导开始时显示 */
+.onboarding-overlay {
+  display: none;           /* 默认不可见，由 JS 控制 */
+  position: fixed;
+  inset: 0;                /* 等同于 top/right/bottom/left: 0 */
+  background: rgba(0, 0, 0, 0.62);
+  z-index: 10000;
+  /* Why: cursor pointer 告知用户"可点击推进"，降低认知负担 */
+  cursor: pointer;
+  /* 淡入过渡，避免突兀切换 */
+  transition: opacity 0.3s ease;
+}
+
+/* 被聚光灯选中的目标元素：z-index 提权 + 白色光晕 */
+/* Why: !important 是对抗页面内其他样式的必要手段，确保高亮元素
+        一定能穿透遮罩层，不被其他样式覆盖 */
+.onboarding-highlight {
+  position: relative !important;
+  z-index: 10001 !important;
+  /* 柔和白色发光阴影：对应马卡龙白 / 暖调，不刺眼 */
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.9),
+    0 0 24px 8px rgba(255, 255, 255, 0.45) !important;
+  border-radius: 12px !important;  /* 保持和页面圆角风格一致 */
+  /* 高亮过渡：给元素赋予"被选中"的呼吸感 */
+  transition: box-shadow 0.3s ease, border-radius 0.3s ease;
+}
+
+/* 浮动引导文案框：白底圆角，马卡龙色文字 */
+/* Why: 不用 fixed 而用 absolute，是为了让 JS 可以基于
+        目标元素的 getBoundingClientRect 灵活定位 */
+.onboarding-tooltip {
+  position: fixed;         /* fixed 方便用 top/left 直接定位到视口坐标 */
+  z-index: 10002;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  max-width: 280px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
+  /* 马卡龙配色文字：与全站 --accent 保持一致 */
+  color: #5a4a6a;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  pointer-events: none;    /* Why: tooltip 本身不拦截点击，让点击穿透到 overlay */
+  /* 弹出动画：从微小缩放渐显，温柔不突兀 */
+  animation: tooltipPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* 文案框底部的小三角箭头（向上，指向被高亮的元素方向） */
+.onboarding-tooltip::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 24px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+}
+
+/* tooltip 出现时的弹性弹出关键帧 */
+@keyframes tooltipPop {
+  from { opacity: 0; transform: scale(0.88) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* 步骤进度指示器（显示"第 1 步 / 共 3 步"），嵌在 tooltip 内 */
+.onboarding-step-counter {
+  font-size: 0.75rem;
+  color: #b0a0c0;          /* 淡雅灰紫，不抢文案焦点 */
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+/* "点击任意位置继续" 提示行 */
+.onboarding-hint {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: #c5b8d5;
+  text-align: right;
+}
 </style>
 </head>
 <body>
@@ -2400,7 +2487,7 @@ body.variant-common .stat-btn.joy {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.5 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.6.1 通用版</span></div>
         <span class="btn-icon" onclick="scrollToSettings()">⚙️</span>
     </div>
 
@@ -2538,7 +2625,7 @@ body.variant-common .stat-btn.joy {
             <div class="task-dialog-buttons">
                 <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">修改</button>
                 <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">记忆</button>
-                <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">完成</button>
+                <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉去做</button>
             </div>
         </div>
     </div>
@@ -3056,14 +3143,15 @@ body.variant-common .stat-btn.joy {
                     <li><b>v5.3：</b> 增加“正在进行中…”；增加30天历史记录；添加重要任务时可以通过“*”/“!”/“重要”加空格 开启。</li>
                     <li><b>v5.4：</b> 关键词修订：输入“看/影”开头：识别为电影；“读/书”开头：识别为书籍；“追/剧”开头：识别为剧集。</li>
                     <li><b>v5.5：</b> 增加起床起飞仪式 & 睡前着陆仪式（可自行编辑）；增加冷库功能：任务封存，暂时不被抽到（可恢复）</li>
-		    <li><b>v5.6：</b> 点击任务库 & 媒体库房里的任务名称，可勾选直接完成。</li>
- 		    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；音乐糖；增加每日打卡图。</li>
-                <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”：点击/触控绽放的小互动，短暂停靠后回到抽卡。</li>
+                    <li><b>v5.6：</b> 点击任务库 & 媒体库房里的任务名称，可勾选直接完成。</li>
+                    <li><b>v6.0：</b> 增加“吃颗糖”：气泡糖；涂鸦糖；涂色糖；涂色糖；音乐糖；增加每日打卡图。</li>
+                    <li><b>v6.1：</b> 增加“烟花/星空拖尾糖”：点击/触控绽放的小互动，短暂停靠后回到抽卡。</li>
                     <li><b>v6.2：</b> 增加“乐器糖”：Kalimba（卡林巴琴）；Chord Pad（和弦击垫）。</li>
-                 <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现。</li>
-                 <li><b>v6.4：</b> 新增能量丸偏好筛选：Up高能模式（不出现剧集）；Anchor模式；Down休息时刻（不出现重要🐸任务）。</li>
-                 <li><b>v6.5：</b> 新增记忆功能：点击结果卡片📝备注或任务库 & 媒体库里的任务名称，可打开记忆面板，记录本次任务的坐标、时长以及备注。</li>
-</ul>
+                    <li><b>v6.3：</b> 01 区抽卡新增「塔罗摊牌模式」，与经典扭蛋模式随机轮流出现。</li>
+                    <li><b>v6.4：</b> 新增能量丸偏好筛选：Up高能模式（不出现剧集）；Anchor模式；Down休息时刻（不出现重要🐸任务）。</li>
+                    <li><b>v6.5：</b> 新增记忆功能：点击结果卡片📝备注或任务库 & 媒体库里的任务名称，可打开记忆面板，记录本次任务的坐标、时长以及备注。</li>
+                    <li><b>v6.6.1：</b> 增加智能冷却算法基础（影视类每日一次）；任务篮任务主动上台增加仪式感。</li>
+                </ul>
             </div>
         </details>
     </div>
@@ -3385,7 +3473,90 @@ const DAILY_POSTER_IMAGES = [
     '/assets/images/daily_posters/poster11.jpg',
     '/assets/images/daily_posters/poster12.jpg',
     '/assets/images/daily_posters/poster13.jpg',
-    '/assets/images/daily_posters/poster14.jpg'
+    '/assets/images/daily_posters/poster14.jpg',
+    '/assets/images/daily_posters/poster15.jpg',
+    '/assets/images/daily_posters/poster16.jpg',
+    '/assets/images/daily_posters/poster17.jpg',
+    '/assets/images/daily_posters/poster18.jpg',
+    '/assets/images/daily_posters/poster19.jpg',
+    '/assets/images/daily_posters/poster20.jpg',
+    '/assets/images/daily_posters/poster21.jpg',
+    '/assets/images/daily_posters/poster22.jpg',
+    '/assets/images/daily_posters/poster23.jpg',
+    '/assets/images/daily_posters/poster24.jpg',
+    '/assets/images/daily_posters/poster25.jpg',
+    '/assets/images/daily_posters/poster26.jpg',
+    '/assets/images/daily_posters/poster27.jpg',
+    '/assets/images/daily_posters/poster28.jpg',
+    '/assets/images/daily_posters/poster29.jpg',
+    '/assets/images/daily_posters/poster30.jpg',
+    '/assets/images/daily_posters/poster31.jpg',
+    '/assets/images/daily_posters/poster32.jpg',
+    '/assets/images/daily_posters/poster33.jpg',
+    '/assets/images/daily_posters/poster34.jpg',
+    '/assets/images/daily_posters/poster35.jpg',
+    '/assets/images/daily_posters/poster36.jpg',
+    '/assets/images/daily_posters/poster37.jpg',
+    '/assets/images/daily_posters/poster38.jpg',
+    '/assets/images/daily_posters/poster39.jpg',
+    '/assets/images/daily_posters/poster40.jpg',
+    '/assets/images/daily_posters/poster41.jpg',
+    '/assets/images/daily_posters/poster42.jpg',
+    '/assets/images/daily_posters/poster43.jpg',
+    '/assets/images/daily_posters/poster44.jpg',
+    '/assets/images/daily_posters/poster45.jpg',
+    '/assets/images/daily_posters/poster46.jpg',
+    '/assets/images/daily_posters/poster47.jpg',
+    '/assets/images/daily_posters/poster48.jpg',
+    '/assets/images/daily_posters/poster49.jpg',
+    '/assets/images/daily_posters/poster50.jpg',
+    '/assets/images/daily_posters/poster51.jpg',
+    '/assets/images/daily_posters/poster52.jpg',
+    '/assets/images/daily_posters/poster53.jpg',
+    '/assets/images/daily_posters/poster54.jpg',
+    '/assets/images/daily_posters/poster55.jpg',
+    '/assets/images/daily_posters/poster56.jpg',
+    '/assets/images/daily_posters/poster57.jpg',
+    '/assets/images/daily_posters/poster58.jpg',
+    '/assets/images/daily_posters/poster59.jpg',
+    '/assets/images/daily_posters/poster60.jpg',
+    '/assets/images/daily_posters/poster61.jpg',
+    '/assets/images/daily_posters/poster62.jpg',
+    '/assets/images/daily_posters/poster63.jpg',
+    '/assets/images/daily_posters/poster64.jpg',
+    '/assets/images/daily_posters/poster65.jpg',
+    '/assets/images/daily_posters/poster66.jpg',
+    '/assets/images/daily_posters/poster67.jpg',
+    '/assets/images/daily_posters/poster68.jpg',
+    '/assets/images/daily_posters/poster69.jpg',
+    '/assets/images/daily_posters/poster70.jpg',
+    '/assets/images/daily_posters/poster71.jpg',
+    '/assets/images/daily_posters/poster72.jpg',
+    '/assets/images/daily_posters/poster73.jpg',
+    '/assets/images/daily_posters/poster74.jpg',
+    '/assets/images/daily_posters/poster75.jpg',
+    '/assets/images/daily_posters/poster76.jpg',
+    '/assets/images/daily_posters/poster77.jpg',
+    '/assets/images/daily_posters/poster78.jpg',
+    '/assets/images/daily_posters/poster79.jpg',
+    '/assets/images/daily_posters/poster80.jpg',
+    '/assets/images/daily_posters/poster81.jpg',
+    '/assets/images/daily_posters/poster82.jpg',
+    '/assets/images/daily_posters/poster83.jpg',
+    '/assets/images/daily_posters/poster84.jpg',
+    '/assets/images/daily_posters/poster85.jpg',
+    '/assets/images/daily_posters/poster86.jpg',
+    '/assets/images/daily_posters/poster87.jpg',
+    '/assets/images/daily_posters/poster88.jpg',
+    '/assets/images/daily_posters/poster89.jpg',
+    '/assets/images/daily_posters/poster90.jpg',
+    '/assets/images/daily_posters/poster91.jpg',
+    '/assets/images/daily_posters/poster92.jpg',
+    '/assets/images/daily_posters/poster93.jpg',
+    '/assets/images/daily_posters/poster94.jpg',
+    '/assets/images/daily_posters/poster95.jpg',
+    '/assets/images/daily_posters/poster96.jpg',
+    '/assets/images/daily_posters/poster97.jpg'
 ];
 
 // 预加载打卡图（在页面加载时提前加载，避免显示时才开始加载）
@@ -6136,9 +6307,9 @@ function playGachaAnimation(result) {
         
         // 更新提示语
         const hints = {
-            'uptime': ' 🔥 高能推进：趁现在状态好，去解决那只“青蛙”',
-            'anchor': '⚓ 随机漫步：减少纠结，把下一步交给概率。',
-            'downtime': ' 🔋 安静蓄能：允许自己停下来，享受低功耗时刻。'
+            'uptime': ' 🔥 高能推进：趁现在状态好，高歌猛进',
+            'anchor': '⚓ 随机漫步：默认状态，劳逸结合',
+            'downtime': ' 🔋 安静蓄能：累了就选这个，安心休息。'
         };
         hint.textContent = hints[energyMode];
         
@@ -6227,6 +6398,99 @@ function pickDrawMode() {
 
 // 把 v6.2 draw() 里“根据筛选/防重复/青蛙优先”等逻辑抽出来，方便塔罗模式复用
 
+// ============================================================
+// 🛡️ 智能冷却引擎 (Smart Cooldown Engine) — v6.6
+// ============================================================
+// Why: 防止用户一天内连续抽到高刺激的影视剧任务，
+//      通过"隐形管家"在后台悄悄调节抽卡池，无需用户感知。
+// What: 纯函数，接收候选池 + 今日足迹 + 当前模式，
+//       返回经过冷却规则净化后的候选池。
+//
+// 🔮 未来扩展点 (Future Config Entry):
+//   - 这里是未来的配置入口：将 COOLDOWN_RULES 暴露为用户可自定义的开关，
+//     让用户选择哪些类别需要冷却、冷却阈值是多少。
+//   - 可扩展为: { movie: { enabled: true, maxPerDay: 1 },
+//                 series: { enabled: true, maxPerDay: 1 },
+//                 vinyl: { enabled: false } }
+// ============================================================
+function applySmartCooldown(pool, log, currentMode) {
+
+    // 【意图接管 — Intent Override】
+    // Why: 如果用户主动选了"只看书影"(culture)，说明用户此刻明确想要影视剧内容，
+    //      冷却引擎必须让路，把控制权完整交还给用户。
+    // 🔮 这里是未来的配置入口：将来如果新增其他"用户意图覆盖"的模式，在此处扩展。
+    if (currentMode === 'culture') {
+        return pool;
+    }
+
+    const todayStr = new Date().toDateString();
+
+    // --- 冷却规则 #1：影视剧类 (Movie / Series Cooldown) ---
+    // What: 扫描今日足迹，检查是否已有"已完成"的影视剧任务。
+    // Why: 影视剧是高刺激、高时间消耗的活动，一天看一部/一集就够了，
+    //      把剩余机会留给书籍、运动、桌面任务等更均衡的选项。
+    //
+    // 🔮 这里是未来的配置入口：
+    //   将来改为从用户配置读取，例如:
+    //   { category: 'movie', enabled: userPrefs.cooldown.movie, maxPerDay: 1 }
+    const hasCompletedMovieOrSeries = log.some(entry => {
+        // 只看今天的记录
+        if (entry.date !== todayStr) return false;
+        // 只看已完成的记录（done: true）
+        if (!entry.done) return false;
+
+        // 检测方式 1（主要）：直接看足迹的 icon 字段
+        // Why: icon 在足迹写入时已确定，是最可靠的判据；
+        //      🎬 = 电影，📺 = 剧集，两者都属于"影视剧"大类。
+        if (entry.icon === '🎬' || entry.icon === '📺') return true;
+
+        // 检测方式 2（防御性兜底）：通过 taskId 回溯候选池中的原任务对象
+        // Why: 防止极端边缘情况（如旧版数据 icon 缺失），
+        //      回到候选池找原始任务，检查其 subtype / isSeries 属性。
+        if (entry.taskId) {
+            const originalTask = pool.find(t => t.id === entry.taskId);
+            if (originalTask) {
+                if (originalTask.subtype === 'movie' || originalTask.isSeries === true) return true;
+            }
+        }
+
+        return false;
+    });
+
+    // 今天没有已完成的影视剧 → 冷却不生效，原样返回
+    if (!hasCompletedMovieOrSeries) {
+        return pool;
+    }
+
+    // --- 执行冷却：从候选池中移除影视剧类任务 ---
+    // What: 过滤掉 subtype='movie' / isSeries=true / icon 为 🎬📺 的任务。
+    // Why: 今天已经享用过影视剧了，把抽卡机会让给其他类型，实现全天活动均衡。
+    const cooledPool = pool.filter(item => {
+        // 明确标记为电影的任务
+        if (item.subtype === 'movie') return false;
+        // 明确标记为剧集/系列的任务
+        if (item.isSeries === true) return false;
+
+        // 兜底：有些 culture 任务没有明确 subtype，但 getSmartIcon 会判定为影视
+        // Why: addNew 时可能没走到 subtype 赋值分支，但图标逻辑会正确归类
+        if (item.type === 'culture') {
+            const icon = item.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(item) : '');
+            if (icon === '🎬' || icon === '📺') return false;
+        }
+
+        return true;
+    });
+
+    // 安全兜底：如果冷却后池子为空，退回原池
+    // Why: 冷却是"锦上添花"而非"强制约束"，绝不能因为它导致用户抽不出任何任务。
+    //      极端场景：用户任务池里全是影视剧 → 冷却后为空 → 必须退回原池。
+    if (cooledPool.length === 0) {
+        return pool;
+    }
+
+    return cooledPool;
+}
+
 // v6.4 重写 pickTaskByFilters：实现能量药丸筛选逻辑
 function pickTaskByFilters() {
     const ctx = document.getElementById('selContext').value;
@@ -6243,6 +6507,14 @@ function pickTaskByFilters() {
         
         return true;
     });
+
+    // Step 1.5: 智能冷却 (Smart Cooldown) — 隐形管家
+    // Why: 在物理铁律之后、模式策略之前，悄悄移除今天已有同类完成记录的高刺激任务。
+    //      此处独立调用纯函数，与上下文完全解耦，方便未来扩展更多冷却规则。
+    // 🔮 这里是未来的配置入口：将来可在此处串联多个冷却规则，如:
+    //   validPool = applyCooldown_Vinyl(validPool, dailyLog, mode);
+    //   validPool = applyCooldown_Sport(validPool, dailyLog, mode);
+    validPool = applySmartCooldown(validPool, dailyLog, mode);
 
     // Step 2: 模式分支策略（Mode Strategy）
     if (energyMode === 'anchor') {
@@ -7000,14 +7272,37 @@ function openRitual(type) {
     }
 
     // v6.3-edit-buttons-enter：处理完成操作
+    // v6.6 "主动登台"：从任务库点击 👉去做，让任务登上 01 区主舞台并进入进行中状态。
+    // Why: 相比原来的"静默完成"，给用户一个完整的"选中 → 锚定 → 执行"仪式感流程，
+    //       同时复用已有的 renderResultCard + setCardAsAnchor 链路，确保足迹/心跳一致。
     function handleTaskComplete() {
         if (!currentDialogTask) return;
         const task = currentDialogTask;
+
+        // Step 1: 关闭三选项对话框，释放 UI
         closeTaskActionDialog();
-        
-        // 如果这条正好是当前 card 上的任务：当作正常 finishTask，顺便关卡片
-        const isCurrent = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
-        completeTaskCore(task, { silentCard: !isCurrent });
+
+        // Step 2: 将选中的任务提升为全局当前任务
+        // Why: renderResultCard 和 setCardAsAnchor 都依赖 currentTask 全局变量，
+        //      必须在调用它们之前完成赋值。
+        currentTask = task;
+
+        // Step 3: 在 01 区渲染这张任务卡片（展示任务信息、按钮等）
+        renderResultCard(currentTask);
+
+        // Step 4: 将卡片状态切换为"📌 锚点 · ING..."
+        // Why: setCardAsAnchor 内部会：
+        //   - 设置 currentStatus = 'anchor'
+        //   - 启动心跳动画 (rIngPulse)
+        //   - 记录 anchorStartTime
+        //   - 在 dailyLog 中写入一条 done:false 的足迹
+        setCardAsAnchor();
+
+        // Step 5: 平滑滚动到 01 区，让用户视线聚焦到主舞台
+        const hero = document.querySelector('.hero-wrapper');
+        if (hero) {
+            hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     // v6.3-edit-buttons-enter：处理修改操作
@@ -8248,6 +8543,186 @@ document.addEventListener("DOMContentLoaded", function() {
     if (time) time.value = "120";    // 2小时+
 });
 
+// ============================================================
+// v6.6.1 新手引导 (Onboarding)
+// ============================================================
+// Why: 新用户第一次看到多功能页面时，容易不知道从哪里开始。
+//      通过轻量的聚光灯 + 文案三步走，温柔指出"输入 → 抽卡 → 吃糖"
+//      三个核心操作，之后永久不再打扰。
+//
+// 设计原则：
+//   1. 读 localStorage 做新/老用户判断，绝不打扰已用过的用户
+//   2. 纯原生 JS，不引入任何外部库
+//   3. 点击任意位置推进，不强制用户看完（关遮罩也会写入 visited）
+// ============================================================
+function initOnboarding() {
+
+    // --- 守卫：老用户直接跳出 ---
+    // Why: 'anchor_visited_v66' 是这个版本的专属 key，
+    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
+    const VISITED_KEY = 'anchor_visited_v66';
+    if (localStorage.getItem(VISITED_KEY)) return;
+
+    // --- 三步引导配置 ---
+    // 🔮 未来扩展点：将 steps 抽出为配置对象，新增步骤只需加数组条目。
+    const steps = [
+        {
+            // Step 1：任务输入区——核心起点
+            targetId: 'inpTitle',
+            text: '📍 <b>第 1 步：清空大脑。</b><br>把今天想做的事全写在这里，一行一个<br>（例：看电影 / 整理桌面），存入任务库。'
+        },
+        {
+            // Step 2：抽卡按钮——核心动作
+            targetId: 'mainBtn',
+            text: '🎲 <b>第 2 步：交出决定权。</b><br>不用纠结下一步做什么，直接点这里。系统会像扭蛋一样，随机为你抽出一张待办卡片。'
+        },
+        {
+            // Step 3：糖果按钮——情绪出口
+            targetId: 'candyButton',
+            text: '🍬 <b>紧急出口：</b><br>如果此刻什么都不想做，先点这里「吃颗糖」（捏泡泡 / 涂鸦 / 听歌）。别有压力，玩够了、回血了，再去抽卡行动。'
+        }
+    ];
+
+    let currentStep = 0;
+    let lastTarget  = null; // 记录上一步高亮的元素，用于清理
+
+    const overlay = document.getElementById('onboardingOverlay');
+    const tooltip = document.getElementById('onboardingTooltip');
+
+    // 安全检查：如果 DOM 节点不存在则放弃（容错降级）
+    if (!overlay || !tooltip) return;
+
+    // --- 核心：渲染某一步 ---
+    function showStep(index) {
+
+        // 所有步骤走完 → 收尾
+        if (index >= steps.length) {
+            finishOnboarding();
+            return;
+        }
+
+        const step   = steps[index];
+        const target = document.getElementById(step.targetId);
+
+        // 清理上一步的高亮（避免多个元素同时发光）
+        if (lastTarget) {
+            lastTarget.classList.remove('onboarding-highlight');
+            lastTarget = null;
+        }
+
+        // 目标元素不存在时跳过这一步（容错）
+        if (!target) {
+            currentStep++;
+            showStep(currentStep);
+            return;
+        }
+
+        // 给目标元素加聚光灯高亮
+        target.classList.add('onboarding-highlight');
+        lastTarget = target;
+
+        // 获取目标元素在视口中的精确位置
+        const rect = target.getBoundingClientRect();
+
+        // --- 定位 tooltip ---
+        // Why: 优先显示在元素下方（+16px gap），
+        //      若下方放不下（超出视口底部），则翻到上方显示。
+        const TOOLTIP_WIDTH  = 290;
+        const TOOLTIP_OFFSET = 16; // 与目标元素的间距
+
+        // 水平位置：左对齐目标元素，但不超出屏幕右边界
+        let left = rect.left;
+        if (left + TOOLTIP_WIDTH > window.innerWidth - 12) {
+            left = window.innerWidth - TOOLTIP_WIDTH - 12;
+        }
+        if (left < 12) left = 12;
+
+        // 垂直位置：先算下方是否够用
+        const spaceBelow = window.innerHeight - rect.bottom;
+        let top;
+        let arrowOnTop = true; // tooltip 箭头默认向上（指向元素）
+
+        if (spaceBelow > 130) {
+            // 有足够空间：tooltip 在元素正下方
+            top = rect.bottom + TOOLTIP_OFFSET;
+            arrowOnTop = true;
+        } else {
+            // 空间不足：tooltip 翻到元素上方
+            // 先显示 tooltip 以获取其实际高度（估算 100px）
+            top = rect.top - 100 - TOOLTIP_OFFSET;
+            if (top < 12) top = 12;
+            arrowOnTop = false;
+        }
+
+        // 填入 tooltip 内容（innerHTML 支持粗体 <b> 标签）
+        tooltip.innerHTML = `
+            <div class="onboarding-step-counter">第 ${index + 1} 步 / 共 ${steps.length} 步</div>
+            ${step.text}
+            <div class="onboarding-hint">点击任意位置继续 →</div>
+        `;
+
+        // 应用定位（先重置 display 以触发动画）
+        tooltip.style.display  = 'none';
+        tooltip.style.left     = left + 'px';
+        tooltip.style.top      = top  + 'px';
+        tooltip.style.maxWidth = TOOLTIP_WIDTH + 'px';
+
+        // 根据方向切换箭头伪元素（向上箭头 vs 向下箭头）
+        // Why: 用 data 属性控制，CSS 可按需扩展两个方向的 ::before 样式
+        tooltip.dataset.arrowDir = arrowOnTop ? 'up' : 'down';
+
+        // 短暂延迟后显示，触发 CSS 弹出动画
+        requestAnimationFrame(() => {
+            tooltip.style.display = 'block';
+            // 重置动画：先移除、再强制回流、再添加，让动画每步都重播
+            tooltip.style.animation = 'none';
+            void tooltip.offsetWidth; // 强制回流
+            tooltip.style.animation  = '';
+        });
+
+        // 确保目标元素出现在视口内（引导时自动滚动）
+        // Why: 用户可能停在页面中间，目标元素在视口外，需要先滚过去
+        target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // --- 引导结束：清理并写入 visited 标记 ---
+    function finishOnboarding() {
+        // 移除最后一个高亮
+        if (lastTarget) {
+            lastTarget.classList.remove('onboarding-highlight');
+            lastTarget = null;
+        }
+        // 隐藏遮罩和 tooltip
+        overlay.style.display = 'none';
+        tooltip.style.display = 'none';
+
+        // 写入 localStorage，下次打开不再触发引导
+        localStorage.setItem(VISITED_KEY, 'true');
+    }
+
+    // --- 绑定遮罩点击事件：每次点击推进一步 ---
+    // Why: 使用具名函数（而非匿名箭头函数）方便后续 removeEventListener
+    function handleOverlayClick() {
+        currentStep++;
+        showStep(currentStep);
+    }
+    overlay.addEventListener('click', handleOverlayClick);
+
+    // --- 启动！显示遮罩并进入第一步 ---
+    // Why: 微小延迟 400ms，等页面其他初始化（renderList、动画等）基本完成，
+    //      避免引导遮罩和页面初始化动画同时竞争，造成视觉混乱。
+    setTimeout(() => {
+        overlay.style.display = 'block';
+        showStep(0);
+    }, 400);
+}
+
+// 在最后一个 DOMContentLoaded 中调用 initOnboarding
+// Why: 放在最后确保所有 DOM 元素已渲染完毕，getBoundingClientRect 能拿到真实位置
+document.addEventListener("DOMContentLoaded", function() {
+    initOnboarding();
+});
+
 
 </script>
     <!-- 每日打卡图弹窗（默认隐藏） -->
@@ -8279,6 +8754,13 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
     </div>
+
+    <!-- v6.6.1 新手引导：遮罩层（点击推进步骤）-->
+    <!-- Why: 空容器，全部内容由 JS 动态注入，保持 HTML 干净 -->
+    <div id="onboardingOverlay" class="onboarding-overlay"></div>
+
+    <!-- v6.6.1 新手引导：浮动文案框（内容由 JS 填充）-->
+    <div id="onboardingTooltip" class="onboarding-tooltip" style="display:none;"></div>
 
 </body>
 </html>
