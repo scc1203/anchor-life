@@ -2529,7 +2529,6 @@ html.onboarding-lock {
   position: fixed;
   pointer-events: none;
   z-index: 9999;
-  will-change: transform, opacity;  /* GPU 合成，避免主线程重排掉帧 */
 }
 /* 方形纸片 */
 .quiet-confetti--square {
@@ -7292,37 +7291,39 @@ function openRitual(type) {
         } catch (e) { /* 不支持就跳过 */ }
     }
 
-    // 青蛙彩纸：36 片马卡龙色纸片（方形 + 三角形混合）从屏幕上方飘落
+    // 青蛙彩纸：24 片马卡龙色纸片（方形 + 三角形混合）从屏幕中上部飘落
     function spawnQuietConfetti() {
         const colors = ['#FFB6B9', '#A8E6CF', '#FDFD96', '#B5DEFF', '#FFDAC1', '#D5AAFF'];
-        const count  = 36;
+        const count  = 24;
+        // 用 DocumentFragment 批量插入，只触发一次重排
+        const frag = document.createDocumentFragment();
+        const cleanups = [];
+
         for (let i = 0; i < count; i++) {
             const el  = document.createElement('div');
             const clr = colors[Math.floor(Math.random() * colors.length)];
-
-            // 约一半方形、一半三角形
             const isTriangle = (i % 2 === 0);
-            el.className = 'quiet-confetti ' + (isTriangle ? 'quiet-confetti--triangle' : 'quiet-confetti--square');
 
+            el.className = 'quiet-confetti ' + (isTriangle ? 'quiet-confetti--triangle' : 'quiet-confetti--square');
             el.style.left = (5 + Math.random() * 90) + '%';
             el.style.top  = (15 + Math.random() * 25) + '%';
 
             if (isTriangle) {
-                // 三角形用 border-bottom-color 着色
-                el.style.color = clr;
                 el.style.borderBottomColor = clr;
             } else {
                 el.style.background = clr;
             }
 
-            // 每片随机持续时间 2.8~4.2s + 随机延迟 0~0.6s，避免齐刷刷的机械感
             const dur   = (2.8 + Math.random() * 1.4);
-            const delay = (Math.random() * 0.6);
+            const delay = (Math.random() * 0.5);
             el.style.animation = `confettiFall ${dur}s linear ${delay}s forwards`;
 
-            document.body.appendChild(el);
-            setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, (dur + delay) * 1000 + 500);
+            frag.appendChild(el);
+            cleanups.push({ el, ms: (dur + delay) * 1000 + 300 });
         }
+
+        document.body.appendChild(frag);
+        cleanups.forEach(c => setTimeout(() => { if (c.el.parentNode) c.el.parentNode.removeChild(c.el); }, c.ms));
     }
 
     /**
