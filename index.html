@@ -2512,29 +2512,39 @@ html.onboarding-lock {
 
 /* 卡片呼吸光晕：用于 culture / vinyl 休闲任务卡片 */
 /* Why: 柔和的粉色脉动暗示"这是享受时间"，降低用户的罪恶感 */
+/* 实现方式：通过 JS 在入场动画 stripOpen 结束后，直接设置 card.style.animation，
+   避免 CSS class 和内联 style 的优先级冲突 */
 @keyframes relaxAura {
   0%   { box-shadow: 0 16px 40px rgba(0,0,0,0.10); }
-  50%  { box-shadow: 0 16px 50px rgba(255,182,185,0.4); }
+  50%  { box-shadow: 0 16px 50px rgba(255,182,185,0.45); }
   100% { box-shadow: 0 16px 40px rgba(0,0,0,0.10); }
 }
-.card-relax-aura {
-  animation: relaxAura 3s ease-in-out infinite !important;
-}
 
-/* 青蛙任务完成时的极简彩纸 */
-/* Why: 只为最难的任务提供克制的视觉嘉奖，不喧宾夺主 */
+/* 青蛙任务完成时的彩纸 */
 @keyframes confettiFall {
-  0%   { transform: translateY(0) rotate(0deg);   opacity: 1; }
-  100% { transform: translateY(150px) rotate(360deg); opacity: 0; }
+  0%   { transform: translateY(0) rotate(0deg) scale(1);   opacity: 1; }
+  70%  { opacity: 0.7; }
+  100% { transform: translateY(200px) rotate(480deg) scale(0.4); opacity: 0; }
 }
 .quiet-confetti {
   position: fixed;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
   pointer-events: none;
   z-index: 9999;
-  animation: confettiFall 2.5s ease-out forwards;
+}
+/* 方形纸片 */
+.quiet-confetti--square {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+/* 三角形纸片：用 border 技巧画三角 */
+.quiet-confetti--triangle {
+  width: 0;
+  height: 0;
+  border-left:  5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid currentColor;
+  background: transparent !important;
 }
 </style>
 </head>
@@ -6228,9 +6238,6 @@ function renderResultCard(result) {
             const isRelaxType = (result.type === 'culture' || result.type === 'vinyl');
             if (isRelaxType) {
                 displayDesc = '✨ 放下顾虑去享受吧，这是你应得的。';
-                if (card) card.classList.add('card-relax-aura');
-            } else {
-                if (card) card.classList.remove('card-relax-aura');
             }
 
             if (descEl) descEl.innerText = displayDesc || "";
@@ -6291,6 +6298,18 @@ function renderResultCard(result) {
         void card.offsetWidth;
         card.style.animation = "stripOpen 0.28s ease-out forwards";
         card.style.display = 'block';
+
+        // v6.6.3 呼吸光晕：stripOpen 入场动画结束后（300ms），
+        // 如果是休闲任务则切换到呼吸光晕动画；否则清除动画。
+        // Why: 内联 style.animation 优先级高于 CSS class，所以不能用 classList，
+        //      必须在 stripOpen 播完后直接用内联 style 切换到 relaxAura。
+        setTimeout(() => {
+            if (result && (result.type === 'culture' || result.type === 'vinyl')) {
+                card.style.animation = 'relaxAura 3s ease-in-out infinite';
+            } else {
+                card.style.animation = '';
+            }
+        }, 300);
     }
 
     function setCardAsAnchor() {
@@ -7273,23 +7292,36 @@ function openRitual(type) {
         } catch (e) { /* 不支持就跳过 */ }
     }
 
-    // 青蛙彩纸：12 片马卡龙色纸片从屏幕上半部飘落
-    // Why: 只在最难的任务完成时才出现，克制的视觉奖励而非铺天盖地的庆祝
+    // 青蛙彩纸：36 片马卡龙色纸片（方形 + 三角形混合）从屏幕上方飘落
     function spawnQuietConfetti() {
         const colors = ['#FFB6B9', '#A8E6CF', '#FDFD96', '#B5DEFF', '#FFDAC1', '#D5AAFF'];
-        const count  = 12;
+        const count  = 36;
         for (let i = 0; i < count; i++) {
-            const el = document.createElement('div');
-            el.className = 'quiet-confetti';
-            el.style.left       = (10 + Math.random() * 80) + '%';
-            el.style.top        = (5 + Math.random() * 25) + '%';
-            el.style.background = colors[Math.floor(Math.random() * colors.length)];
-            // 每片有微量偏移的持续时间，避免齐刷刷的机械感
-            el.style.animationDuration = (2.0 + Math.random() * 1.0) + 's';
-            el.style.animationDelay    = (Math.random() * 0.4) + 's';
+            const el  = document.createElement('div');
+            const clr = colors[Math.floor(Math.random() * colors.length)];
+
+            // 约一半方形、一半三角形
+            const isTriangle = (i % 2 === 0);
+            el.className = 'quiet-confetti ' + (isTriangle ? 'quiet-confetti--triangle' : 'quiet-confetti--square');
+
+            el.style.left = (5 + Math.random() * 90) + '%';
+            el.style.top  = (-2 + Math.random() * 20) + '%';
+
+            if (isTriangle) {
+                // 三角形用 border-bottom-color 着色
+                el.style.color = clr;
+                el.style.borderBottomColor = clr;
+            } else {
+                el.style.background = clr;
+            }
+
+            // 每片随机持续时间 2.8~4.2s + 随机延迟 0~0.6s，避免齐刷刷的机械感
+            const dur   = (2.8 + Math.random() * 1.4);
+            const delay = (Math.random() * 0.6);
+            el.style.animation = `confettiFall ${dur}s ease-out ${delay}s forwards`;
+
             document.body.appendChild(el);
-            // 动画结束后从 DOM 移除，不留垃圾节点
-            setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 3500);
+            setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, (dur + delay) * 1000 + 500);
         }
     }
 
@@ -7457,7 +7489,7 @@ function openRitual(type) {
         // 非 silent 模式下，收起卡片 & 清空锚点状态
         if (!silent) {
             if (card) card.style.display = 'none';
-            if (card) card.classList.remove('card-relax-aura'); // 收起时移除光晕
+            card.style.animation = ''; // 收起时清除呼吸光晕
             if (statusEl) statusEl.style.display = 'none';
             if (ingEl) ingEl.style.display = 'none';
             currentTask = null;
