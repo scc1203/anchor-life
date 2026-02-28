@@ -2628,7 +2628,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.1 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.2 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3298,7 +3298,8 @@ body.immersive-locked {
                     <li><b>v6.6.1：</b> 增加智能冷却算法基础（影视类每日一次）；任务篮任务主动上台增加仪式感。</li>
                     <li><b>v6.6.2：</b> 新手引导（首次打开三步聚光灯）；每日日签飞天收纳动画；右上角🌁按钮手动打开日签。</li>
                     <li><b>v6.6.3：</b> 静音多巴胺反馈系统：书影/唱片卡片呼吸光晕 + 蓄能文案；完成任务触觉震动；青蛙任务完成彩纸嘉奖。</li>
-                    <li><b>v6.7.1：</b> 全屏沉浸抽卡模式：抽卡时暗场毛玻璃聚焦，屏蔽视觉噪音，用户决策后恢复。</li>
+                    <li><b>v6.7.1：</b> 全屏沉浸抽卡模式：抽卡时暗场聚焦，屏蔽视觉噪音，用户决策后恢复。</li>
+                    <li><b>v6.7.2：</b> URL 听诊器：支持通过 URL 参数快捷添加任务（?add=）、切换能量模式（?mode=）、打开吃糖（?candy=1）。</li>
                 </ul>
             </div>
         </details>
@@ -9176,10 +9177,75 @@ function initOnboarding() {
     }, 400);
 }
 
-// 在最后一个 DOMContentLoaded 中调用 initOnboarding
+// ============================================================
+// v6.7.2 URL 听诊器 (URL Router)
+// ============================================================
+// What: 在页面初始化时解析 URL Query Parameters，自动执行对应系统动作。
+// Why:  允许外部快捷指令（如 iOS 快捷指令、浏览器书签）通过 URL 参数
+//       直接触发"添加任务 / 切换能量模式 / 打开吃糖"等操作，
+//       实现跨应用的自动化联动，无需用户手动操作界面。
+//
+// 支持的参数：
+//   ?add=任务文本        → 自动填入输入框并调用 addNew() 入库
+//   ?mode=uptime|anchor|downtime → 自动切换能量药丸状态
+//   ?candy=1             → 自动打开 00 区吃糖引擎
+//   以上参数可组合使用，如 ?add=看电影&mode=downtime
+// ============================================================
+function handleUrlRouting() {
+    const params = new URLSearchParams(window.location.search);
+
+    // 如果 URL 没有任何参数，直接跳出，零开销
+    if (!params.toString()) return;
+
+    // --- 1. 处理添加任务 ?add=xxx ---
+    // Why: 允许外部通过 URL 传入任务文本，实现"一键添加"。
+    //      例如 iOS 快捷指令拼接 URL → Safari 打开 → 任务自动入库。
+    const addText = params.get('add');
+    if (addText) {
+        const inp = document.getElementById('inpTitle');
+        if (inp) {
+            // 解码后赋值给输入框（URLSearchParams 已自动 decode）
+            inp.value = addText;
+            // 调用已有的 addNew() 将任务入库
+            if (typeof addNew === 'function') addNew();
+        }
+    }
+
+    // --- 2. 处理能量模式 ?mode=xxx ---
+    // Why: 允许外部预设能量模式，如"午休后自动切到 downtime"。
+    const modeParam = params.get('mode');
+    if (modeParam) {
+        const validModes = ['uptime', 'anchor', 'downtime'];
+        if (validModes.includes(modeParam) && typeof setEnergyMode === 'function') {
+            setEnergyMode(modeParam);
+        }
+    }
+
+    // --- 3. 处理吃糖 ?candy=1 ---
+    // Why: 允许外部直接打开吃糖引擎，如"心情低落时一键吃糖"快捷方式。
+    const candyParam = params.get('candy');
+    if (candyParam === '1') {
+        if (typeof openCandyEngine === 'function') openCandyEngine();
+    }
+
+    // --- 清理 URL：用 replaceState 移除参数，防止刷新时重复执行 ---
+    // Why: add 参数如果不清除，每次刷新都会重复添加同一个任务。
+    //      replaceState 不会触发页面跳转，只静默替换地址栏。
+    if (window.history && window.history.replaceState) {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
+}
+
+// 在最后一个 DOMContentLoaded 中调用 initOnboarding + handleUrlRouting
 // Why: 放在最后确保所有 DOM 元素已渲染完毕，getBoundingClientRect 能拿到真实位置
 document.addEventListener("DOMContentLoaded", function() {
     initOnboarding();
+
+    // v6.7.2：URL 路由放在最末尾，确保 db / dailyLog / DOM 全部就绪后再执行
+    // Why: addNew() 依赖 db 和 DOM 输入框；setEnergyMode() 依赖能量药丸 UI；
+    //      必须等所有初始化完成后才能安全调用。
+    handleUrlRouting();
 });
 
 
