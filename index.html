@@ -2545,6 +2545,53 @@ html.onboarding-lock {
   border-bottom: 10px solid currentColor;
   background: transparent !important;
 }
+
+/* ============================================================
+   v6.7.1 全屏沉浸抽卡 (Immersive Gacha Mode)
+   ============================================================
+   Why: 抽卡时页面内容繁杂（任务库、足迹、设置等），分散用户注意力。
+        用暗场 + 毛玻璃聚焦到抽卡区，营造"开盲盒"的仪式感。
+   ============================================================ */
+
+/* 全屏暗场遮罩：固定定位，毛玻璃，默认隐藏 */
+.immersive-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);  /* Safari 兼容 */
+  z-index: 900;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+/* 激活态：可见 + 可点击（点击暗处可退出沉浸） */
+.immersive-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* 抽卡区在沉浸模式下浮出暗场，白色光晕凸显 */
+.section-display.immersive-active {
+  position: relative;
+  z-index: 1000 !important;
+  box-shadow: 0 0 40px 8px rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  transition: box-shadow 0.35s ease;
+}
+
+/* 沉浸模式下，扭蛋机层去掉原有的白色背景 */
+/* Why: #gachaLayer 默认有 rgba(255,255,255,0.95) 的径向渐变，
+        会完全遮挡暗场氛围，必须在沉浸态下透明化 */
+.section-display.immersive-active #gachaLayer {
+  background: radial-gradient(circle at top, rgba(0,0,0,0.05), transparent);
+}
+
+/* 沉浸模式下锁死页面滚动 */
+body.immersive-locked {
+  overflow: hidden !important;
+}
 </style>
 </head>
 <body>
@@ -2560,7 +2607,7 @@ html.onboarding-lock {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.6.3 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.1 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3230,6 +3277,7 @@ html.onboarding-lock {
                     <li><b>v6.6.1：</b> 增加智能冷却算法基础（影视类每日一次）；任务篮任务主动上台增加仪式感。</li>
                     <li><b>v6.6.2：</b> 新手引导（首次打开三步聚光灯）；每日日签飞天收纳动画；右上角🌁按钮手动打开日签。</li>
                     <li><b>v6.6.3：</b> 静音多巴胺反馈系统：书影/唱片卡片呼吸光晕 + 蓄能文案；完成任务触觉震动；青蛙任务完成彩纸嘉奖。</li>
+                    <li><b>v6.7.1：</b> 全屏沉浸抽卡模式：抽卡时暗场毛玻璃聚焦，屏蔽视觉噪音，用户决策后恢复。</li>
                 </ul>
             </div>
         </details>
@@ -6352,6 +6400,10 @@ function renderResultCard(result) {
 
     function handlePrimaryAction() {
         if (!currentTask) return;
+
+        // v6.7.1：用户做出决策（就它啦 / 已完成），退出沉浸暗场
+        exitImmersiveMode();
+
         if (currentTask.type === 'sos') {
             finishTask();
             return;
@@ -6366,6 +6418,9 @@ function renderResultCard(result) {
     }
 
     function changeTask() {
+        // v6.7.1：换一个 —— 先退出当前沉浸态（draw 会重新进入）
+        exitImmersiveMode();
+
         if (!currentTask) { 
             draw();
             return;
@@ -7097,6 +7152,51 @@ function runTarotDrawFlow(result) {
 }
 
 
+// ============================================================
+// v6.7.1 全屏沉浸抽卡：进入 / 退出控制器
+// ============================================================
+
+// What: 激活暗场遮罩 + 抽卡区高亮 + 锁定滚动 + 平滑滚动到抽卡区
+// Why: 在用户按下"帮我选"的那一刻，将注意力收拢到抽卡区，
+//      屏蔽页面其他区域的视觉噪音，营造"开盲盒"的沉浸仪式感。
+function enterImmersiveMode() {
+    const overlay = document.getElementById('immersiveOverlay');
+    const displaySec = document.getElementById('displaySec');
+    if (overlay) overlay.classList.add('active');
+    if (displaySec) displaySec.classList.add('immersive-active');
+    document.body.classList.add('immersive-locked');
+
+    // 平滑滚动到抽卡区顶部，让卡片出现在视口中央附近
+    if (displaySec) {
+        displaySec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+// What: 移除暗场遮罩 + 取消高亮 + 解锁滚动
+// Why: 用户做出决策（就它啦 / 已完成 / 换一个）或主动点击暗处后，
+//      恢复正常页面状态，不干扰后续操作。
+function exitImmersiveMode() {
+    const overlay = document.getElementById('immersiveOverlay');
+    const displaySec = document.getElementById('displaySec');
+    if (overlay) overlay.classList.remove('active');
+    if (displaySec) displaySec.classList.remove('immersive-active');
+    document.body.classList.remove('immersive-locked');
+}
+
+// v6.7.1：暗场遮罩的点击"逃生通道"
+// Why: 用户可能抽卡后不想做任何操作，直接点暗处退出沉浸，
+//      这是最自然的退出方式，减少"被困住"的焦虑感。
+(function bindImmersiveEscape() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('immersiveOverlay');
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                exitImmersiveMode();
+            });
+        }
+    });
+})();
+
 function draw() {
         const card = document.getElementById('resultCard'); 
         if (card) card.style.display = 'none';
@@ -7107,6 +7207,9 @@ function draw() {
 
         // 进入抽卡前，先确保塔罗层被收起（避免残留）
         hideTarotLayer();
+
+        // v6.7.1 全屏沉浸：抽卡瞬间进入暗场
+        enterImmersiveMode();
 
         if (mode !== 'sos' && gachaAnimating) return;
 
@@ -7554,6 +7657,8 @@ function openRitual(type) {
         const dialog = document.getElementById('taskActionDialog');
         if (dialog) dialog.style.display = 'none';
         currentDialogTask = null;
+        // v6.7.1：关闭任务弹窗时也退出沉浸模式
+        exitImmersiveMode();
     }
 
     // v6.3-edit-buttons-enter：处理完成操作
@@ -9085,6 +9190,9 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
         </div>
     </div>
+
+    <!-- v6.7.1 全屏沉浸抽卡：暗场遮罩（点击退出沉浸模式）-->
+    <div id="immersiveOverlay" class="immersive-overlay"></div>
 
     <!-- v6.6.1 新手引导：遮罩层（点击推进步骤）-->
     <!-- Why: 空容器，全部内容由 JS 动态注入，保持 HTML 干净 -->
