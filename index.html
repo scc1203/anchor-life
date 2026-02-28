@@ -2547,48 +2547,69 @@ html.onboarding-lock {
 }
 
 /* ============================================================
-   v6.7.1 全屏沉浸抽卡 (Immersive Gacha Mode)
+   v6.7.1 全屏沉浸抽卡 — 深邃立体 (Immersive Abyss)
    ============================================================
-   Why: 抽卡时页面内容繁杂（任务库、足迹、设置等），分散用户注意力。
-        用暗场 + 毛玻璃聚焦到抽卡区，营造"开盲盒"的仪式感。
+   Why: 抽卡时页面内容繁杂，分散注意力。
+        用全屏深灰蓝暗场 + 极微弱的环境漫反射光，
+        让扭蛋机 / 卡片悬浮在黑暗中，兼具沉浸感与立体神圣感。
    ============================================================ */
 
-/* 全屏暗场遮罩：固定定位，毛玻璃，默认隐藏 */
+/* 1. 全屏暗场遮罩：深灰蓝，略带透气感 */
 .immersive-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);  /* Safari 兼容 */
+  background: rgba(28, 28, 34, 0.86);
   z-index: 900;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.4s ease;
 }
-/* 激活态：可见 + 可点击（点击暗处可退出沉浸） */
-.immersive-overlay.active {
+.immersive-overlay.show {
   opacity: 1;
   pointer-events: auto;
   cursor: pointer;
 }
 
-/* 抽卡区在沉浸模式下浮出暗场，白色光晕凸显 */
+/* 2. 抽卡区提权 + 背景透明 */
 .section-display.immersive-active {
   position: relative;
   z-index: 1000 !important;
-  box-shadow: 0 0 40px 8px rgba(255, 255, 255, 0.25);
-  border-radius: 20px;
-  transition: box-shadow 0.35s ease;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
 }
 
-/* 沉浸模式下，扭蛋机层去掉原有的白色背景 */
-/* Why: #gachaLayer 默认有 rgba(255,255,255,0.95) 的径向渐变，
-        会完全遮挡暗场氛围，必须在沉浸态下透明化 */
+/* 3. 扭蛋机层去掉白色径向渐变 */
 .section-display.immersive-active #gachaLayer {
-  background: radial-gradient(circle at top, rgba(0,0,0,0.05), transparent);
+  background: transparent !important;
 }
 
-/* 沉浸模式下锁死页面滚动 */
+/* 4. 扭蛋机 PNG 轮廓光：沉浸模式下用 drop-shadow 贴合透明轮廓 */
+/* Why: 纯暗背景下 PNG 图像没有环境光，显得像平面贴纸；
+        极淡暖粉白 drop-shadow 模拟漫反射光，增强立体感与神圣感 */
+.section-display.immersive-active #gachaImg {
+  filter: drop-shadow(0 0 18px rgba(255, 220, 230, 0.35))
+          drop-shadow(0 0 40px rgba(255, 200, 210, 0.12));
+}
+
+/* 5. 塔罗牌整体区域光晕（加在 #tarotLayer 而非 .tarot-card）*/
+/* Why: .tarot-card 本身有 transform-style: preserve-3d 用于翻牌，
+        而 filter 会强制 preserve-3d → flat，导致翻牌后正面不可见、
+        "收下"按钮无法点击，流程卡死。
+        把 drop-shadow 挂在父容器 #tarotLayer 上即可避免冲突 */
+.section-display.immersive-active #tarotLayer {
+  filter: drop-shadow(0 0 15px rgba(230, 210, 255, 0.25));
+}
+
+/* 6. 结果卡片立体光晕：双层阴影 = 悬浮压暗 + 向外发光 */
+/* Why: 白色卡片在暗场中需要"托底"阴影压住暗场营造悬浮感，
+        同时极淡外发光让卡片边缘柔和过渡，不像硬切的纸片 */
+body.immersive-locked #resultCard {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.50),
+              0 0 60px 10px rgba(255, 220, 235, 0.10) !important;
+}
+
+/* 7. 锁死页面滚动 */
 body.immersive-locked {
   overflow: hidden !important;
 }
@@ -7162,7 +7183,9 @@ function runTarotDrawFlow(result) {
 function enterImmersiveMode() {
     const overlay = document.getElementById('immersiveOverlay');
     const displaySec = document.getElementById('displaySec');
-    if (overlay) overlay.classList.add('active');
+    // .show 控制暗场遮罩的 opacity 过渡（对应 CSS .immersive-overlay.show）
+    if (overlay) overlay.classList.add('show');
+    // .immersive-active 将抽卡区提权到暗场之上，并加上聚光灯光晕
     if (displaySec) displaySec.classList.add('immersive-active');
     document.body.classList.add('immersive-locked');
 
@@ -7178,7 +7201,7 @@ function enterImmersiveMode() {
 function exitImmersiveMode() {
     const overlay = document.getElementById('immersiveOverlay');
     const displaySec = document.getElementById('displaySec');
-    if (overlay) overlay.classList.remove('active');
+    if (overlay) overlay.classList.remove('show');
     if (displaySec) displaySec.classList.remove('immersive-active');
     document.body.classList.remove('immersive-locked');
 }
