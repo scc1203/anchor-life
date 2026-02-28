@@ -6822,19 +6822,30 @@ function pickTaskByFilters() {
 
     // Step 2: 模式分支策略（Mode Strategy）
     if (energyMode === 'anchor') {
-        // 分支 A：中间档 (Anchor) - 完全沿用 v6.3 的逻辑
+        // 分支 A：中间档 (Anchor)
+        // v6.7.2-fix: 尊重抽屉状态 —— 只有用户主动展开了筛选抽屉，
+        //   才按 selContext 的值做地点过滤；否则全域搜索，不排除任何地点类型。
+        // Why: selContext 默认值是 'desktop'，如果抽屉没展开就盲目使用，
+        //      会导致 outdoor 任务永远被过滤掉，用户无感知地丢失了户外任务。
+        const shouldRespectLocation = filterDrawerExpanded;
+
         validPool = validPool.filter(item => {
             const tTime = (item.time === undefined || item.time === null) ? 30 : item.time;
             const isFlexible = (tTime === 0);
             
-            // 时长限制
-            if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
+            // 时长限制（仅在抽屉展开时生效，与地点逻辑保持一致）
+            if (shouldRespectLocation) {
+                if (!isFlexible && !item.isQuick && tTime > limitTime) return false;
+            }
 
-            // mode 过滤（vinyl/culture）
+            // mode 过滤（vinyl/culture 专属模式按钮）
             if (mode === 'vinyl') return item.type === 'vinyl';
             if (mode === 'culture') return item.type === 'culture';
 
-            // 地点过滤
+            // 地点过滤：抽屉未展开 → 跳过地点限制，全域搜索
+            if (!shouldRespectLocation) return true;
+
+            // 抽屉已展开 → 按用户选择的 ctx 过滤
             if (item.type === 'culture' || item.type === 'vinyl') {
                 if (ctx === 'outdoor') return false;
             } else if (item.type === 'sport') {
