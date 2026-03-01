@@ -6045,33 +6045,23 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             dayLogs.forEach(log => {
                 const suffix = log.done ? ' ✅' : '';
                 
-                // v6.5：检查任务库中对应任务的当前记忆状态（跟随任务最新状态显示）
-                let currentBookmark = null;
-                let currentTotalMinutes = 0;
-                let currentNote = null;
+                // v6.7.2-fix: 历史记录必须使用"当时的快照"，而非 db 中的最新状态
+                // Why: 历史记录的意义在于"回看那一刻的切片"——
+                //      比如一本书读了 10 天，每天的书签位置和备注都不同，
+                //      如果用 db 里的最新值覆盖，所有 10 天的记录都会显示最后一天的进度，
+                //      历史切片的意义就完全丧失了。
+                //      快照字段（bookmarkSnapshot / noteSnapshot / lastAddMinutes）
+                //      在 completeTaskCore / changeTask 等写入 dailyLog 时已经保存，
+                //      这里只需直接读取，不再查询 db。
+                const displayBookmark = (log.bookmarkSnapshot && log.bookmarkSnapshot.trim()) ? log.bookmarkSnapshot : null;
+                const displayNote = (log.noteSnapshot && log.noteSnapshot.trim()) ? log.noteSnapshot : null;
+                const displayLastAddMinutes = (log.lastAddMinutes && log.lastAddMinutes > 0) ? log.lastAddMinutes : null;
                 
-                // 如果有taskId，查找任务库中对应任务的当前状态
-                if (log.taskId) {
-                    const currentTask = db.find(t => t.id === log.taskId);
-                    if (currentTask) {
-                        currentBookmark = currentTask.bookmarkText && currentTask.bookmarkText.trim() ? currentTask.bookmarkText : null;
-                        currentTotalMinutes = currentTask.totalMinutes || 0;
-                        currentNote = currentTask.noteText && currentTask.noteText.trim() ? currentTask.noteText : null;
-                    }
-                }
-                
-                // 优先使用任务当前状态，如果没有则使用快照
-                const displayBookmark = currentBookmark || (log.bookmarkSnapshot && log.bookmarkSnapshot.trim() ? log.bookmarkSnapshot : null);
-                const displayTotalMinutes = currentTotalMinutes > 0 ? currentTotalMinutes : 0;
-                const displayNote = currentNote || (log.noteSnapshot && log.noteSnapshot.trim() ? log.noteSnapshot : null);
-                const displayLastAddMinutes = log.lastAddMinutes && log.lastAddMinutes > 0 ? log.lastAddMinutes : null;
-                
-                // 显示记忆参数（不管有没有✅，只要有记忆参数就显示）
                 let memoryInfo = "";
-                const hasMemory = displayLastAddMinutes || displayBookmark || displayTotalMinutes > 0 || displayNote;
+                const hasMemory = displayLastAddMinutes || displayBookmark || displayNote;
                 
                 if (hasMemory) {
-                    // 显示本次投入时长（如果有）
+                    // 当次投入时长（快照值，记录的是这一次做了多久）
                     if (displayLastAddMinutes) {
                         const hours = Math.floor(displayLastAddMinutes / 60);
                         const mins = displayLastAddMinutes % 60;
@@ -6083,11 +6073,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                         }
                         memoryInfo += ` <span class="manual-tag">⏱ +${timeDisplay}</span>`;
                     }
-                    // 显示书签
+                    // 当次书签（快照值，记录的是这一次读到/看到哪里）
                     if (displayBookmark) {
                         memoryInfo += ` <span class="manual-tag">🔖 ${displayBookmark}</span>`;
                     }
-                    // 显示备注
+                    // 当次备注（快照值，记录的是这一次的感想/笔记）
                     if (displayNote) {
                         const notePreview = displayNote.split('\n')[0].substring(0, 15);
                         const noteFull = displayNote;
