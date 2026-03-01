@@ -2644,9 +2644,19 @@ html.onboarding-lock {
   font-size: 1rem;
   font-weight: 600;
   writing-mode: vertical-rl;
-  letter-spacing: 1px; /* 缩减间距，单列能放更多字 */
-  max-height: 140px;   /* 配合拉长的竹签，增加文本区高度 */
+  letter-spacing: 1px;
+  max-height: 140px;
   overflow: hidden;
+
+  /* === 核心修复：排版居中魔法 === */
+  /* Why: 利用 Flexbox 的特性，上下 auto margin 会像两根弹簧一样，
+     把这段文字完美推到剩余空间的垂直正中心 */
+  margin-top: auto;
+  margin-bottom: auto;
+  /* Why: text-align: center 在 vertical-rl 模式下，控制的是垂直方向的文本对齐，
+     确保多列短文字也能紧凑居中 */
+  text-align: center;
+  padding-bottom: 8px; /* 底部稍微留一点保底白边 */
 }
 /* 竹筒摇晃动画 */
 @keyframes bambooShake {
@@ -2946,7 +2956,7 @@ body.immersive-locked {
 
         <!-- v6.7.5 Bamboo mode layer 竹筒摇签层 -->
         <div id="bambooLayer" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column; z-index:40; perspective: 1000px;">
-            <div class="bamboo-stage" style="position:relative; width: 280px; height: 300px; margin-top: 28vh; display:flex; align-items:flex-end; justify-content:center;">
+            <div class="bamboo-stage" style="position:relative; width: 280px; height: 300px; margin-top: 30vh; display:flex; align-items:flex-end; justify-content:center;">
                 <!-- 竹签初始藏在竹筒后面，z-index 较低 -->
                 <div id="bambooStick" class="bamboo-stick" style="opacity:0;">
                     <div class="stick-stamp" id="stickStamp">大吉</div>
