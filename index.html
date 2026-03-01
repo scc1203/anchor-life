@@ -2608,7 +2608,7 @@ html.onboarding-lock {
 /* 竹签本体：浅木色渐变 + 内凹阴影模拟立体感 */
 .bamboo-stick {
   position: absolute;
-  bottom: 40px; /* 初始位置藏在竹筒中 */
+  bottom: 40px; /* 恢复原本舒适的初始位置 */
   width: 44px;
   height: 200px;
   background: linear-gradient(to bottom, #F5DEB3, #E1C699); /* 浅木色 */
@@ -2658,13 +2658,14 @@ html.onboarding-lock {
 }
 .bamboo-shaking { animation: bambooShake 0.5s ease-in-out infinite; }
 /* 出签飞行动画：竹签从筒中飞出并放大 */
+/* 出签飞行动画：回调安全高度，确保停留在视口中央 */
 @keyframes stickFly {
   0% { transform: translateY(0) scale(1); opacity: 1; z-index: 5; }
-  100% { transform: translateY(-160px) scale(1.4); opacity: 1; z-index: 20; }
+  100% { transform: translateY(-200px) scale(1.4); opacity: 1; z-index: 20; }
 }
 .stick-fly-out { animation: stickFly 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: auto; }
-/* 点击后翻转消失动画 */
-.stick-flip-reveal { transform: translateY(-160px) scale(1.8) rotateY(90deg) !important; opacity: 0 !important; }
+/* 翻转消失动画同步修改高度 */
+.stick-flip-reveal { transform: translateY(-200px) scale(1.8) rotateY(90deg) !important; opacity: 0 !important; }
 
 /* 全屏沉浸暗场下竹筒与竹签的光晕，与扭蛋/塔罗风格统一 */
 body.immersive-locked #bambooTubeImg {
@@ -2946,14 +2947,14 @@ body.immersive-locked {
 
         <!-- v6.7.5 Bamboo mode layer 竹筒摇签层 -->
         <div id="bambooLayer" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column; z-index:40; perspective: 1000px;">
-            <div class="bamboo-stage" style="position:relative; width: 220px; height: 300px; display:flex; align-items:flex-end; justify-content:center;">
+            <div class="bamboo-stage" style="position:relative; width: 240px; height: 300px; margin-top: 14vh; display:flex; align-items:flex-end; justify-content:center;">
                 <!-- 竹签初始藏在竹筒后面，z-index 较低 -->
                 <div id="bambooStick" class="bamboo-stick" style="opacity:0;">
                     <div class="stick-stamp" id="stickStamp">大吉</div>
                     <div class="stick-text" id="stickText">任务名称</div>
                 </div>
-                <!-- 竹筒图片在最前面 -->
-                <img id="bambooTubeImg" src="assets/images/bamboo-tube.png" alt="Bamboo Tube" style="width: 160px; z-index: 10; position:relative; transform-origin: center bottom;">
+                <!-- 竹筒图片在最前面（放大到 200px） -->
+                <img id="bambooTubeImg" src="assets/images/bamboo-tube.png" alt="Bamboo Tube" style="width: 200px; z-index: 10; position:relative; transform-origin: center bottom;">
             </div>
             <div class="bamboo-caption" id="bambooCaption" style="margin-top: 20px; font-size: 0.85rem; color: #888; text-align: center;">摇晃竹筒，求得今日的指引…</div>
         </div>
