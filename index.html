@@ -2650,6 +2650,80 @@ body.immersive-locked {
   background: rgba(255, 255, 255, 0.14);
   border-color: rgba(255, 255, 255, 0.35);
 }
+
+/* v6.7.4 极简全屏玄关 (The Minimalist Lobby) — 层级 800，在打卡图 999 之下 */
+.anchor-lobby {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
+.anchor-lobby.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.lobby-morning { background: linear-gradient(135deg, #F0F4F8, #E3EDF7); color: #5D5C61; }
+.lobby-afternoon { background: linear-gradient(135deg, #FFF7F0, #FFEFE0); color: #6b4a3b; }
+/* 修复：夜间模式改为温馨助眠的暮色紫（偏淡、偏暖） */
+.lobby-night {
+  background: linear-gradient(135deg, #6B5F78 0%, #52485C 50%, #443C50 100%);
+  color: #F5EEFA; /* 更柔和的淡紫白 */
+}
+.lobby-content {
+  width: 80%;
+  max-width: 320px;
+  text-align: center;
+}
+.lobby-greeting {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 40px;
+  letter-spacing: 0.05em;
+}
+.lobby-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lobby-btn {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.04);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.lobby-btn:active { transform: scale(0.96); background: rgba(255,255,255,0.85); }
+/* 夜间模式按钮微调：在淡紫背景上更通透 */
+.lobby-night .lobby-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  color: #EDE6F5;
+}
+.lobby-night .lobby-btn:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+.lobby-escape {
+  margin-top: 40px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 </style>
 </head>
 <body>
@@ -2665,7 +2739,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.3 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.4 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3338,6 +3412,7 @@ body.immersive-locked {
                     <li><b>v6.7.1：</b> 全屏沉浸抽卡模式：抽卡时暗场聚焦，屏蔽视觉噪音，用户决策后恢复。</li>
                     <li><b>v6.7.2：</b> URL 听诊器：支持通过 URL 参数快捷添加任务（?add=）、切换能量模式（?mode=）、打开吃糖（?candy=1）。</li>
                     <li><b>v6.7.3：</b> 每日日签一键保存海报：Canvas 原生合成，图片 + 天数 + 日期文案合成 PNG 下载。</li>
+                    <li><b>v6.7.4：</b> 全屏极简玄关 (The Minimalist Lobby)：打开页面时全屏遮罩，一日三季动态配色，三个竖排入口（先玩会儿 / 直接抽卡 / 任务入库），点击后进入对应区域；关闭打卡图时玄关同步散开。</li>
                 </ul>
             </div>
         </details>
@@ -3403,6 +3478,20 @@ body.immersive-locked {
             Anchor · by scc 🌊
         </div>
     </div>
+
+    <!-- v6.7.4 极简全屏玄关 (The Minimalist Lobby) -->
+    <div id="anchorLobby" class="anchor-lobby">
+        <div class="lobby-content">
+            <div id="lobbyGreeting" class="lobby-greeting">...</div>
+            <div class="lobby-buttons">
+                <button class="lobby-btn" onclick="lobbyEnter('candy')">🍬 先玩会儿</button>
+                <button class="lobby-btn" onclick="lobbyEnter('gacha')">🔮 直接抽卡</button>
+                <button class="lobby-btn" onclick="lobbyEnter('input')">🧺 任务入库</button>
+            </div>
+            <div class="lobby-escape" onclick="lobbyEnter('escape')">直接进入后台管理 →</div>
+        </div>
+    </div>
+
 <script>
 // ===== Anchor Variant Switch =====
 // 规则：anchor.dawnharbour.com => common；anchor-scc.dawnharbour.com => personal
@@ -4266,6 +4355,7 @@ function markPosterPhase(phaseKey) {
             card.style.opacity     = '';
             overlay.style.transition = '';
             overlay.style.background = '';
+            if (typeof lobbyEnter === 'function') lobbyEnter('escape');
             if (typeof callback === 'function') callback();
         };
 
@@ -9309,6 +9399,7 @@ function handleUrlRouting() {
 // Why: 放在最后确保所有 DOM 元素已渲染完毕，getBoundingClientRect 能拿到真实位置
 document.addEventListener("DOMContentLoaded", function() {
     initOnboarding();
+    if (typeof initLobby === 'function') initLobby();
 
     // v6.7.2：URL 路由放在最末尾，确保 db / dailyLog / DOM 全部就绪后再执行
     // Why: addNew() 依赖 db 和 DOM 输入框；setEnergyMode() 依赖能量药丸 UI；
@@ -9431,6 +9522,43 @@ function saveDailyPoster() {
     }
 }
 
+// ============================================================
+// v6.7.4 极简全屏玄关 (The Minimalist Lobby)
+// ============================================================
+function initLobby() {
+    const lobby = document.getElementById('anchorLobby');
+    const greeting = document.getElementById('lobbyGreeting');
+    if (!lobby || !greeting) return;
+
+    const phase = typeof getCurrentPhase === 'function' ? getCurrentPhase() : 'morning';
+
+    lobby.classList.remove('lobby-morning', 'lobby-afternoon', 'lobby-night');
+    lobby.classList.add('lobby-' + phase);
+
+    if (phase === 'morning') greeting.innerText = '🌅 晨昕已至，要从哪里开始？';
+    else if (phase === 'afternoon') greeting.innerText = '⛵️ 渡船时刻，要从哪里开始？';
+    else greeting.innerText = '🌙 夜航静谧，要从哪里开始？';
+}
+
+function lobbyEnter(action) {
+    const lobby = document.getElementById('anchorLobby');
+    if (lobby) lobby.classList.add('hidden');
+
+    setTimeout(() => {
+        if (action === 'candy') {
+            if (typeof openCandyEngine === 'function') openCandyEngine();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (action === 'gacha') {
+            const hero = document.querySelector('.hero-wrapper');
+            if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (action === 'input') {
+            const inputSec = document.querySelector('.section-input');
+            const inp = document.getElementById('inpTitle');
+            if (inputSec) inputSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (inp) setTimeout(() => inp.focus(), 400);
+        }
+    }, 300);
+}
 
 </script>
     <!-- 每日打卡图弹窗（默认隐藏）；点击遮罩/图片外任意处关闭 -->
