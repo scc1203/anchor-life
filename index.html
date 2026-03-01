@@ -9483,42 +9483,58 @@ function saveDailyPoster() {
     ctx.fillText('Anchor ⚓️', w - pad, h - pad);
     ctx.textAlign = 'left';
 
-    // --- 6. 导出 & 下载 ---
-    // Why: 桌面端直接触发文件下载；移动端浏览器不支持 <a download> 时，
-    //      打开新标签页让用户长按保存。
+    // --- 6. 导出 & 展示 (修复移动端 PWA 卡死 Bug) ---
     try {
-        const dataUrl = canvas.toDataURL('image/png');
-        const today = getTodayDateStr ? getTodayDateStr() : new Date().toISOString().slice(0, 10);
-        const fileName = `Anchor_${today}.png`;
-
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95); // 使用 jpeg 更小更快
+        const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr() : new Date().toISOString().slice(0, 10);
+        const fileName = `Anchor_${todayStr}.jpg`;
         const link = document.createElement('a');
         link.download = fileName;
         link.href = dataUrl;
 
-        // 检测是否为移动端（简易判断）
         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
         if (isMobile) {
-            // 移动端：打开新窗口，提示长按保存
-            const newTab = window.open();
-            if (newTab) {
-                newTab.document.write(`
-                    <html><head><title>${fileName}</title>
-                    <meta name="viewport" content="width=device-width,initial-scale=1">
-                    <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#111;color:#fff;font-family:sans-serif;}img{max-width:92%;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.4);}p{margin-top:16px;font-size:14px;opacity:0.7;}</style>
-                    </head><body><img src="${dataUrl}"><p>长按图片即可保存 📥</p><\/body><\/html>
-                `);
-                newTab.document.close();
-            } else {
-                link.click();
-            }
-            showToast('📥 长按图片保存到相册');
+            // 移动端：不使用 window.open，直接在当前文档内创建一个全屏“暗房”，彻底解决 PWA 困死问题
+            const darkRoom = document.createElement('div');
+            darkRoom.style.cssText = 'position:fixed;inset:0;background:#111;z-index:20000;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;';
+
+            // 左上角实体返回按钮 (适配全面屏 SafeArea)
+            const closeBtn = document.createElement('div');
+            closeBtn.innerHTML = '❮ 返回';
+            closeBtn.style.cssText = 'position:absolute;top:max(20px, env(safe-area-inset-top));left:20px;padding:8px 16px;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:99px;color:#fff;font-size:14px;border:1px solid rgba(255,255,255,0.2);cursor:pointer;';
+
+            // 点击返回销毁暗房
+            closeBtn.onclick = () => {
+                if (document.body.contains(darkRoom)) {
+                    document.body.removeChild(darkRoom);
+                }
+            };
+
+            // 海报图片
+            const imgEl = document.createElement('img');
+            imgEl.src = dataUrl;
+            imgEl.style.cssText = 'max-width:90%;max-height:80vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.5);';
+
+            // 底部提示
+            const hint = document.createElement('p');
+            hint.innerText = '长按图片即可保存 📥';
+            hint.style.cssText = 'margin-top:24px;font-size:14px;color:rgba(255,255,255,0.6);letter-spacing:1px;';
+
+            darkRoom.appendChild(closeBtn);
+            darkRoom.appendChild(imgEl);
+            darkRoom.appendChild(hint);
+            document.body.appendChild(darkRoom);
+
+            if(typeof showToast === 'function') showToast('📥 长按图片保存到相册');
         } else {
+            // 桌面端保持直接触发下载
             link.click();
-            showToast('📥 海报已保存');
+            if(typeof showToast === 'function') showToast('📥 海报已保存');
         }
     } catch (e) {
         console.warn('海报合成失败:', e);
-        showToast('保存失败，可能是图片跨域限制');
+        if(typeof showToast === 'function') showToast('保存失败，可能是图片加载异常');
     }
 }
 
