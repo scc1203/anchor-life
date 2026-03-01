@@ -2602,6 +2602,76 @@ html.onboarding-lock {
   filter: drop-shadow(0 0 15px rgba(230, 210, 255, 0.25));
 }
 
+/* ============================================================
+   v6.7.5 竹筒摇签 (Bamboo Draw) 样式与动画
+   ============================================================ */
+/* 竹签本体：浅木色渐变 + 内凹阴影模拟立体感 */
+.bamboo-stick {
+  position: absolute;
+  bottom: 40px; /* 初始位置藏在竹筒中 */
+  width: 44px;
+  height: 200px;
+  background: linear-gradient(to bottom, #F5DEB3, #E1C699); /* 浅木色 */
+  border-radius: 4px;
+  box-shadow: inset -2px 0 5px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 12px;
+  z-index: 5;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+}
+/* 签头红色印章质感 */
+.stick-stamp {
+  color: #D32F2F; /* 印泥红 */
+  font-size: 1.1rem;
+  font-weight: 900;
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
+  border: 1px solid #D32F2F;
+  padding: 4px 2px;
+  border-radius: 3px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+/* 竖排任务文字 */
+.stick-text {
+  color: #3e3222;
+  font-size: 1rem;
+  font-weight: 600;
+  writing-mode: vertical-rl;
+  letter-spacing: 4px;
+  max-height: 120px;
+  overflow: hidden;
+}
+/* 竹筒摇晃动画 */
+@keyframes bambooShake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-8deg); }
+  50% { transform: rotate(6deg); }
+  75% { transform: rotate(-4deg); }
+  100% { transform: rotate(0deg); }
+}
+.bamboo-shaking { animation: bambooShake 0.5s ease-in-out infinite; }
+/* 出签飞行动画：竹签从筒中飞出并放大 */
+@keyframes stickFly {
+  0% { transform: translateY(0) scale(1); opacity: 1; z-index: 5; }
+  100% { transform: translateY(-160px) scale(1.4); opacity: 1; z-index: 20; }
+}
+.stick-fly-out { animation: stickFly 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: auto; }
+/* 点击后翻转消失动画 */
+.stick-flip-reveal { transform: translateY(-160px) scale(1.8) rotateY(90deg) !important; opacity: 0 !important; }
+
+/* 全屏沉浸暗场下竹筒与竹签的光晕，与扭蛋/塔罗风格统一 */
+body.immersive-locked #bambooTubeImg {
+  filter: drop-shadow(0 0 35px rgba(255, 235, 240, 0.15));
+}
+body.immersive-locked .bamboo-stick {
+  box-shadow: inset -2px 0 5px rgba(0,0,0,0.1), 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
 /* 6. 结果卡片立体光晕：双层阴影 = 悬浮压暗 + 向外发光 */
 /* Why: 白色卡片在暗场中需要"托底"阴影压住暗场营造悬浮感，
         同时极淡外发光让卡片边缘柔和过渡，不像硬切的纸片 */
@@ -2870,6 +2940,20 @@ body.immersive-locked {
                 <div class="tarot-deck" id="tarotDeck" title="点我开始洗牌"></div>
                 <div class="tarot-cards" id="tarotCards"></div>
             </div>
+        </div>
+
+        <!-- v6.7.5 Bamboo mode layer 竹筒摇签层 -->
+        <div id="bambooLayer" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; flex-direction:column; z-index:40; perspective: 1000px;">
+            <div class="bamboo-stage" style="position:relative; width: 220px; height: 300px; display:flex; align-items:flex-end; justify-content:center;">
+                <!-- 竹签初始藏在竹筒后面，z-index 较低 -->
+                <div id="bambooStick" class="bamboo-stick" style="opacity:0;">
+                    <div class="stick-stamp" id="stickStamp">大吉</div>
+                    <div class="stick-text" id="stickText">任务名称</div>
+                </div>
+                <!-- 竹筒图片在最前面 -->
+                <img id="bambooTubeImg" src="assets/images/bamboo-tube.png" alt="Bamboo Tube" style="width: 160px; z-index: 10; position:relative; transform-origin: center bottom;">
+            </div>
+            <div class="bamboo-caption" id="bambooCaption" style="margin-top: 20px; font-size: 0.85rem; color: #888; text-align: center;">摇晃竹筒，求得今日的指引…</div>
         </div>
 
     <!-- v6.3-edit-buttons-enter：任务操作三选项对话框 -->
@@ -6822,15 +6906,16 @@ function playGachaAnimation(result) {
     }
     
     
-// === v6.3：抽卡模式调度器（classic / tarot） ===
-const DRAW_MODES = ['classic', 'tarot'];
-let lastDrawMode = 'tarot'; // 让第一次从 classic 开始，之后 classic ↔ tarot 轮流出现
+// === v6.3 / v6.7.5：抽卡模式调度器（classic / tarot / bamboo） ===
+const DRAW_MODES = ['classic', 'tarot', 'bamboo'];
+let lastDrawMode = 'tarot'; // 首次从 classic 开始，之后三者轮换
 
 function pickDrawMode() {
-    // v6.3 v2：两种模式轮着来（classic → tarot → classic...）
-    const next = (lastDrawMode === 'classic') ? 'tarot' : 'classic';
-    lastDrawMode = next;
-    return next;
+    // v6.7.5：三种模式轮换（classic → tarot → bamboo → classic...）
+    const currentIdx = DRAW_MODES.indexOf(lastDrawMode);
+    const nextIdx = (currentIdx + 1) % DRAW_MODES.length;
+    lastDrawMode = DRAW_MODES[nextIdx];
+    return lastDrawMode;
 }
 
 // 把 v6.2 draw() 里“根据筛选/防重复/青蛙优先”等逻辑抽出来，方便塔罗模式复用
@@ -7122,6 +7207,16 @@ function hideClassicGachaLayer() {
     if (gacha) gacha.style.display = 'none';
 }
 
+// v6.7.5：统一隐藏所有抽卡表现层（扭蛋 / 塔罗 / 竹筒），避免残留
+function hideAllGachaLayers() {
+    const gacha = document.getElementById('gachaLayer');
+    const tarot = document.getElementById('tarotLayer');
+    const bamboo = document.getElementById('bambooLayer');
+    if (gacha) gacha.style.display = 'none';
+    if (tarot) tarot.style.display = 'none';
+    if (bamboo) bamboo.style.display = 'none';
+}
+
 function showTarotLayer() {
     const layer = document.getElementById('tarotLayer');
     if (layer) layer.style.display = 'flex';
@@ -7317,6 +7412,86 @@ function runTarotDrawFlow(result) {
     prepareTarotScene(result);
 }
 
+// ============================================================
+// v6.7.5 竹筒摇签 (Bamboo Draw) 流程与签文映射
+// ============================================================
+// 根据任务属性生成签文标题与解语，再驱动竹签动画与结果卡展示
+function runBambooDrawFlow(task) {
+    const card = document.getElementById('resultCard');
+    if (card) card.style.display = 'none';
+    hideAllGachaLayers();
+
+    const layer = document.getElementById('bambooLayer');
+    const tube = document.getElementById('bambooTubeImg');
+    const stick = document.getElementById('bambooStick');
+    const stamp = document.getElementById('stickStamp');
+    const text = document.getElementById('stickText');
+    const caption = document.getElementById('bambooCaption');
+
+    if (!layer || !tube || !stick) return renderResultCard(task); // 兜底：无竹筒 DOM 时直接出结果卡
+
+    // 1. 签文映射：根据任务类型/标记生成「签文」与「解语」
+    let fortuneTitle = '大吉';
+    let fortuneDesc = '诸事皆宜，稳步向前';
+
+    if (task.isFrog) {
+        fortuneTitle = '上上签';
+        fortuneDesc = '今日运势极旺，宜攻克难关';
+    } else if (task.isQuick) {
+        fortuneTitle = '神行签';
+        fortuneDesc = '宜速战速决';
+    } else if (task.type === 'culture' || task.type === 'vinyl') {
+        fortuneTitle = Math.random() > 0.5 ? '清心签' : '雅签';
+        fortuneDesc = '宜享受当下，忌焦虑';
+    } else {
+        const normals = ['上签', '中吉', '大吉'];
+        fortuneTitle = normals[Math.floor(Math.random() * normals.length)];
+    }
+
+    // 临时把解语存到任务对象，供结果卡展示用（不写回持久化）
+    task._tempFortuneDesc = fortuneDesc;
+
+    // 2. 初始化竹签 UI
+    stamp.textContent = fortuneTitle;
+    text.textContent = task.title;
+
+    stick.style.opacity = '0';
+    stick.classList.remove('stick-fly-out', 'stick-flip-reveal');
+    tube.classList.remove('bamboo-shaking');
+    caption.textContent = '摇晃竹筒，求得今日的指引…';
+
+    layer.style.display = 'flex';
+
+    // 3. 动画编排：先摇筒，再出签
+    setTimeout(function() {
+        tube.classList.add('bamboo-shaking');
+    }, 150);
+
+    setTimeout(function() {
+        tube.classList.remove('bamboo-shaking');
+        stick.style.opacity = '1'; // 出签时显示竹签
+        stick.classList.add('stick-fly-out');
+        caption.textContent = '点化签文，揭晓天机';
+    }, 1350);
+
+    // 4. 点击竹签：翻转消失后展示结果卡，解语写入描述
+    stick.onclick = function(e) {
+        e.stopPropagation();
+        stick.onclick = null; // 防重复点击
+
+        stick.classList.add('stick-flip-reveal');
+
+        var originalDesc = task.desc;
+        task.desc = '【' + fortuneTitle + '】 ' + fortuneDesc;
+
+        setTimeout(function() {
+            layer.style.display = 'none';
+            renderResultCard(task);
+            task.desc = originalDesc; // 恢复原描述，避免污染长期数据
+        }, 350);
+    };
+}
+
 
 // ============================================================
 // v6.7.1 全屏沉浸抽卡：进入 / 退出控制器
@@ -7373,8 +7548,8 @@ function draw() {
         const overlay = document.getElementById('ritualOverlay');
         if (overlay) overlay.style.display = 'none';
 
-        // 进入抽卡前，先确保塔罗层被收起（避免残留）
-        hideTarotLayer();
+        // 进入抽卡前，先收起所有抽卡表现层（扭蛋/塔罗/竹筒），避免残留
+        hideAllGachaLayers();
 
         // v6.7.1 全屏沉浸：抽卡瞬间进入暗场
         enterImmersiveMode();
@@ -7405,6 +7580,8 @@ function draw() {
                     const drawMode = pickDrawMode();
                     if (drawMode === 'tarot') {
                         runTarotDrawFlow(result);
+                    } else if (drawMode === 'bamboo') {
+                        runBambooDrawFlow(result);
                     } else {
                         playGachaAnimation(result);
                     }
