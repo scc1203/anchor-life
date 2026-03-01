@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
@@ -2613,6 +2614,42 @@ body.immersive-locked #resultCard {
 body.immersive-locked {
   overflow: hidden !important;
 }
+
+/* ============================================================
+   v6.7.3 一键保存海报 — 高透毛玻璃胶囊按钮
+   ============================================================ */
+.poster-save-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  padding: 5px 12px;
+  min-height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.poster-save-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.72);
+}
+.poster-save-btn:active {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+}
 </style>
 </head>
 <body>
@@ -2628,7 +2665,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.2 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.7.3 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3300,6 +3337,7 @@ body.immersive-locked {
                     <li><b>v6.6.3：</b> 静音多巴胺反馈系统：书影/唱片卡片呼吸光晕 + 蓄能文案；完成任务触觉震动；青蛙任务完成彩纸嘉奖。</li>
                     <li><b>v6.7.1：</b> 全屏沉浸抽卡模式：抽卡时暗场聚焦，屏蔽视觉噪音，用户决策后恢复。</li>
                     <li><b>v6.7.2：</b> URL 听诊器：支持通过 URL 参数快捷添加任务（?add=）、切换能量模式（?mode=）、打开吃糖（?candy=1）。</li>
+                    <li><b>v6.7.3：</b> 每日日签一键保存海报：Canvas 原生合成，图片 + 天数 + 日期文案合成 PNG 下载。</li>
                 </ul>
             </div>
         </details>
@@ -4033,6 +4071,20 @@ function stopStarShineSound() {
         return `${y}-${m}-${day}`;
     }
 
+    // v6.7.2 一日三季：根据当前小时返回时段标识
+    // Why: 将一天分为三个时段，每个时段首次打开页面都会弹一次打卡图，
+    //      比"每天只弹一次"更有仪式感，也能适配不同作息节奏的用户。
+    // 时段划分：
+    //   晨光 (morning)  : 04:00 ~ 11:59
+    //   午后 (afternoon) : 12:00 ~ 17:59
+    //   夜航 (night)     : 18:00 ~ 03:59（跨天，但 getTodayDateStr 按自然日归属）
+    function getCurrentPhase() {
+        const h = new Date().getHours();
+        if (h >= 4 && h < 12)  return 'morning';
+        if (h >= 12 && h < 18) return 'afternoon';
+        return 'night';
+    }
+
     // 初始化 / 更新累计打开天数，返回“这是第几天”
     function initOpenedDays() {
         const today = getTodayDateStr();
@@ -4055,10 +4107,17 @@ function stopStarShineSound() {
 
     // 如有需要，弹出今日打卡图（优化：添加图片预加载和错误处理）
 function showDailyPosterIfNeeded(openDaysCount) {
-    // 【Bug #5 修复】检查今天是否已经弹过，避免重复弹
+    // v6.7.2 一日三季：按时段判断是否弹出打卡图
+    // Why: 原逻辑"每天只弹一次"，改为"一天三个时段各弹一次"，
+    //      让晨光 / 午后 / 夜航各有一次仪式感停靠。
+    // 缓存 Key 格式：anchor_poster_phase_v67_2026-02-26_morning
+    //      每个自然日的每个时段独立判断，互不干扰。
     const today = getTodayDateStr();
-    const shownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
-    // if (shownDay === today) return; // 临时：每次打开都弹
+    const phase = getCurrentPhase();
+    const phaseKey = `anchor_poster_phase_v67_${today}_${phase}`;
+
+    // 如果当前时段已弹过，直接跳出
+    if (localStorage.getItem(phaseKey)) return;
 
     // v6.6.2 防弹窗打架：如果新手引导尚未完成（localStorage 中没有 visited 标记），
     // 延迟打卡图的弹出，让引导优先完成后再展示。
@@ -4112,7 +4171,7 @@ function showDailyPosterIfNeeded(openDaysCount) {
             imgEl.src = imageUrl; // 即使超时也尝试设置
             imgEl.style.opacity = '0.3'; // 降低透明度提示可能未完全加载
             overlay.style.display = 'flex';
-            markPosterShown(today);
+            markPosterPhase(phaseKey);
         }, 5000);
         
         // 使用改进的加载函数
@@ -4127,7 +4186,7 @@ function showDailyPosterIfNeeded(openDaysCount) {
                 const showPoster = () => {
                     imgEl.style.opacity = '1';
                     overlay.style.display = 'flex';
-                    markPosterShown(today);
+                    markPosterPhase(phaseKey);
                 };
                 
                 // 检查图片是否已经在浏览器缓存中
@@ -4146,7 +4205,7 @@ function showDailyPosterIfNeeded(openDaysCount) {
                         console.warn('打卡图在 img 元素中加载失败:', imageUrl);
                         imgEl.style.display = 'none';
                         overlay.style.display = 'flex';
-                        markPosterShown(today);
+                        markPosterPhase(phaseKey);
                         imgEl.removeEventListener('load', imgLoadHandler);
                         imgEl.removeEventListener('error', imgErrorHandler);
                     };
@@ -4160,21 +4219,29 @@ function showDailyPosterIfNeeded(openDaysCount) {
                 // 加载失败，隐藏图片但显示弹窗
                 imgEl.style.display = 'none';
                 overlay.style.display = 'flex';
-                markPosterShown(today);
+                markPosterPhase(phaseKey);
             });
     } else {
         // 如果没有图片，直接显示弹窗
         overlay.style.display = 'flex';
-        markPosterShown(today);
+        markPosterPhase(phaseKey);
     }
 }
 
-// 辅助函数：标记打卡图已显示
-function markPosterShown(today) {
+// v6.7.2 辅助函数：标记当前时段的打卡图已弹出
+// What: 将时段专属的 phaseKey 写入 localStorage，值为 '1'
+// Why: 使用独立的 phaseKey（如 anchor_poster_phase_v67_2026-02-26_morning）
+//      确保每个时段的弹出状态互不干扰，同时自然日切换后 key 不同也不会冲突。
+// 向后兼容: 保留 KEY_POSTER_SHOWN_DAY 的写入，确保云同步/导出等
+//           依赖该 key 的逻辑不会 break。
+function markPosterPhase(phaseKey) {
     try {
-        localStorage.setItem(KEY_POSTER_SHOWN_DAY, today);
+        localStorage.setItem(phaseKey, '1');
+        // 向后兼容：同时更新旧的 KEY_POSTER_SHOWN_DAY，
+        // 供云同步/导出等可能依赖它的外部逻辑使用
+        localStorage.setItem(KEY_POSTER_SHOWN_DAY, getTodayDateStr());
     } catch (e) {
-        console.warn('保存 posterShownDay 失败', e);
+        console.warn('保存打卡图时段标记失败', e);
     }
 }
 
@@ -9249,6 +9316,119 @@ document.addEventListener("DOMContentLoaded", function() {
     handleUrlRouting();
 });
 
+// ============================================================
+// v6.7.3 一键保存海报 — Canvas 暗房合成
+// ============================================================
+// What: 将打卡图（图片 + 天数 + 日期文案）合成为一张可保存的 PNG 海报。
+// Why:  不依赖 html2canvas 等第三方库，用原生 <canvas> 绘制，
+//       过程全在内存中完成，不影响页面渲染性能。
+//       合成后自动触发下载（桌面端）或弹出长按保存提示（移动端）。
+// ============================================================
+function saveDailyPoster() {
+    const imgEl   = document.getElementById('dailyPosterImg');
+    const daySpan = document.getElementById('dailyPosterDayCount');
+    const dateEl  = document.getElementById('dailyPosterDate');
+
+    if (!imgEl || !imgEl.naturalWidth) {
+        showToast('图片还没加载好，稍等再试~');
+        return;
+    }
+
+    // --- 1. 创建离屏 Canvas ---
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 使用图片原始尺寸，保证输出清晰度
+    const w = imgEl.naturalWidth;
+    const h = imgEl.naturalHeight;
+    canvas.width = w;
+    canvas.height = h;
+
+    // --- 2. 绘制打卡图片 ---
+    ctx.drawImage(imgEl, 0, 0, w, h);
+
+    // --- 3. 底部渐变遮罩（模拟 CSS 的 linear-gradient） ---
+    // Why: 和页面上的 .daily-poster-caption 视觉一致，
+    //      让白色文字在深浅不一的图片上都能清晰可读。
+    const gradH = h * 0.25;
+    const grad = ctx.createLinearGradient(0, h - gradH, 0, h);
+    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, h - gradH, w, gradH);
+
+    // --- 4. 绘制文字（天数 + 日期文案） ---
+    // 字号按图片宽度自适应，确保不同分辨率的图片都美观
+    const dayText = daySpan ? `这是你和 Anchor 的第 ${daySpan.textContent.trim()} 天` : '';
+    const subText = dateEl  ? dateEl.textContent.trim() : '';
+
+    // 天数行：较大字号，加粗
+    const dayFontSize = Math.round(w * 0.038);
+    ctx.font = `bold ${dayFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+    ctx.shadowBlur = 6;
+    ctx.fillText(dayText, w * 0.04, h - w * 0.06);
+
+    // 日期行：较小字号，略透明
+    const subFontSize = Math.round(w * 0.026);
+    ctx.font = `${subFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(subText, w * 0.04, h - w * 0.025);
+
+    // 清除阴影，避免影响后续绘制
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+
+    // --- 5. 右下角水印 ---
+    const wmSize = Math.round(w * 0.022);
+    ctx.font = `${wmSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.textAlign = 'right';
+    ctx.fillText('Anchor ⚓️', w * 0.96, h - w * 0.008);
+    ctx.textAlign = 'left';
+
+    // --- 6. 导出 & 下载 ---
+    // Why: 桌面端直接触发文件下载；移动端浏览器不支持 <a download> 时，
+    //      打开新标签页让用户长按保存。
+    try {
+        const dataUrl = canvas.toDataURL('image/png');
+        const today = getTodayDateStr ? getTodayDateStr() : new Date().toISOString().slice(0, 10);
+        const fileName = `Anchor_${today}.png`;
+
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = dataUrl;
+
+        // 检测是否为移动端（简易判断）
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+            // 移动端：打开新窗口，提示长按保存
+            const newTab = window.open();
+            if (newTab) {
+                newTab.document.write(`
+                    <html><head><title>${fileName}</title>
+                    <meta name="viewport" content="width=device-width,initial-scale=1">
+                    <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#111;color:#fff;font-family:sans-serif;}img{max-width:92%;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.4);}p{margin-top:16px;font-size:14px;opacity:0.7;}</style>
+                    </head><body><img src="${dataUrl}"><p>长按图片即可保存 📥</p><\/body><\/html>
+                `);
+                newTab.document.close();
+            } else {
+                link.click();
+            }
+            showToast('📥 长按图片保存到相册');
+        } else {
+            link.click();
+            showToast('📥 海报已保存');
+        }
+    } catch (e) {
+        console.warn('海报合成失败:', e);
+        showToast('保存失败，可能是图片跨域限制');
+    }
+}
+
 
 </script>
     <!-- 每日打卡图弹窗（默认隐藏） -->
@@ -9256,6 +9436,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="daily-poster-card">
 <div class="daily-poster-image">
     <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" style="opacity: 0; transition: opacity 0.3s; display: block;">
+    <!-- v6.7.3 一键保存海报按钮：右上角小印章 -->
+    <button type="button" class="poster-save-btn" onclick="saveDailyPoster()" title="保存日签">保存日签</button>
     <div class="daily-poster-caption">
         <div class="daily-poster-day">
             这是你和 Anchor 的第
