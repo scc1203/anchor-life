@@ -9382,12 +9382,14 @@ function saveDailyPoster() {
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
 
-    // --- 5. 右下角水印 ---
+    // --- 5. 右下角水印（右/下边距一致，更靠右、略上移）---
+    const pad = w * 0.02;
     const wmSize = Math.round(w * 0.022);
     ctx.font = `${wmSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.textAlign = 'right';
-    ctx.fillText('Anchor ⚓️', w * 0.96, h - w * 0.008);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Anchor ⚓️', w - pad, h - pad);
     ctx.textAlign = 'left';
 
     // --- 6. 导出 & 下载 ---
@@ -9431,8 +9433,8 @@ function saveDailyPoster() {
 
 
 </script>
-    <!-- 每日打卡图弹窗（默认隐藏） -->
-    <div id="dailyPosterOverlay" class="daily-poster-overlay">
+    <!-- 每日打卡图弹窗（默认隐藏）；点击遮罩/图片外任意处关闭 -->
+    <div id="dailyPosterOverlay" class="daily-poster-overlay" onclick="if(event.target===this)closeDailyPoster()">
         <div class="daily-poster-card">
 <div class="daily-poster-image">
     <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" style="opacity: 0; transition: opacity 0.3s; display: block;">
