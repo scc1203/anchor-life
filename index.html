@@ -4208,25 +4208,11 @@ function showDailyPosterIfNeeded(openDaysCount) {
     // 如果当前时段已弹过，直接跳出
     if (localStorage.getItem(phaseKey)) return;
 
-    // v6.6.2 防弹窗打架：如果新手引导尚未完成（localStorage 中没有 visited 标记），
-    // 延迟打卡图的弹出，让引导优先完成后再展示。
-    // Why: 新手引导的 overlay(z:10000) 和打卡图的 overlay(z:999) 同时出现会互相遮挡，
-    //      体验非常混乱。引导有绝对优先权——新用户先学会操作，再看日签。
+    // 修复：新手第一次来，绝对不弹打卡图；把纯净主界面完全留给新手引导的聚光灯。
     const VISITED_KEY = 'anchor_visited_v66';
     if (!localStorage.getItem(VISITED_KEY)) {
-        // 引导还没走完 → 监听引导完成后再弹打卡图
-        // Why: 使用 storage 事件不跨 tab 可靠，改用轮询 500ms 检测 key 写入，
-        //      最多等 30s（60次），避免无限等待。
-        let pollCount = 0;
-        const pollId = setInterval(() => {
-            pollCount++;
-            if (localStorage.getItem(VISITED_KEY) || pollCount > 60) {
-                clearInterval(pollId);
-                // 引导结束后再弹打卡图（微延迟 300ms，避免和引导关闭动画撞帧）
-                setTimeout(() => showDailyPosterIfNeeded(openDaysCount), 300);
-            }
-        }, 500);
-        return; // 先退出，等引导完成后重新调用自己
+        markPosterPhase(phaseKey);
+        return;
     }
 
     const overlay = document.getElementById('dailyPosterOverlay');
@@ -9539,21 +9525,36 @@ function saveDailyPoster() {
 }
 
 // ============================================================
-// v6.7.4 极简全屏玄关 (The Minimalist Lobby)
+// v6.7.4 极简全屏玄关 (The Minimalist Lobby) — 智能互斥逻辑
 // ============================================================
+// 初始化玄关 (v6.7.4 修订版：加入智能互斥逻辑)
 function initLobby() {
-    const lobby = document.getElementById('anchorLobby');
-    const greeting = document.getElementById('lobbyGreeting');
-    if (!lobby || !greeting) return;
+  const lobby = document.getElementById('anchorLobby');
+  const greeting = document.getElementById('lobbyGreeting');
+  if (!lobby || !greeting) return;
 
-    const phase = typeof getCurrentPhase === 'function' ? getCurrentPhase() : 'morning';
+  // 1. 获取当前状态标识
+  const isNewUser = !localStorage.getItem('anchor_visited_v66');
+  const phase = typeof getCurrentPhase === 'function' ? getCurrentPhase() : 'morning';
+  const today = typeof getTodayDateStr === 'function' ? getTodayDateStr() : new Date().toISOString().slice(0, 10);
+  const phaseKey = `anchor_poster_phase_v67_${today}_${phase}`;
+  const willShowPoster = !localStorage.getItem(phaseKey);
 
-    lobby.classList.remove('lobby-morning', 'lobby-afternoon', 'lobby-night');
-    lobby.classList.add('lobby-' + phase);
+  // 2. 核心互斥：如果是新手，或者当前时段即将弹出打卡图，直接干掉玄关！
+  if (isNewUser || willShowPoster) {
+    lobby.style.display = 'none'; // 瞬间隐藏，绝不抢戏
+    return;
+  }
 
-    if (phase === 'morning') greeting.innerText = '🌅 晨昕已至，要从哪里开始？';
-    else if (phase === 'afternoon') greeting.innerText = '⛵️ 渡船时刻，要从哪里开始？';
-    else greeting.innerText = '🌙 夜航静谧，要从哪里开始？';
+  // 3. 否则，正常展示玄关
+  lobby.style.display = 'flex';
+  lobby.classList.remove('hidden');
+  lobby.classList.remove('lobby-morning', 'lobby-afternoon', 'lobby-night');
+  lobby.classList.add('lobby-' + phase);
+
+  if (phase === 'morning') greeting.innerText = '🌅 晨昕已至，要从哪里开始？';
+  else if (phase === 'afternoon') greeting.innerText = '⛵️ 渡船时刻，要从哪里开始？';
+  else greeting.innerText = '🌙 夜航静谧，要从哪里开始？';
 }
 
 function lobbyEnter(action) {
