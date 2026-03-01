@@ -2626,12 +2626,14 @@ html.onboarding-lock {
 /* 签头红色印章质感 */
 .stick-stamp {
   color: #D32F2F; /* 印泥红 */
-  font-size: 1.1rem;
+  font-size: 1rem; /* 稍微缩小一点，更精致，以容纳三个字 */
   font-weight: 900;
   writing-mode: vertical-rl;
-  letter-spacing: 2px;
+  text-orientation: upright; /* 强制中文字符直立 */
+  white-space: nowrap; /* 核心修复：死命令，绝对不允许换行 */
+  letter-spacing: 1px; /* 缩减字间距，给三个字腾出空间 */
   border: 1px solid #D32F2F;
-  padding: 4px 2px;
+  padding: 6px 4px; /* 稍微拉长一点上下边距，让印章看起来更修长 */
   border-radius: 3px;
   margin-bottom: 12px;
   opacity: 0.85;
