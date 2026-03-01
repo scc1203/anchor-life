@@ -10,7 +10,6 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
@@ -2616,39 +2615,28 @@ body.immersive-locked {
 }
 
 /* ============================================================
-   v6.7.3 一键保存海报 — 高透毛玻璃胶囊按钮
+   v6.7.3 一键保存海报 — 右上角按钮
    ============================================================ */
 .poster-save-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   z-index: 10;
-  padding: 5px 12px;
-  min-height: 28px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  line-height: 1.25;
-  white-space: nowrap;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 1.1rem;
+  line-height: 36px;
+  text-align: center;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-.poster-save-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.28);
-  color: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s, background 0.2s;
 }
 .poster-save-btn:active {
-  transform: scale(0.97);
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.35);
+  transform: scale(0.9);
+  background: rgba(255, 255, 255, 1);
 }
 </style>
 </head>
@@ -9412,7 +9400,7 @@ function saveDailyPoster() {
                     <html><head><title>${fileName}</title>
                     <meta name="viewport" content="width=device-width,initial-scale=1">
                     <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#111;color:#fff;font-family:sans-serif;}img{max-width:92%;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.4);}p{margin-top:16px;font-size:14px;opacity:0.7;}</style>
-                    </head><body><img src="${dataUrl}"><p>长按图片即可保存 📥</p><\/body><\/html>
+                    </head><body><img src="${dataUrl}"><p>长按图片即可保存 📥</p></body></html>
                 `);
                 newTab.document.close();
             } else {
@@ -9437,7 +9425,7 @@ function saveDailyPoster() {
 <div class="daily-poster-image">
     <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" style="opacity: 0; transition: opacity 0.3s; display: block;">
     <!-- v6.7.3 一键保存海报按钮：右上角小印章 -->
-    <button type="button" class="poster-save-btn" onclick="saveDailyPoster()" title="保存日签">保存日签</button>
+    <button class="poster-save-btn" onclick="saveDailyPoster()" title="保存日签">🖼</button>
     <div class="daily-poster-caption">
         <div class="daily-poster-day">
             这是你和 Anchor 的第
