@@ -3516,7 +3516,7 @@ body.immersive-locked {
     <!-- 起飞 & 着陆仪式编辑 -->
     <div class="section-settings">
         <details>
-            <summary>📝 起飞 / 着陆仪式编辑</summary>
+            <summary>📝 仪式与清单</summary>
             <div class="manual-content">
                 <div style="font-size:0.8rem; color:#666; margin-bottom:6px;">
                     每行代表一个步骤，可以修改、删减或增加；如果全部留空，会自动恢复默认模板。
@@ -3544,6 +3544,33 @@ body.immersive-locked {
                 </div>
             </div>
         </details>
+    </div>
+
+    <!-- 偏好与时钟设置 -->
+    <div class="section-settings">
+      <details>
+        <summary>⚙️ 偏好与时钟</summary>
+        <div class="manual-content">
+          <div style="font-size:0.8rem; color:#666; margin-bottom:10px;">
+            如果你是夜猫子，可以重定义一天的界限。凌晨打卡将自动归档到昨天。
+          </div>
+          <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">
+            🌅 新一天开启时间
+          </div>
+          <div class="control-group" style="margin-bottom: 5px;">
+            <div class="select-wrapper">
+              <select id="dayStartOffset" onchange="saveDayStartOffset()">
+                <option value="0">默认 (00:00 开启新一天)</option>
+                <option value="1">凌晨 01:00 开启新一天</option>
+                <option value="2">凌晨 02:00 开启新一天</option>
+                <option value="3">凌晨 03:00 开启新一天</option>
+                <option value="4">凌晨 04:00 开启新一天</option>
+                <option value="5">凌晨 05:00 开启新一天</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </details>
     </div>
 
 <!-- 设置 & 备份 -->
@@ -3604,6 +3631,43 @@ function detectVariant() {
 }
 
 const APP_VARIANT = detectVariant();
+
+// v6.8 夜猫子时钟：获取用户设定的偏移量
+function getDayStartOffset() {
+  return parseInt(localStorage.getItem('anchor_day_start_offset') || '0', 10);
+}
+
+function saveDayStartOffset() {
+  const offset = document.getElementById('dayStartOffset').value;
+  localStorage.setItem('anchor_day_start_offset', offset);
+  showToast("时区已更新，刷新生效");
+}
+
+// v6.8 核心魔法：所有需要判断“今天日期”的地方，都调用此函数
+// 原理：如果当前真实时间早于设定的偏移量（如凌晨 3点 < 设定 4点），则逻辑上退回昨天
+function getAnchorDate() {
+  const now = new Date();
+  const offsetHours = getDayStartOffset();
+  if (now.getHours() < offsetHours) {
+    now.setDate(now.getDate() - 1); // 拨回昨天
+  }
+  return now;
+}
+
+// 重写原有的 getTodayDateStr 函数
+function getTodayDateStr() {
+  const d = getAnchorDate();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// 初始化下拉菜单状态
+document.addEventListener('DOMContentLoaded', () => {
+  const offsetSel = document.getElementById('dayStartOffset');
+  if (offsetSel) offsetSel.value = getDayStartOffset().toString();
+});
 
 
     const sosLibrary = [
@@ -4246,15 +4310,6 @@ function stopStarShineSound() {
     // 记录累计打开天数 & 每日打卡图已弹出的日期
     const KEY_OPENED_DAYS = 'anchor_opened_days_v56';
     const KEY_POSTER_SHOWN_DAY = 'anchor_poster_shown_day_v56';
-
-    // 获取 yyyy-mm-dd 格式的今天日期
-    function getTodayDateStr() {
-        const d = new Date();
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
-    }
 
     // v6.7.2 一日三季：根据当前小时返回时段标识
     // Why: 将一天分为三个时段，每个时段首次打开页面都会弹一次打卡图，
@@ -6099,7 +6154,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (coldList) coldList.innerHTML = "";
 
         let dCount = 0, mCount = 0, cCount = 0;
-        const todayStr = new Date().toDateString();
+        const todayStr = getAnchorDate().toDateString();
         const sortedDB = [...db].sort((a, b) => b.id - a.id);
 
         sortedDB.forEach(item => {
@@ -6229,7 +6284,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const list = document.getElementById('logList');
         if(!list) return;
         list.innerHTML = "";
-        const today = new Date().toDateString();
+        const today = getAnchorDate().toDateString();
         let count = 0;
         dailyLog.forEach((log, idx) => {
             if (log.date !== today) return;
@@ -6640,7 +6695,7 @@ function renderResultCard(result) {
             title: currentTask.title,
             icon: currentTask.icon || getSmartIcon(currentTask),
             timeStr,
-            date: dt.toDateString(),
+            date: getAnchorDate().toDateString(),
             done: false,
             taskId: currentTask.id
         });
@@ -6678,8 +6733,7 @@ function renderResultCard(result) {
         }
         
         // v6.5：如果当前任务有历史记录（未完成状态），更新记忆数据
-        const now = new Date();
-        const todayStr = now.toDateString();
+        const todayStr = getAnchorDate().toDateString();
         const taskId = currentTask.id;
         
         // 查找任务在 db 中的最新状态
@@ -6957,7 +7011,7 @@ function applySmartCooldown(pool, log, currentMode) {
         return pool;
     }
 
-    const todayStr = new Date().toDateString();
+    const todayStr = getAnchorDate().toDateString();
 
     // --- 冷却规则 #1：影视剧类 (Movie / Series Cooldown) ---
     // What: 扫描今日足迹，检查是否已有"已完成"的影视剧任务。
@@ -7029,7 +7083,7 @@ function applySmartCooldown(pool, log, currentMode) {
 function pickTaskByFilters() {
     const ctx = document.getElementById('selContext').value;
     const limitTime = parseInt(document.getElementById('selTime').value);
-    const todayStr = new Date().toDateString();
+    const todayStr = getAnchorDate().toDateString();
 
     // Step 1: 物理铁律过滤（Hard Filters）
     let validPool = db.filter(item => {
@@ -7709,7 +7763,7 @@ function openRitual(type) {
             title: title,
             icon: icon,
             timeStr: timeStr,
-            date: now.toDateString(),
+            date: getAnchorDate().toDateString(),
             done: true
         });
 
@@ -7819,6 +7873,7 @@ function openRitual(type) {
         // 写入「今日足迹 / 历史记录」：如果已有“就它啦”记录则标记为完成，否则补一条完成记录
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        const anchorTodayStr = getAnchorDate().toDateString();
 
         // v6.5：保存书签和备注快照（使用任务的最新状态）
         // 如果任务在 db 中，使用 db 中的最新状态；否则使用传入的 task
@@ -7831,7 +7886,7 @@ function openRitual(type) {
         let marked = false;
         for (let i = 0; i < dailyLog.length; i++) {
             const log = dailyLog[i];
-            if (log.date === now.toDateString() && log.taskId === task.id) {
+            if (log.date === anchorTodayStr && log.taskId === task.id) {
                 log.done = true;
                 log.title = finalTask.title;
                 log.icon = finalTask.icon || getSmartIcon(finalTask);
@@ -7849,7 +7904,7 @@ function openRitual(type) {
                 title: task.title,
                 icon: task.icon || getSmartIcon(task),
                 timeStr: timeStr,
-                date: now.toDateString(),
+                date: anchorTodayStr,
                 done: true,
                 taskId: task.id,
                 // v6.5：保存快照
@@ -7862,7 +7917,7 @@ function openRitual(type) {
         // 1）每日循环任务：只打卡，不出任务池
         if (task.recurrence === 'daily') {
             const taskIndex = db.findIndex(t => t.id === task.id);
-            if (taskIndex > -1) db[taskIndex].lastDone = now.toDateString();
+            if (taskIndex > -1) db[taskIndex].lastDone = anchorTodayStr;
             renderLog();
             if (typeof renderHistory === 'function') renderHistory();
             save();
@@ -8312,8 +8367,7 @@ function openRitual(type) {
             }
             
             // v6.5：更新历史记录中的记忆数据（如果任务已经有历史记录）
-            const now = new Date();
-            const todayStr = now.toDateString();
+            const todayStr = getAnchorDate().toDateString();
             for (let i = 0; i < dailyLog.length; i++) {
                 const log = dailyLog[i];
                 if (log.date === todayStr && log.taskId === task.id) {
