@@ -3089,9 +3089,30 @@ body.immersive-locked {
             <div class="card-desc" id="rDesc"></div>
             <div class="card-time" id="rTime"></div>
             <div id="rIngPulse">正在进行中 · · ·</div>
+            <!-- 微启动专属 UI -->
+            <div id="trailerZone" style="display:none; margin: 15px 0;">
+              <div style="font-size: 0.85rem; color: #777; margin-bottom: 5px;">🐾 1分钟微启动进行中...</div>
+              <div id="trailerTimerDisplay" style="font-size: 2.4rem; font-weight: bold; color: #75B79E; font-family: monospace;">00:00</div>
+
+              <!-- 满 60 秒后出现的选择区 -->
+              <div id="trailerChoices" style="display:none; margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="font-size: 0.85rem; color: #d65a64; font-weight: bold;">🎉 1分钟达成！感觉如何？</div>
+                <button class="btn-card-action" onclick="continueFromTrailer()" style="background: #e8f5e9; color: #2e7d32; font-weight:bold; margin: 0 auto; width: 80%;">🔥 状态来了，正式开始</button>
+                <button class="btn-card-action" onclick="finishTrailer()" style="background: #ffe2e2; color: #d65a64; margin: 0 auto; width: 80%;">🐾 还是不想做，记录微小足迹</button>
+              </div>
+
+              <!-- 随时可以放弃的逃生门 -->
+              <div style="margin-top: 15px;">
+                <span onclick="cancelTrailer()" style="font-size: 0.75rem; color: #bbb; cursor: pointer; text-decoration: underline;">⏹ 换一个</span>
+              </div>
+            </div>
             <div style="margin-top:15px;">
                 <button class="btn-card-action" onclick="changeTask()" id="btnChange">换一个</button>
                 <button class="btn-card-action" onclick="handlePrimaryAction()" id="btnPrimary">就它啦</button>
+                <!-- 弱化的微启动入口（放到原本按钮区的下方） -->
+                <div id="trailerEntryZone" style="margin-top: 12px;">
+                  <span onclick="startTrailer()" id="btnStartTrailer" style="font-size: 0.8rem; color: #999; cursor: pointer; text-decoration: underline;">觉得太难？尝试 🐾 1分钟微启动</span>
+                </div>
             </div>
         </div>
     </div>
@@ -3754,6 +3775,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentTask = null;
     let currentStatus = 'idle';
     let anchorStartTime = null;
+    // 预告片 / 微启动全局变量
+    let trailerTimer = null;
+    let trailerTimeElapsed = 0; // 正计时，记录已过去的秒数
     let switchState = { cycle: false, flash: false };
     let gachaAnimating = false;
     // v6.4 抽屉展开状态
@@ -6291,7 +6315,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             count++;
             const li = document.createElement('li');
             li.className = 'task-item';
-            const suffix = log.done ? ' ✅' : '';
+            const suffix = log.isTrailer ? ' 🐾' : (log.done ? ' ✅' : '');
             li.innerHTML = `
                 <div style="display:flex;align-items:center;gap:0px;width:100%;font-size:0.8rem;">
                     <span class="footprint-time">${log.timeStr || ''}</span>
@@ -6337,7 +6361,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             htmlStr += `<div style="margin-bottom:8px;">`;
             htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:2px;">${dateLabel}</div>`;
             dayLogs.forEach(log => {
-                const suffix = log.done ? ' ✅' : '';
+                const suffix = log.isTrailer ? ' 🐾' : (log.done ? ' ✅' : '');
                 
                 // v6.7.2-fix: 历史记录必须使用"当时的快照"，而非 db 中的最新状态
                 // Why: 历史记录的意义在于"回看那一刻的切片"——
@@ -6634,6 +6658,18 @@ function renderResultCard(result) {
 
             if (statusEl) statusEl.style.display = 'none';
             if (ingEl) ingEl.style.display = 'none';
+
+            const trailerZone = document.getElementById('trailerZone');
+            const btnStartTrailer = document.getElementById('btnStartTrailer');
+            const trailerChoices = document.getElementById('trailerChoices');
+            if (trailerZone) trailerZone.style.display = 'none';
+            if (trailerChoices) trailerChoices.style.display = 'none';
+            if (btnStartTrailer) {
+                // SOS模式下不显示预告片，其他模式显示
+                btnStartTrailer.style.display = (result && result.type === 'sos') ? 'none' : 'inline-block';
+            }
+            if (trailerTimer) clearInterval(trailerTimer);
+
             if (changeBtn) changeBtn.style.display = 'inline-block';
             if (primaryBtn) {
                 primaryBtn.style.display = 'inline-block';
@@ -6671,6 +6707,10 @@ function renderResultCard(result) {
         const primaryBtn = document.getElementById('btnPrimary');
         const ingEl = document.getElementById('rIngPulse');
 
+        // 👉 [修复] 只要进入正式锚定/ING 状态，就必须隐藏微启动的入口，防止视觉累赘
+        const btnStartTrailer = document.getElementById('btnStartTrailer');
+        if (btnStartTrailer) btnStartTrailer.style.display = 'none';
+
         // v6.6.3 静音多巴胺：休闲任务用"蓄能"文案替代"锚点"
         // Why: "锚点"暗示任务/执行，对 culture/vinyl 来说语气太硬；
         //      "蓄能·享受ING"传递"你在充电而非偷懒"的信号。
@@ -6702,6 +6742,91 @@ function renderResultCard(result) {
         save();
         renderLog();
         renderHistory();
+    }
+
+    function formatTrailerTime(seconds) {
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    function startTrailer() {
+        // 👉 [修复] 只要用户做出了决定（进入微启动），就通知系统退出沉浸暗场
+        if (typeof exitImmersiveMode === 'function') {
+            exitImmersiveMode();
+        }
+
+        const btnStart = document.getElementById('btnStartTrailer');
+        const btnChange = document.getElementById('btnChange');
+        const btnPrimary = document.getElementById('btnPrimary');
+        const trailerZone = document.getElementById('trailerZone');
+        const trailerTimerDisplay = document.getElementById('trailerTimerDisplay');
+        const trailerChoices = document.getElementById('trailerChoices');
+
+        // 隐藏常规操作，展示预告片区
+        if (btnStart) btnStart.style.display = 'none';
+        if (btnChange) btnChange.style.display = 'none';
+        if (btnPrimary) btnPrimary.style.display = 'none';
+        if (trailerZone) trailerZone.style.display = 'block';
+        if (trailerChoices) trailerChoices.style.display = 'none';
+
+        trailerTimeElapsed = 0;
+        if (trailerTimerDisplay) {
+            trailerTimerDisplay.innerText = "00:00";
+            trailerTimerDisplay.style.color = "#75B79E"; // 默认柔和绿
+        }
+
+        if (trailerTimer) clearInterval(trailerTimer);
+        trailerTimer = setInterval(() => {
+            trailerTimeElapsed++;
+            if (trailerTimerDisplay) {
+                trailerTimerDisplay.innerText = formatTrailerTime(trailerTimeElapsed);
+            }
+
+            // 满 60 秒，触发选项
+            if (trailerTimeElapsed === 60) {
+                if (trailerTimerDisplay) {
+                    trailerTimerDisplay.style.color = "#FF9AA2"; // 变成粉色提示完成
+                }
+                if (trailerChoices) trailerChoices.style.display = 'flex';
+                if (typeof showToast === 'function') showToast('🎉 1 分钟到了！');
+                // 注意：这里我们不清除定时器，如果用户没选，让它继续默默计时也可以
+            }
+        }, 1000);
+    }
+
+    // 选项 A：正式转正
+    function continueFromTrailer() {
+        if (trailerTimer) clearInterval(trailerTimer);
+
+        // 隐藏微启动专属区域
+        const trailerZone = document.getElementById('trailerZone');
+        if (trailerZone) trailerZone.style.display = 'none';
+
+        // 👉 [修复] 重新显示常规的主按钮
+        const btnChange = document.getElementById('btnChange');
+        const btnPrimary = document.getElementById('btnPrimary');
+        if (btnChange) btnChange.style.display = 'inline-block';
+        if (btnPrimary) btnPrimary.style.display = 'inline-block';
+
+        // 调用系统的“正式锚定”逻辑
+        setCardAsAnchor();
+        if (typeof showToast === 'function') showToast('🔥 状态不错！正式开始！');
+    }
+
+    // 选项 B：记录微小足迹
+    function finishTrailer() {
+        if (trailerTimer) clearInterval(trailerTimer);
+        if (!currentTask) return;
+        // 走核心完成逻辑，加上 isTrailer 标记
+        completeTaskCore(currentTask, { silentCard: false, isTrailer: true });
+    }
+
+    // 选项 C：中途放弃
+    function cancelTrailer() {
+        if (trailerTimer) clearInterval(trailerTimer);
+        // 直接调用现成的换一个逻辑
+        changeTask();
     }
 
     function handlePrimaryAction() {
@@ -7895,6 +8020,8 @@ function openRitual(type) {
                 log.bookmarkSnapshot = bookmarkSnapshot;
                 log.noteSnapshot = noteSnapshot;
                 log.lastAddMinutes = lastAddMinutes;
+                // v6.8：预告片模式标记
+                log.isTrailer = opts.isTrailer || false;
                 marked = true;
                 break;
             }
@@ -7910,7 +8037,9 @@ function openRitual(type) {
                 // v6.5：保存快照
                 bookmarkSnapshot: bookmarkSnapshot,
                 noteSnapshot: noteSnapshot,
-                lastAddMinutes: lastAddMinutes
+                lastAddMinutes: lastAddMinutes,
+                // v6.8：预告片模式标记
+                isTrailer: opts.isTrailer || false
             });
         }
 
