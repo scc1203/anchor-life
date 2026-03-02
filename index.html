@@ -4434,6 +4434,9 @@ function showDailyPosterIfNeeded(openDaysCount) {
                 
                 // 使用更可靠的方法：等待图片在 img 元素中完全加载
                 const showPoster = () => {
+                    const fallbackEl = document.getElementById('dailyPosterFallback');
+                    if (fallbackEl) fallbackEl.style.display = 'none';
+                    if (imgEl) imgEl.style.display = 'block';
                     imgEl.style.opacity = '1';
                     overlay.style.display = 'flex';
                     markPosterPhase(phaseKey);
@@ -4453,7 +4456,9 @@ function showDailyPosterIfNeeded(openDaysCount) {
                     const imgErrorHandler = () => {
                         clearTimeout(loadTimeout);
                         console.warn('打卡图在 img 元素中加载失败:', imageUrl);
-                        imgEl.style.display = 'none';
+                        const fallbackEl = document.getElementById('dailyPosterFallback');
+                        if (fallbackEl) fallbackEl.style.display = 'flex';
+                        if (imgEl) imgEl.style.display = 'none';
                         overlay.style.display = 'flex';
                         markPosterPhase(phaseKey);
                         imgEl.removeEventListener('load', imgLoadHandler);
@@ -4466,9 +4471,13 @@ function showDailyPosterIfNeeded(openDaysCount) {
             .catch((error) => {
                 clearTimeout(loadTimeout);
                 console.warn('打卡图加载失败:', imageUrl, error);
-                // 加载失败，隐藏图片但显示弹窗
-                imgEl.style.display = 'none';
-                overlay.style.display = 'flex';
+
+                // 👉 优雅兜底：隐藏图片，显示温柔的提示语
+                const fallbackEl = document.getElementById('dailyPosterFallback');
+                if (fallbackEl) fallbackEl.style.display = 'flex';
+                if (imgEl) imgEl.style.display = 'none';
+
+                if (overlay) overlay.style.display = 'flex';
                 markPosterPhase(phaseKey);
             });
     } else {
@@ -9955,6 +9964,9 @@ function lobbyEnter(action) {
         <div class="daily-poster-card">
 <div class="daily-poster-image">
     <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" style="opacity: 0; transition: opacity 0.3s; display: block;">
+    <div id="dailyPosterFallback" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; background:#1A1C23; color:#777; font-size:0.85rem; z-index:1;">
+      🖼️ 信号丢失，但今天依然是很好的一天。
+    </div>
     <!-- v6.7.3 一键保存海报按钮：右上角小印章 -->
     <button type="button" class="poster-save-btn" onclick="saveDailyPoster()" title="保存日签">保存日签</button>
     <div class="daily-poster-caption">
