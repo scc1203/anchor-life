@@ -2917,6 +2917,14 @@ body.immersive-locked {
                     </select>
                 </div>
             </div>
+            <div id="controls-playlist" class="control-group" style="display:flex; margin-top:6px;">
+              <div class="select-wrapper" style="flex:1;">
+                <select id="selPlaylist" onchange="handlePlaylistChange()" style="text-align: center; text-align-last: center; font-weight: bold; appearance: none; padding-right: 16px;">
+                  <option value="">🔮 不限定清单 (全域抽卡)</option>
+                  <!-- 选项由 JS 动态生成 -->
+                </select>
+              </div>
+            </div>
             <div id="controls-sos" class="control-group" style="display:none; color: #555; font-size:0.9rem;">
                 <span>🍃 允许自己暂时停下来...</span>
             </div>
@@ -3073,6 +3081,21 @@ body.immersive-locked {
                 </button>
             </div>
         </div>
+    </div>
+
+    <div id="playlistOverlay" style="display:none; width:100%; margin-top:16px; margin-bottom:16px;">
+      <div class="ritual-card">
+        <span class="card-icon">📑</span>
+        <div class="ritual-title" id="plOverlayTitle">清单名称</div>
+        <ul class="ritual-steps" id="plOverlaySteps"></ul>
+        <div class="ritual-actions" style="margin-top:15px;">
+          <button class="ritual-btn-secondary" type="button" onclick="startPlaylist('random')">🔀 随机抽取</button>
+          <button class="ritual-btn-primary" type="button" onclick="startPlaylist('sequence')">▶️ 顺序开启</button>
+        </div>
+        <div style="margin-top:15px; font-size:0.75rem; color:#999; cursor:pointer; text-decoration:underline;" onclick="closePlaylistOverlay()">
+          先关掉
+        </div>
+      </div>
     </div>
 
 
@@ -3555,6 +3578,16 @@ body.immersive-locked {
                 <textarea id="ritualNightInput"
                           placeholder="例如：&#10;手机充电并远离床边&#10;喝一口水 / 吃药&#10;关窗帘 / 灯&#10;写一句“明天想做的事”"></textarea>
 
+                <div style="font-size:0.75rem; color:#888; margin-bottom:10px;">
+                  建立你的专属沉浸隧道。点击下方按钮添加新清单。
+                </div>
+                <div id="playlistsEditorZone" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
+                  <!-- 清单卡片将由 JS 动态渲染在这里 -->
+                </div>
+                <button class="btn-outline" style="width:100%; border-style:dashed; color:#75B79E; border-color:#75B79E;" type="button" onclick="addNewPlaylistCard()">
+                  ➕ 新建专属清单
+                </button>
+
                 <div style="display:flex; gap:8px; margin-top:10px;">
                     <button class="btn-file" style="flex:1;" type="button" onclick="saveRitualFromInputs()">
                         💾 保存仪式
@@ -3773,6 +3806,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // v6.5：每次刷新页面都重置为 anchor 中间档
     let energyMode = 'anchor';
     let currentTask = null;
+    let customPlaylists = []; // v6.8.3：自定义专属清单数组
+    let activePlaylist = null; // 当前正在执行的清单状态
     let currentStatus = 'idle';
     let anchorStartTime = null;
     // 预告片 / 微启动全局变量
@@ -6115,7 +6150,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     } else {
         setTimeout(preloadDailyPosters, 100);
     }
-    
+
     document.addEventListener('DOMContentLoaded', () => {
         
         // 先读取可能存在的自定义仪式
@@ -6144,6 +6179,8 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const inputNight   = document.getElementById('ritualNightInput');
         if (inputMorning) inputMorning.value = ritualMorningSteps.join('\n');
         if (inputNight)   inputNight.value   = ritualNightSteps.join('\n');
+
+        loadAndRenderPlaylists();
 
         // v6.4 初始化能量药丸 UI
         // v6.5：每次刷新页面都重置为 anchor 中间档
@@ -6860,6 +6897,20 @@ function renderResultCard(result) {
     function changeTask() {
         // v6.7.1：换一个 —— 先退出当前沉浸态（draw 会重新进入）
         exitImmersiveMode();
+
+        if (activePlaylist) {
+          if (!Array.isArray(activePlaylist.tasks)) {
+            activePlaylist.tasks = [];
+          }
+          if (activePlaylist.tasks.length > 0) {
+            const discardedText = currentTask ? currentTask.rawTaskText : null;
+            drawFromPlaylist();
+            if (discardedText) activePlaylist.tasks.push(discardedText);
+          } else {
+            showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
+          }
+          return;
+        }
 
         if (!currentTask) { 
             draw();
@@ -7740,9 +7791,67 @@ function exitImmersiveMode() {
     });
 })();
 
-function draw() {
+function handlePlaylistChange() {
+  const sel = document.getElementById('selPlaylist');
+  const btn = document.getElementById('mainBtn');
+  if (sel && sel.value) {
+    if (btn) {
+      btn.innerText = "📂 开启专属清单";
+      btn.style.background = "#A0E7E5"; // 给清单一个特殊的薄荷绿色
+    }
+  } else {
+    // 恢复原有文字和颜色
+    setMode(mode);
+  }
+}
+
+function closePlaylistOverlay() {
+  const overlay = document.getElementById('playlistOverlay');
+  if (overlay) overlay.style.display = 'none';
+  const ph = document.getElementById('placeholder');
+  const gachaLayer = document.getElementById('gachaLayer');
+  if (ph) ph.style.display = 'block';
+  if (gachaLayer) gachaLayer.style.display = 'block';
+}
+ 
+ function draw() {
         const card = document.getElementById('resultCard'); 
         if (card) card.style.display = 'none';
+
+        const selPl = document.getElementById('selPlaylist');
+        if (selPl && selPl.value) {
+          const targetId = selPl.value;
+          const targetPl = customPlaylists.find(p => p.id === targetId);
+          if (!targetPl || !targetPl.tasks || targetPl.tasks.length === 0) {
+            showToast("该清单为空");
+            return;
+          }
+          // 隐藏其他元素，展示清单 Overlay
+          hideTarotLayer();
+          if (card) card.style.display = 'none';
+          const ph = document.getElementById('placeholder');
+          const gachaLayer = document.getElementById('gachaLayer');
+          if (ph) ph.style.display = 'none';
+          if (gachaLayer) gachaLayer.style.display = 'none';
+
+          // 渲染 Overlay
+          const overlay = document.getElementById('playlistOverlay');
+          const titleEl = document.getElementById('plOverlayTitle');
+          const stepsUl = document.getElementById('plOverlaySteps');
+          if (overlay && titleEl && stepsUl) {
+            titleEl.textContent = targetPl.name;
+            stepsUl.innerHTML = '';
+            targetPl.tasks.forEach(t => {
+              const li = document.createElement('li');
+              li.textContent = t;
+              stepsUl.appendChild(li);
+            });
+            overlay.style.display = 'block';
+          }
+          // 清理旧的活跃清单状态
+          activePlaylist = null;
+          return; // 拦截常规抽卡
+        }
 
         // 👉 如果有起床/睡前仪式卡在，就先关掉
         const overlay = document.getElementById('ritualOverlay');
@@ -7758,22 +7867,22 @@ function draw() {
 
         setTimeout(() => {
             let result = null;
-
+ 
             if (mode === 'sos') { 
                 const r = Math.floor(Math.random() * sosLibrary.length); 
                 result = { ...sosLibrary[r], type: 'sos', time: 0 }; 
             } else {
                 result = pickTaskByFilters();
             }
-
+ 
             // 更新当前任务引用（让后续“就它啦/换一个”等主线逻辑保持一致）
             currentTask = result;
-
+ 
             const ph = document.getElementById('placeholder');
-
+ 
             if (result) {
                 if (ph) ph.style.display = 'none';
-
+ 
                 if (mode === 'sos') {
                     renderResultCard(result);
                 } else {
@@ -7792,6 +7901,126 @@ function draw() {
             }
         }, 300);
     }
+
+function startPlaylist(playMode) {
+  const sel = document.getElementById('selPlaylist');
+  if (!sel || !sel.value) return;
+  const targetId = sel.value;
+  const targetPl = customPlaylists.find(p => p.id === targetId);
+  if (!targetPl) return;
+
+  activePlaylist = {
+    id: targetPl.id, // 👉 核心：保存 ID
+    name: targetPl.name,
+    tasks: Array.isArray(targetPl.tasks) ? [...targetPl.tasks] : [],
+    mode: playMode
+  };
+  closePlaylistOverlay();
+  drawFromPlaylist();
+}
+
+function drawFromPlaylist() {
+  if (!activePlaylist) return;
+
+  if (!Array.isArray(activePlaylist.tasks)) {
+    activePlaylist.tasks = [];
+  }
+
+  if (activePlaylist.tasks.length === 0) {
+    // 🎉 结算终点
+    if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
+
+    // 使用 ID 进行统计
+    let stats = {};
+    try {
+      stats = JSON.parse(localStorage.getItem('anchor_playlist_stats') || '{}') || {};
+    } catch (e) {
+      stats = {};
+    }
+    stats[activePlaylist.id] = (stats[activePlaylist.id] || 0) + 1;
+    localStorage.setItem('anchor_playlist_stats', JSON.stringify(stats));
+    const finishCount = stats[activePlaylist.id];
+
+    const plName = activePlaylist.name;
+    activePlaylist = null;
+
+    const selPl = document.getElementById('selPlaylist');
+    if (selPl) selPl.value = "";
+    if (typeof handlePlaylistChange === 'function') handlePlaylistChange();
+
+    // 刷新后台编辑器里的 UI 统计
+    renderPlaylistEditor();
+
+    const card = document.getElementById('resultCard');
+    const ph = document.getElementById('placeholder');
+    const gachaLayer = document.getElementById('gachaLayer');
+    if (ph) ph.style.display = 'none';
+    if (gachaLayer) gachaLayer.style.display = 'none';
+
+    if (card) {
+      const titleEl = document.getElementById('rTitle');
+      const iconEl = document.getElementById('rIcon');
+      const descEl = document.getElementById('rDesc');
+      const timeEl = document.getElementById('rTime');
+      const badgeEl = document.getElementById('rBadge');
+      const progressEl = document.getElementById('rProgress');
+
+      if (titleEl) titleEl.innerText = `【${plName}】全部完成！`;
+      if (iconEl) iconEl.innerText = "🏆";
+      if (descEl) descEl.innerText = `这条专注隧道，你已经成功打通了 ${finishCount} 次！去休息一下吧。`;
+      if (timeEl) timeEl.innerText = "🎉 完美收工";
+      if (badgeEl) badgeEl.innerHTML = "";
+      if (progressEl) progressEl.innerHTML = "";
+
+      const statusEl = document.getElementById('rStatus');
+      const ingEl = document.getElementById('rIngPulse');
+      const btnChange = document.getElementById('btnChange');
+      const btnPrimary = document.getElementById('btnPrimary');
+      const btnMemory = document.getElementById('btnMemory');
+
+      if (statusEl) statusEl.style.display = 'none';
+      if (ingEl) ingEl.style.display = 'none';
+      if (btnChange) btnChange.style.display = 'none';
+      if (btnPrimary) btnPrimary.style.display = 'none';
+      if (btnMemory) btnMemory.style.display = 'none';
+
+      currentTask = null;
+      card.style.animation = "none";
+      // 触发重绘以便重新应用动画
+      void card.offsetWidth;
+      card.style.animation = "stripOpen 0.28s ease-out forwards";
+      card.style.display = 'block';
+    }
+    return;
+  }
+
+  let taskText = "";
+  if (activePlaylist.mode === 'sequence') {
+    taskText = activePlaylist.tasks.shift();
+  } else {
+    const r = Math.floor(Math.random() * activePlaylist.tasks.length);
+    taskText = activePlaylist.tasks.splice(r, 1);
+  }
+
+  currentTask = {
+    id: 'pl_' + Date.now(),
+    title: `【${activePlaylist.name}】 ${taskText}`,
+    rawTaskText: taskText,
+    type: 'playlist',
+    icon: '📑',
+    desc: `专属清单进行中`,
+    time: 0,
+    isPlaylist: true
+  };
+
+  exitImmersiveMode();
+  const ph = document.getElementById('placeholder');
+  const gachaLayer = document.getElementById('gachaLayer');
+  if (ph) ph.style.display = 'none';
+  if (gachaLayer) gachaLayer.style.display = 'none';
+
+  renderResultCard(currentTask);
+}
 
     // 🌅🌙 起飞 / 着陆：打开浮层
         function dimRitualButton(type) {
@@ -8149,6 +8378,11 @@ function openRitual(type) {
             currentTask = null;
             if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
             if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+
+            // 👉 [修复4] 如果在专属清单模式下完成了任务，直接自动弹出下一张，保持心流
+            if (typeof activePlaylist !== 'undefined' && activePlaylist) {
+              drawFromPlaylist();
+            }
         }
     }
 
@@ -9086,7 +9320,7 @@ if (!userOverrideFlash) {
             const taskCount = incomingDB.length;
             const archiveCount = incomingArchive.length;
             const logCount = incomingDailyLog.length;
-            const hasLocalData = localData && (localData.ritualMorning || localData.ritualNight || localData.openedDays || localData.posterShownDay);
+            const hasLocalData = localData && (localData.ritualMorning || localData.ritualNight || localData.openedDays || localData.posterShownDay || localData.customPlaylists || localData.playlistStats);
             
             // 保存待导入的数据
             pendingImportData = {
@@ -9105,7 +9339,7 @@ if (!userOverrideFlash) {
             let dialogTitle = `📡 找到 ${taskCount} 个任务`;
             if (archiveCount > 0) dialogTitle += `、${archiveCount} 个归档`;
             if (logCount > 0) dialogTitle += `、${logCount} 条足迹`;
-            if (hasLocalData) dialogTitle += `\n以及仪式和打卡数据`;
+            if (hasLocalData) dialogTitle += `\n以及仪式、打卡与专属清单数据`;
             dialogTitle += `\n\n请选择导入方式：`;
             
             const titleElement = document.getElementById('backupDialogTitle');
@@ -9259,6 +9493,47 @@ if (!userOverrideFlash) {
                 if (localData.posterShownDay !== undefined && localData.posterShownDay !== null) {
                     localStorage.setItem(KEY_POSTER_SHOWN_DAY, localData.posterShownDay);
                 }
+
+                // 👉 恢复专属清单
+                if (localData.customPlaylists !== undefined && localData.customPlaylists !== null) {
+                  if (action === 'merge') {
+                    // 尝试合并：按 ID 去重
+                    let existing = [];
+                    try { existing = JSON.parse(localStorage.getItem('anchor_custom_playlists') || '[]'); } catch(e) {}
+                    if (!Array.isArray(existing)) existing = [];
+                    if (typeof localData.customPlaylists === 'string') {
+                      // 旧版纯文本，直接覆盖以免冲突
+                      localStorage.setItem('anchor_custom_playlists', localData.customPlaylists);
+                    } else {
+                      let incoming = Array.isArray(localData.customPlaylists) ? localData.customPlaylists : [];
+                      incoming.forEach(inPl => {
+                        const idx = existing.findIndex(ex => ex && ex.id === inPl.id);
+                        if (idx >= 0) existing[idx] = inPl;
+                        else existing.push(inPl);
+                      });
+                      localStorage.setItem('anchor_custom_playlists', JSON.stringify(existing));
+                    }
+                  } else {
+                    // 覆盖模式
+                    const val = typeof localData.customPlaylists === 'string'
+                      ? localData.customPlaylists
+                      : JSON.stringify(localData.customPlaylists);
+                    localStorage.setItem('anchor_custom_playlists', val);
+                  }
+                }
+
+                // 👉 恢复清单统计数据
+                if (localData.playlistStats !== undefined && localData.playlistStats !== null) {
+                  if (action === 'merge') {
+                    let exStats = {};
+                    try { exStats = JSON.parse(localStorage.getItem('anchor_playlist_stats') || '{}'); } catch(e){}
+                    exStats = exStats && typeof exStats === 'object' ? exStats : {};
+                    Object.assign(exStats, localData.playlistStats);
+                    localStorage.setItem('anchor_playlist_stats', JSON.stringify(exStats));
+                  } else {
+                    localStorage.setItem('anchor_playlist_stats', JSON.stringify(localData.playlistStats));
+                  }
+                }
             } catch (e) {
                 console.warn('恢复 localStorage 数据时出错', e);
             }
@@ -9272,6 +9547,9 @@ if (!userOverrideFlash) {
             if (inputMorning && ritualMorningSteps) inputMorning.value = ritualMorningSteps.join('\n');
             if (inputNight && ritualNightSteps) inputNight.value = ritualNightSteps.join('\n');
         }
+
+        // 👉 重新加载并渲染专属清单
+        if (typeof loadAndRenderPlaylists === 'function') loadAndRenderPlaylists();
         
         // 8. 调用渲染函数刷新界面
         renderList();
@@ -9283,7 +9561,7 @@ if (!userOverrideFlash) {
         let successMsg = `✅ 成功${action === 'overwrite' ? '覆盖' : '合并'}导入 ${taskCount} 个任务`;
         if (archiveCount > 0) successMsg += `、${archiveCount} 个归档`;
         if (logCount > 0) successMsg += `、${logCount} 条足迹`;
-        if (hasLocalData) successMsg += `\n以及仪式和打卡数据`;
+        if (hasLocalData) successMsg += `\n以及仪式、打卡与专属清单数据`;
         alert(successMsg);
         
         document.getElementById('dataArea').value = "";
@@ -9326,7 +9604,103 @@ if (!userOverrideFlash) {
             console.warn('保存仪式设置出错', e);
         }
 
-        showToast('📝 已更新起飞 / 着陆仪式');
+        // v6.8.3：保存结构化专属清单
+        localStorage.setItem('anchor_custom_playlists', JSON.stringify(customPlaylists));
+        renderPlaylistDropdown();
+        showToast('📝 已更新仪式与专属清单');
+    }
+
+    function loadAndRenderPlaylists() {
+      const raw = localStorage.getItem('anchor_custom_playlists') || '';
+      customPlaylists = [];
+
+      // 🚨 [向后兼容海关]：判断是旧版纯文本还是新版 JSON
+      if (raw.trim().startsWith('#') || (!raw.startsWith('[') && raw.length > 0)) {
+        // 自动迁移旧版 Markdown 文本
+        const lines = raw.split('\n');
+        let currentList = null;
+        lines.forEach(line => {
+          line = line.trim();
+          if (!line) return;
+          if (line.startsWith('#')) {
+            const name = line.substring(1).trim();
+            if (name) {
+              currentList = { id: 'pl_' + Date.now() + Math.random(), name: name, tasks: [] };
+              customPlaylists.push(currentList);
+            }
+          } else if (currentList) {
+            currentList.tasks.push(line);
+          }
+        });
+        // 迁移后立刻保存为新版 JSON
+        localStorage.setItem('anchor_custom_playlists', JSON.stringify(customPlaylists));
+      } else if (raw) {
+        try { customPlaylists = JSON.parse(raw); } catch (e) { customPlaylists = []; }
+      }
+
+      renderPlaylistEditor();
+      renderPlaylistDropdown();
+    }
+
+    function renderPlaylistEditor() {
+      const zone = document.getElementById('playlistsEditorZone');
+      if (!zone) return;
+      zone.innerHTML = '';
+
+      // 读取统计数据
+      const stats = JSON.parse(localStorage.getItem('anchor_playlist_stats') || '{}');
+
+      customPlaylists.forEach((pl, index) => {
+        const count = stats[pl.id] || 0;
+        const card = document.createElement('div');
+        card.style.cssText = "background:#fafafa; border:1px solid #eee; border-radius:12px; padding:10px; position:relative;";
+
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <input type="text" value="${pl.name}" onchange="updatePlaylistData(${index}, 'name', this.value)" placeholder="清单名称 (如: 我的画画课)" style="flex:1; padding:6px 10px; border:1px solid #ddd; border-radius:8px; font-weight:bold; font-size:0.9rem; outline:none;">
+            <span style="font-size:0.75rem; color:#FF9AA2; font-weight:bold;">🏆 ${count}次</span>
+            <button type="button" onclick="deletePlaylist(${index})" style="background:transparent; border:none; cursor:pointer; font-size:1rem; opacity:0.6;">🗑️</button>
+          </div>
+          <textarea onchange="updatePlaylistData(${index}, 'tasks', this.value)" placeholder="输入任务，每行一个" style="width:100%; min-height:70px; border:1px solid #ddd; border-radius:8px; padding:8px; font-size:0.85rem; outline:none; resize:vertical; background:#fff;">${pl.tasks.join('\n')}</textarea>
+        `;
+        zone.appendChild(card);
+      });
+    }
+
+    function addNewPlaylistCard() {
+      customPlaylists.push({ id: 'pl_' + Date.now(), name: '新专属清单', tasks: [] });
+      renderPlaylistEditor();
+    }
+
+    function updatePlaylistData(index, field, value) {
+      if (!customPlaylists[index]) return;
+      if (field === 'name') customPlaylists[index].name = value;
+      if (field === 'tasks') customPlaylists[index].tasks = value.split('\n').map(t => t.trim()).filter(t => t !== '');
+    }
+
+    function deletePlaylist(index) {
+      if (confirm("确定删除这个清单吗？")) {
+        customPlaylists.splice(index, 1);
+        renderPlaylistEditor();
+        renderPlaylistDropdown();
+        localStorage.setItem('anchor_custom_playlists', JSON.stringify(customPlaylists));
+      }
+    }
+
+    function renderPlaylistDropdown() {
+      const sel = document.getElementById('selPlaylist');
+      if (!sel) return;
+      const oldVal = sel.value;
+      sel.innerHTML = '<option value="">🔮 不限定清单 (全域抽卡)</option>';
+      customPlaylists.forEach(pl => {
+        if (!pl || !Array.isArray(pl.tasks) || pl.tasks.length === 0) return; // 空清单不上桌
+        const opt = document.createElement('option');
+        opt.value = pl.id; // 👉 核心修复：以 ID 为 value
+        opt.textContent = `📑 限定：${pl.name} (${pl.tasks.length}项)`;
+        sel.appendChild(opt);
+      });
+      // 尝试恢复旧选择
+      if (Array.from(sel.options).some(o => o.value === oldVal)) sel.value = oldVal;
     }
 
     // 恢复为默认模板
@@ -9349,11 +9723,13 @@ if (!userOverrideFlash) {
 
     // 【备份导出/导入升级 v6.3-backup2】exportToFile: 导出包含版本信息和 localStorage 数据的新格式
     function exportToFile() { 
-        // 读取 localStorage 中的仪式和打卡数据
+        // 读取 localStorage 中的仪式、打卡和专属清单数据
         let ritualMorning = null;
         let ritualNight = null;
         let openedDays = [];
         let posterShownDay = null;
+        let customPlaylists = [];
+        let playlistStats = {};
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -9372,20 +9748,36 @@ if (!userOverrideFlash) {
             }
             
             posterShownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
+
+            // 👉 读取清单和统计数据
+            const storedPlaylists = localStorage.getItem('anchor_custom_playlists');
+            if (storedPlaylists) {
+              // 兼容纯文本或 JSON 格式的读取
+              if (storedPlaylists.trim().startsWith('#') || (!storedPlaylists.startsWith('[') && storedPlaylists.length > 0)) {
+                customPlaylists = storedPlaylists; // 旧版未迁移文本，按原样备份
+              } else {
+                customPlaylists = JSON.parse(storedPlaylists);
+              }
+            }
+            const storedStats = localStorage.getItem('anchor_playlist_stats');
+            if (storedStats) playlistStats = JSON.parse(storedStats);
         } catch (e) {
             console.warn('读取 localStorage 数据时出错', e);
         }
         
         // 构建新格式的备份对象
         const backupData = {
-            version: "v6.3-backup2",
+            version: "v6.8.3-backup",
             exportedAt: new Date().toISOString(),
             data: { db, archive, dailyLog, userStats },
             local: {
                 ritualMorning: ritualMorning,
                 ritualNight: ritualNight,
                 openedDays: openedDays,
-                posterShownDay: posterShownDay
+                posterShownDay: posterShownDay,
+                // 👉 备份清单数据
+                customPlaylists: customPlaylists,
+                playlistStats: playlistStats
             }
         };
         
@@ -9398,11 +9790,13 @@ if (!userOverrideFlash) {
 
     // 【备份导出/导入升级 v6.3-backup2】copyToClip: 复制包含版本信息和 localStorage 数据的新格式
     function copyToClip() { 
-        // 读取 localStorage 中的仪式和打卡数据
+        // 读取 localStorage 中的仪式、打卡和专属清单数据
         let ritualMorning = null;
         let ritualNight = null;
         let openedDays = [];
         let posterShownDay = null;
+        let customPlaylists = [];
+        let playlistStats = {};
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -9421,20 +9815,34 @@ if (!userOverrideFlash) {
             }
             
             posterShownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
+
+            // 👉 读取清单和统计数据
+            const storedPlaylists = localStorage.getItem('anchor_custom_playlists');
+            if (storedPlaylists) {
+              if (storedPlaylists.trim().startsWith('#') || (!storedPlaylists.startsWith('[') && storedPlaylists.length > 0)) {
+                customPlaylists = storedPlaylists;
+              } else {
+                customPlaylists = JSON.parse(storedPlaylists);
+              }
+            }
+            const storedStats = localStorage.getItem('anchor_playlist_stats');
+            if (storedStats) playlistStats = JSON.parse(storedStats);
         } catch (e) {
             console.warn('读取 localStorage 数据时出错', e);
         }
         
         // 构建新格式的备份对象
         const backupData = {
-            version: "v6.3-backup2",
+            version: "v6.8.3-backup",
             exportedAt: new Date().toISOString(),
             data: { db, archive, dailyLog, userStats },
             local: {
                 ritualMorning: ritualMorning,
                 ritualNight: ritualNight,
                 openedDays: openedDays,
-                posterShownDay: posterShownDay
+                posterShownDay: posterShownDay,
+                customPlaylists: customPlaylists,
+                playlistStats: playlistStats
             }
         };
         
