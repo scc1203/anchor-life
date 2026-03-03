@@ -3787,6 +3787,18 @@ body.immersive-locked {
         <details>
             <summary>📡 数据方舟 (Offline)</summary>
             <div class="manual-content">
+        <div style="font-size:0.8rem; color:#6B4A3B; margin-bottom:5px; font-weight:bold;">👤 本机身份标识 (为云端做准备)</div>
+        <div style="display:flex; gap:8px; margin-bottom:15px; align-items:center;">
+          <input type="text" id="settingUsernameInp" placeholder="例如：SCC" maxlength="12" style="flex:1; padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;">
+          <button class="btn-file" style="padding:8px 16px;" onclick="saveUsername()">更新身份</button>
+        </div>
+        <script>
+          // 延迟填充当前名字到输入框
+          setTimeout(() => {
+            const unInp = document.getElementById('settingUsernameInp');
+            if (unInp && currentUsername !== 'Anchor') unInp.value = currentUsername;
+          }, 100);
+        </script>
         <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (电脑端推荐)</div>
         <div class="backup-grid">
             <button class="btn-file" onclick="exportToFile()">📥 导出文件</button>
@@ -3889,6 +3901,7 @@ document.addEventListener('DOMContentLoaded', () => {
         { title: "吃一颗水果", icon: "🍊", desc: "慢慢吃，感受香气。" }
     ];
 
+    const KEY_USERNAME = 'anchor_live_username';
     const KEY_DB = 'anchor_live_db';
     const KEY_ARCHIVE = 'anchor_live_archive';
     const KEY_LOG = 'anchor_live_log';
@@ -3896,6 +3909,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_VISITED = 'anchor_has_visited_v55_personal';
     const KEY_RITUAL_MORNING = 'anchor_ritual_morning_v55';
     const KEY_RITUAL_NIGHT  = 'anchor_ritual_night_v55';
+
+    let currentUsername = localStorage.getItem(KEY_USERNAME) || 'Anchor';
 
 
     const defaultDB = [
@@ -3985,6 +4000,41 @@ coloringBgImg.src = '/assets/images/coloring_bg.png';
 coloringBgImg.onload = function () {
     coloringBgImgLoaded = true;
 };
+
+    // 动态更新全站的用户名显示
+    function updateUsernameUI() {
+      // 1. 更新左上角 Header
+      const titleEl = document.querySelector('.app-title');
+      if (titleEl) {
+        titleEl.textContent = `${currentUsername} ⚓️`;
+      }
+
+      // 2. 更新打卡图海报文案
+      const daySpan = document.getElementById('dailyPosterDayCount');
+      if (daySpan) {
+        // 找到包裹它的父级 div，替换文本但保留 span
+        const dayContainer = daySpan.parentElement;
+        if (dayContainer) {
+          const count = daySpan.textContent;
+          // 确保兼容不同的称呼
+          const caller = currentUsername === 'Anchor' ? '你' : currentUsername;
+          dayContainer.innerHTML = `这是 ${caller} 和 Anchor 的第 <span id="dailyPosterDayCount">${count}</span> 天`;
+        }
+      }
+    }
+
+    // 保存并应用新用户名
+    function saveUsername() {
+      const inp = document.getElementById('settingUsernameInp');
+      if (!inp) return;
+      let newName = inp.value.trim();
+      if (!newName) newName = 'Anchor'; // 兜底
+
+      currentUsername = newName;
+      localStorage.setItem(KEY_USERNAME, currentUsername);
+      updateUsernameUI();
+      showToast(`✨ 身份已变更为：${currentUsername}`);
+    }
 
 // 糖家族配置：先只启用已经做好的两颗糖
 // 以后可以在这里加：music / instrument / web / movie / joke 等
@@ -10727,6 +10777,7 @@ function handleUrlRouting() {
 document.addEventListener("DOMContentLoaded", function() {
     initOnboarding();
     if (typeof initLobby === 'function') initLobby();
+    updateUsernameUI(); // 初始化页面时更新名字
 
     // v6.7.2：URL 路由放在最末尾，确保 db / dailyLog / DOM 全部就绪后再执行
     // Why: addNew() 依赖 db 和 DOM 输入框；setEnergyMode() 依赖能量药丸 UI；
