@@ -3143,7 +3143,12 @@ body.immersive-locked {
 
     <!-- 输入区 -->
     <div class="section-input">
-        <div class="section-title">02 · 新任务入库</div>
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <span>02 · 新任务入库</span>
+          <span onclick="shortcutToNewPlaylist()" style="font-size:0.75rem; color:#75B79E; font-weight:normal; cursor:pointer; text-decoration:underline;">
+            ✂️ 任务太庞大？拆分为子步骤
+          </span>
+        </div>
         <div class="input-box">
     <textarea id="inpTitle"
       placeholder="输入事项…（支持批量输入）&#10;例：！写导言30m / 整理书桌 / 看好东西…"
@@ -3578,6 +3583,9 @@ body.immersive-locked {
                 <textarea id="ritualNightInput"
                           placeholder="例如：&#10;手机充电并远离床边&#10;喝一口水 / 吃药&#10;关窗帘 / 灯&#10;写一句“明天想做的事”"></textarea>
 
+                <div style="font-size:0.8rem; font-weight:bold; margin:15px 0 4px; color:#5D5C61; border-top:1px dashed #eee; padding-top:15px;">
+                  📑 专属清单 (项目 / 任务拆分)
+                </div>
                 <div style="font-size:0.75rem; color:#888; margin-bottom:10px;">
                   建立你的专属沉浸隧道。点击下方按钮添加新清单。
                 </div>
@@ -9654,6 +9662,9 @@ if (!userOverrideFlash) {
         const count = stats[pl.id] || 0;
         const card = document.createElement('div');
         card.style.cssText = "background:#fafafa; border:1px solid #eee; border-radius:12px; padding:10px; position:relative;";
+        if (pl && pl.id) {
+          card.setAttribute('data-playlist-id', pl.id);
+        }
 
         card.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
@@ -9670,6 +9681,68 @@ if (!userOverrideFlash) {
     function addNewPlaylistCard() {
       customPlaylists.push({ id: 'pl_' + Date.now(), name: '新专属清单', tasks: [] });
       renderPlaylistEditor();
+    }
+
+    // 智能传送门：将当前输入/正在修改的任务转化为拆分清单
+    function shortcutToNewPlaylist() {
+      const inp = document.getElementById('inpTitle');
+      let plName = '新专属清单';
+      let newId = 'pl_' + Date.now();
+
+      // 1. 如果输入框里有文字，智能提取第一行作为清单名字
+      if (inp && inp.value.trim() !== '') {
+        const firstLine = inp.value.split('\n')[0] || '';
+        plName = firstLine.replace(/《|》|!|！|\*/g, '').trim() || plName;
+      }
+
+      // 2. 创建新清单
+      customPlaylists.push({ id: newId, name: plName, tasks: [] });
+
+      // 3. 如果用户正在通过“修改”功能编辑某个旧任务，则视为“转化”：将旧任务从任务池彻底移除
+      if (typeof editingTaskId !== 'undefined' && editingTaskId) {
+        db = db.filter(item => item.id !== editingTaskId);
+        editingTaskId = null;
+        if (typeof editingTaskOriginal !== 'undefined') editingTaskOriginal = null;
+        if (typeof renderList === 'function') renderList();
+        showToast(`🔪 已将 [${plName}] 移出主线，请拆解步骤`);
+      } else {
+        showToast("✨ 已为你建好空清单，请在此细分");
+      }
+
+      // 4. 清空输入框和各种开关状态
+      if (inp) inp.value = '';
+      if (typeof toggleSwitch === 'function' && typeof switchState !== 'undefined') {
+        if (switchState.cycle) toggleSwitch('cycle', false);
+        if (switchState.flash) toggleSwitch('flash', false);
+      }
+
+      // 5. 保存并渲染
+      renderPlaylistEditor();
+      if (typeof saveRitualFromInputs === 'function') saveRitualFromInputs();
+      if (typeof save === 'function') save();
+
+      // 6. 展开“📝 仪式与清单”折叠，并平滑滚动过去
+      let ritualDetails = null;
+      const settingsDetails = document.querySelectorAll('.section-settings details');
+      settingsDetails.forEach(d => {
+        if (ritualDetails) return;
+        const s = d.querySelector('summary');
+        if (s && s.textContent && s.textContent.indexOf('仪式与清单') !== -1) {
+          ritualDetails = d;
+        }
+      });
+      if (ritualDetails && !ritualDetails.open) {
+        ritualDetails.open = true;
+      }
+
+      setTimeout(() => {
+        const targetCard = document.querySelector('[data-playlist-id="' + newId + '"]');
+        const fallback = document.getElementById('playlistsEditorZone');
+        const scrollTarget = targetCard || fallback;
+        if (scrollTarget) {
+          scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
     }
 
     function updatePlaylistData(index, field, value) {
