@@ -2937,12 +2937,12 @@ body.immersive-locked {
     <span>01 · 抽签装置（筛选 + 抽卡）</span>
     <div class="ritual-icons">
         <button class="ritual-icon-btn" data-ritual="morning"
-                onclick="openRitual('morning')" aria-label="起床起飞">
-            🌅
+            onclick="openRitual('morning')" aria-label="起床起飞" style="gap: 4px;">
+            🌅 <span style="font-size:0.8rem; color:#777;">晨起</span>
         </button>
         <button class="ritual-icon-btn" data-ritual="night"
-                onclick="openRitual('night')" aria-label="睡前着陆">
-            🌙
+            onclick="openRitual('night')" aria-label="睡前着陆" style="gap: 4px;">
+            🌙 <span style="font-size:0.8rem; color:#777;">睡前</span>
         </button>
     </div>
 </div>
@@ -3274,6 +3274,17 @@ body.immersive-locked {
             </select>
         </div>
         <div id="timeFeedback" style="font-size:0.7rem; color:#75B79E; margin-top:5px; margin-left:5px; height:1rem;"></div>
+
+        <!-- 新增：智能输入指令词典 (弱化版) -->
+        <details style="margin-top: 8px; font-size: 0.75rem; color: #999;">
+            <summary style="cursor: pointer; opacity: 0.8; outline: none; padding-left: 5px;">💡 智能识别小抄（点击展开）</summary>
+            <div style="padding: 8px 10px; background: rgba(0,0,0,0.02); border-radius: 8px; margin-top: 6px; line-height: 1.6; border: 1px dashed rgba(0,0,0,0.06);">
+                • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
+                • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
+                • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
+                • <b>每日循环：</b>包含「每天、每日」字眼。
+            </div>
+        </details>
     </div>
 
     <!-- 四大块列表 -->
@@ -3846,7 +3857,7 @@ body.immersive-locked {
         </details>
     </div>
         <div class="footer-note">
-            本工具仅在本机浏览器存储数据，不上传云端。请记得「导出备份」。<br>
+            数据上传云端、本机浏览器存储，双备份。但请记得手动上传「备份」。<br>
             Anchor · by scc 🌊
         </div>
     </div>
@@ -10717,27 +10728,32 @@ function initOnboarding() {
    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
     if (localStorage.getItem(ONBOARDING_VISITED_KEY)) return;
 
-    // --- 四步引导配置（v6.9.3） ---
+    // --- 五步引导配置（v6.9.4） ---
     const steps = [
       {
-        // Step 1：认领数字身份（定位到 04 区的用户名输入框）
+        // Step 1：认领数字身份
         targetId: 'settingUsernameInp',
-        text: '🛂 <b>第 1 步：认领数字护照。</b><br>欢迎来到 Anchor。请先在这里输入一个<b>独一无二的代号</b>（如名字缩写、小名+生日）。它将作为你连接云端机房、找回数据的唯一凭证。多设备间一键同步'
+        text: '🛂 <b>第 1 步：认领数字护照。</b><br>欢迎来到 Anchor。请先在这里输入一个<b>独一无二的代号</b>（如缩写、小名+生日）。它将作为你连接云端机房、找回数据的唯一凭证。'
       },
       {
-        // Step 2：任务输入区与清单
+        // Step 2：任务输入区
         targetId: 'inpTitle',
-        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：如果是长期大项目，也可以点击✂️设定为「专属清单」功能哦)</span>'
+        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：大项目可使用右上方✂️「专属清单」)</span>'
       },
       {
-        // Step 3：抽卡按钮
+        // Step 3 (新增)：高亮能量药丸与筛选区
+        targetId: 'filterSec',
+        text: '🔋 <b>第 3 步：调节状态。</b><br>可根据当下状态切换高能/蓄能胶囊；或展开「高级筛选」，只在限定的专属清单中抽取。'
+      },
+      {
+        // Step 4：抽卡按钮
         targetId: 'mainBtn',
-        text: '🎲 <b>第 3 步：交出决定权。</b><br>不用纠结先做哪个，直接点这里。系统会像扭蛋一样，为你随机抽出一张当下的锚点卡片。'
+        text: '🎲 <b>第 4 步：交出决定权。</b><br>不用纠结先做哪个，直接点这里。系统会像扭蛋一样，随机抽出一张当下的锚点卡片。'
       },
       {
-        // Step 4：糖果按钮
+        // Step 5：糖果按钮
         targetId: 'candyButton',
-        text: '🍬 <b>紧急出口：吃颗糖。</b><br>如果此刻什么都不想做，别有压力，先点这里「吃颗糖」（捏泡泡/涂鸦/听歌）。回血了，再出发。'
+        text: '🍬 <b>紧急出口：吃颗糖。</b><br>如果此刻什么都不想做，先点这里「吃颗糖」（捏泡泡/涂鸦/听歌）。回血了，再出发。'
       }
     ];
 
@@ -10772,7 +10788,7 @@ function initOnboarding() {
         document.removeEventListener('touchmove', preventScroll);
     }
 
-    // --- 核心：渲染某一步 ---
+        // --- 核心：渲染某一步 ---
     function showStep(index) {
 
         if (index >= steps.length) {
@@ -10815,7 +10831,8 @@ function initOnboarding() {
         // --- 滚动到目标元素 ---
         // 第 1→2 步特殊处理：用平滑滚动，让用户看到页面上下的空间关系。
         // 其余步骤用瞬间跳转，保持节奏紧凑。
-        const needSmoothScroll = (index === 1);
+        // v6.9.3：Step 3（filterSec）也采用平滑滚动，以便在视野稳定后再展开高级筛选抽屉
+        const needSmoothScroll = (index === 1 || step.targetId === 'filterSec');
 
         // 先隐藏 tooltip，避免滚动期间位置错乱
         tooltip.style.display = 'none';
@@ -10843,6 +10860,10 @@ function initOnboarding() {
                 if (stableFrames >= 3) {
                     lockScroll();
                     positionAndShowTooltip(target, index, step);
+                    // Step 3 特殊演示：在视野稳定后再展开一次高级筛选抽屉
+                    if (step.targetId === 'filterSec' && typeof toggleFilterDrawer === 'function') {
+                        toggleFilterDrawer(true);
+                    }
                 } else {
                     requestAnimationFrame(waitForScrollEnd);
                 }
@@ -10854,11 +10875,17 @@ function initOnboarding() {
                 if (tooltip.style.display === 'none') {
                     lockScroll();
                     positionAndShowTooltip(target, index, step);
+                    if (step.targetId === 'filterSec' && typeof toggleFilterDrawer === 'function') {
+                        toggleFilterDrawer(true);
+                    }
                 }
             }, 800);
         } else {
             lockScroll();
             positionAndShowTooltip(target, index, step);
+            if (step.targetId === 'filterSec' && typeof toggleFilterDrawer === 'function') {
+                toggleFilterDrawer(true);
+            }
         }
 
         target.classList.add('onboarding-highlight');
@@ -10898,6 +10925,11 @@ function initOnboarding() {
             top = rect.top - 100 - TOOLTIP_OFFSET;
             if (top < 12) top = 12;
             arrowOnTop = false;
+        }
+
+        // v6.9.4：当高亮筛选区（filterSec）时，tooltip 整体下移一点，避免与高亮区域重叠过多
+        if (step && step.targetId === 'filterSec') {
+            top += 105;
         }
 
         tooltip.innerHTML = `
