@@ -2541,15 +2541,30 @@ html.onboarding-lock {
   animation: tooltipPop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* 文案框底部的小三角箭头（向上，指向被高亮的元素方向） */
+/* 1. 提取箭头公用样式（内容、绝对定位、水平位置、透明侧边） */
 .onboarding-tooltip::before {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: 24px;
-  border-left: 8px solid transparent;
-  border-right: 8px solid transparent;
-  border-bottom: 8px solid #fff;
+    content: '';
+    position: absolute;
+    left: 24px;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+}
+
+/* 2. 向上箭头（默认，指向元素在下方的情况） */
+.onboarding-tooltip[data-arrow-dir="up"]::before,
+.onboarding-tooltip:not([data-arrow-dir="down"])::before {
+    top: -8px;
+    bottom: auto;
+    border-bottom: 8px solid #fff;
+    border-top: none;
+}
+
+/* 3. 新增：向下箭头（指向元素在上方或屏幕底部的情况，如 PWA 引导） */
+.onboarding-tooltip[data-arrow-dir="down"]::before {
+    top: auto;
+    bottom: -8px;
+    border-top: 8px solid #fff;
+    border-bottom: none;
 }
 
 /* tooltip 出现时的弹性弹出关键帧 */
@@ -3188,7 +3203,7 @@ body.immersive-locked {
                 <span id="rTitle"></span>
                 <span id="rBadge"></span>
             </div>
-            <button id="btnMemory" onclick="openMemoryPanel()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.9);border:none;border-radius:6px;font-size:0.85rem;cursor:pointer;padding:6px 10px;color:#666;animation:memoryBtnBreathe 3s ease-in-out infinite;" onmouseover="this.style.animation='none';this.style.opacity='1'" onmouseout="this.style.animation='memoryBtnBreathe 3s ease-in-out infinite';this.style.opacity=''" title="记忆">📝备注</button>
+            <button id="btnMemory" onclick="openMemoryPanel()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.9);border:none;border-radius:6px;font-size:0.85rem;cursor:pointer;padding:6px 10px;color:#666;animation:memoryBtnBreathe 3s ease-in-out infinite;" onmouseover="this.style.animation='none';this.style.opacity='1'" onmouseout="this.style.animation='memoryBtnBreathe 3s ease-in-out infinite';this.style.opacity=''" title="记忆">📝 记忆进度</button>
             <div id="rProgress" style="font-size:0.85rem;color:#999;margin-top:4px;margin-bottom:8px;min-height:1.2rem;"></div>
             <div class="card-desc" id="rDesc"></div>
             <div class="card-time" id="rTime"></div>
@@ -3281,6 +3296,7 @@ body.immersive-locked {
             <div style="padding: 8px 10px; background: rgba(0,0,0,0.02); border-radius: 8px; margin-top: 6px; line-height: 1.6; border: 1px dashed rgba(0,0,0,0.06);">
                 • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
                 • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
+                • <b>户外行动：</b>首字写「去」，如「去散步/去拿快递」。<br>
                 • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
                 • <b>每日循环：</b>包含「每天、每日」字眼。
             </div>
@@ -10728,7 +10744,7 @@ function initOnboarding() {
    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
     if (localStorage.getItem(ONBOARDING_VISITED_KEY)) return;
 
-    // --- 五步引导配置（v6.9.4） ---
+    // --- 五步引导配置（v6.9.3） ---
     const steps = [
       {
         // Step 1：认领数字身份
@@ -10754,6 +10770,11 @@ function initOnboarding() {
         // Step 5：糖果按钮
         targetId: 'candyButton',
         text: '🍬 <b>紧急出口：吃颗糖。</b><br>如果此刻什么都不想做，先点这里「吃颗糖」（捏泡泡/涂鸦/听歌）。回血了，再出发。'
+      },
+      {
+        // Step 6 (新增)：PWA 沉浸模式引导，指向底部隐形锚点
+        targetId: 'pwaHintTarget',
+        text: '📱 <b>最后 1 步：添加到主屏幕。</b><br>强烈建议：点击屏幕底部的「分享 <b>↑</b>」图标，选择「添加到主屏幕」。<br><span style="font-size:0.8rem; color:#888;">这样它就会变成一个独立的 App，没有浏览器边框，体验最沉浸！</span>'
       }
     ];
 
@@ -10927,9 +10948,16 @@ function initOnboarding() {
             arrowOnTop = false;
         }
 
-        // v6.9.4：当高亮筛选区（filterSec）时，tooltip 整体下移一点，避免与高亮区域重叠过多
+        // v6.9.3：当高亮筛选区（filterSec）时，tooltip 整体下移一点，避免与高亮区域重叠过多
         if (step && step.targetId === 'filterSec') {
-            top += 105;
+            top += 110;
+        }
+
+        // v6.9.3：PWA 引导步骤（pwaHintTarget）——卡片略靠上，箭头向下指向底部分享区域
+        if (step && step.targetId === 'pwaHintTarget') {
+            arrowOnTop = false; // 始终让箭头朝下
+            const idealTop = Math.min(window.innerHeight * 0.45, rect.top - 80);
+            top = Math.max(12, idealTop);
         }
 
         tooltip.innerHTML = `
@@ -11277,6 +11305,9 @@ function lobbyEnter(action) {
     <!-- v6.6.1 新手引导：遮罩层（点击推进步骤）-->
     <!-- Why: 空容器，全部内容由 JS 动态注入，保持 HTML 干净 -->
     <div id="onboardingOverlay" class="onboarding-overlay"></div>
+
+    <!-- v6.9.3 新增：用于 PWA 引导的隐形固定锚点 -->
+    <div id="pwaHintTarget" style="position:fixed; bottom:15px; left:50%; width:1px; height:1px; pointer-events:none;"></div>
 
     <!-- v6.6.1 新手引导：浮动文案框（内容由 JS 填充）-->
     <div id="onboardingTooltip" class="onboarding-tooltip" style="display:none;"></div>
