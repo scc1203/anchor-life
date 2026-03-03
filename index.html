@@ -3784,6 +3784,32 @@ body.immersive-locked {
 
 <!-- 设置 & 备份 -->
     <div class="section-settings" id="settingSec">
+
+        <!-- ☁️ 极空间 NAS 云端同步 (Beta) -->
+        <details id="cloudSyncPanel" style="margin-bottom:10px; display: none;">
+          <summary>☁️ 本地云端机房 (Beta)</summary>
+          <div class="manual-content">
+            <div style="font-size:0.8rem; color:#6B4A3B; margin-bottom:5px; font-weight:bold;">
+              机房连接状态：<span style="color:#2E7D32;">已准备好</span>
+            </div>
+            <p style="font-size:0.75rem; color:#777; margin-bottom:12px;">
+              基于当前的本机身份标识，向 192.168.1.219 发送或拉取你的专属档案。拉取后会触发安全的「合并/覆盖」确认。
+            </p>
+
+            <div class="backup-grid">
+              <button id="btnSyncCloud" class="btn-file" onclick="syncToCloud()" style="background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;">☁️ 推送当前进度至云端</button>
+              <button id="btnPullCloud" class="btn-file" onclick="fetchFromCloud()" style="background:#fff3e0; border-color:#ffcc80; color:#e65100;">☁️ 从云端拉取存档</button>
+            </div>
+          </div>
+        </details>
+        <script>
+          // 仅当 variant 为 personal 时显示云端面板
+          if (typeof APP_VARIANT !== 'undefined' && APP_VARIANT === 'personal') {
+            const pnl = document.getElementById('cloudSyncPanel');
+            if (pnl) pnl.style.display = 'block';
+          }
+        </script>
+
         <details>
             <summary>📡 数据方舟 (Offline)</summary>
             <div class="manual-content">
@@ -10440,8 +10466,8 @@ if (!userOverrideFlash) {
         showToast('✨ 已恢复默认仪式');
     }
 
-    // 【备份导出/导入升级 v6.8-backup】exportToFile: 导出包含版本信息和 localStorage 数据的新格式
-    function exportToFile() { 
+    // 统一的数据打包器（供导出文件、复制文本、云端同步共用）
+    function getBackupDataObj() {
         // 读取 localStorage 中的仪式、打卡和专属清单数据 & 个性化设置
         let ritualMorning = null;
         let ritualNight = null;
@@ -10513,7 +10539,7 @@ if (!userOverrideFlash) {
         }
         
         // 构建新格式的备份对象
-        const backupData = {
+        return {
             version: "v6.8-backup",
             exportedAt: new Date().toISOString(),
             data: { 
@@ -10539,7 +10565,11 @@ if (!userOverrideFlash) {
                 energyMode: energyModeBackup
             }
         };
-        
+    }
+
+    // 【备份导出/导入升级 v6.8-backup】exportToFile: 导出包含版本信息和 localStorage 数据的新格式
+    function exportToFile() { 
+        const backupData = getBackupDataObj();
         const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: "application/json"}); 
         const a = document.createElement('a'); 
         a.href = URL.createObjectURL(blob); 
@@ -10552,100 +10582,7 @@ if (!userOverrideFlash) {
 
     // 【备份导出/导入升级 v6.8-backup】copyToClip: 复制包含版本信息和 localStorage 数据的新格式
     function copyToClip() { 
-        // 读取 localStorage 中的仪式、打卡和专属清单数据 & 个性化设置
-        let ritualMorning = null;
-        let ritualNight = null;
-        let openedDays = [];
-        let posterShownDay = null;
-        let customPlaylists = [];
-        let playlistStats = {};
-        let usernameForBackup = currentUsername || 'Anchor';
-        let dayStartOffset = 0;
-        let visitedV66 = null;
-        let energyModeBackup = null;
-        
-        try {
-            const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
-            const storedNight = localStorage.getItem(KEY_RITUAL_NIGHT);
-            if (storedMorning) {
-                ritualMorning = JSON.parse(storedMorning);
-            }
-            if (storedNight) {
-                ritualNight = JSON.parse(storedNight);
-            }
-            
-            const storedDays = localStorage.getItem(KEY_OPENED_DAYS);
-            if (storedDays) {
-                openedDays = JSON.parse(storedDays);
-                if (!Array.isArray(openedDays)) openedDays = [];
-            }
-            
-            posterShownDay = localStorage.getItem(KEY_POSTER_SHOWN_DAY);
-
-            // 👉 读取清单和统计数据
-            const storedPlaylists = localStorage.getItem('anchor_custom_playlists');
-            if (storedPlaylists) {
-              if (storedPlaylists.trim().startsWith('#') || (!storedPlaylists.startsWith('[') && storedPlaylists.length > 0)) {
-                customPlaylists = storedPlaylists;
-              } else {
-                customPlaylists = JSON.parse(storedPlaylists);
-              }
-            }
-            const storedStats = localStorage.getItem('anchor_playlist_stats');
-            if (storedStats) playlistStats = JSON.parse(storedStats);
-
-            // 👉 用户身份（Username）
-            const storedUsername = localStorage.getItem(KEY_USERNAME);
-            if (storedUsername && storedUsername.trim()) {
-                usernameForBackup = storedUsername.trim();
-            }
-
-            // 👉 夜猫子时钟起始偏移
-            dayStartOffset = getDayStartOffset();
-
-            // 👉 新手引导访问标记
-            visitedV66 = localStorage.getItem('anchor_visited_v66') || null;
-
-            // 👉 能量模式（如果有持久化）
-            try {
-                const storedEnergy = localStorage.getItem('energyMode');
-                if (storedEnergy) {
-                    energyModeBackup = storedEnergy;
-                } else if (typeof energyMode !== 'undefined') {
-                    energyModeBackup = energyMode;
-                }
-            } catch (e) {
-                energyModeBackup = typeof energyMode !== 'undefined' ? energyMode : null;
-            }
-        } catch (e) {
-            console.warn('读取 localStorage 数据时出错', e);
-        }
-        
-        // 构建新格式的备份对象
-        const backupData = {
-            version: "v6.8-backup",
-            exportedAt: new Date().toISOString(),
-            data: { 
-                db, 
-                archive, 
-                dailyLog, 
-                userStats,
-                customPlaylists: customPlaylists
-            },
-            local: {
-                ritualMorning: ritualMorning,
-                ritualNight: ritualNight,
-                openedDays: openedDays,
-                posterShownDay: posterShownDay,
-                customPlaylists: customPlaylists,
-                playlistStats: playlistStats,
-                username: usernameForBackup,
-                dayStartOffset: dayStartOffset,
-                visitedV66: visitedV66,
-                energyMode: energyModeBackup
-            }
-        };
-        
+        const backupData = getBackupDataObj();
         const str = JSON.stringify(backupData, null, 2); 
         if (navigator.clipboard && navigator.clipboard.writeText) { 
             navigator.clipboard.writeText(str)
@@ -10660,30 +10597,101 @@ if (!userOverrideFlash) {
         } 
     }
 
+    const CLOUD_API_BASE = 'http://192.168.1.219:8000/api/data';
+
+    // 👉 1. 将数据 Push 到云端
+    async function syncToCloud() {
+      if (currentUsername === 'Anchor' || !currentUsername) {
+        showToast("⚠️ 请先在上方设置你的专属身份标识（名字）！");
+        return;
+      }
+      const btn = document.getElementById('btnSyncCloud');
+      if(btn) btn.innerText = "☁️ 正在同步...";
+
+      try {
+        const payload = getBackupDataObj();
+        const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+          showToast("☁️ 已成功同步到云端！");
+        } else {
+          showToast("⚠️ 云端同步失败，请检查机房");
+        }
+      } catch(e) {
+        console.error(e);
+        showToast("⚠️ 无法连接到本地服务器，大爷可能下班了");
+      } finally {
+        if(btn) btn.innerText = "☁️ 推送当前进度至云端";
+      }
+    }
+
+    // 👉 2. 从云端 Pull 数据并走安全合并流程
+    async function fetchFromCloud() {
+      if (currentUsername === 'Anchor' || !currentUsername) {
+        showToast("⚠️ 请先输入并更新你想拉取身份标识！");
+        return;
+      }
+      const btn = document.getElementById('btnPullCloud');
+      if(btn) btn.innerText = "☁️ 拉取中...";
+
+      try {
+        const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`);
+        const json = await res.json();
+
+        if (Object.keys(json).length === 0) {
+          showToast(`☁️ 云端目前没有 [${currentUsername}] 的存档哦。`);
+          return;
+        }
+
+        // 魔法：把拉到的云端数据塞进原有的文件导入框，复用现成的防冲突弹窗逻辑！
+        const dataArea = document.getElementById('dataArea');
+        if(dataArea) {
+          dataArea.value = JSON.stringify(json, null, 2);
+          executeImport(); // 这会弹出现有的“覆盖 / 合并”极度安全的对话框
+        }
+      } catch(e) {
+        console.error(e);
+        showToast("⚠️ 无法连接到本地服务器");
+      } finally {
+        if(btn) btn.innerText = "☁️ 从云端拉取存档";
+      }
+    }
+
     // 根据 APP_VARIANT 调整 UI（personal / common）
-function applyVariant() {
-    if (typeof APP_VARIANT === 'undefined') return;
+    function applyVariant() {
+        if (typeof APP_VARIANT === 'undefined') return;
 
-    // 1）根据 variant 给 body 加 class，方便 CSS 区分配色
-    document.body.classList.remove('variant-personal', 'variant-common');
-    document.body.classList.add(APP_VARIANT === 'common' ? 'variant-common' : 'variant-personal');
+        // 1）根据 variant 给 body 加 class，方便 CSS 区分配色
+        document.body.classList.remove('variant-personal', 'variant-common');
+        document.body.classList.add(APP_VARIANT === 'common' ? 'variant-common' : 'variant-personal');
 
-    // 2）原来的唱片入口显隐逻辑
-    var vinylTab = document.getElementById('mode-tab-vinyl');
-    if (vinylTab) {
-        vinylTab.style.display = (APP_VARIANT === 'common') ? 'none' : '';
-    }
-    var vinylTag = document.getElementById('tag-vinyl');
-    if (vinylTag) {
-        vinylTag.style.display = (APP_VARIANT === 'common') ? 'none' : '';
-    }
+        // 2）原来的唱片入口显隐逻辑
+        var vinylTab = document.getElementById('mode-tab-vinyl');
+        if (vinylTab) {
+            vinylTab.style.display = (APP_VARIANT === 'common') ? 'none' : '';
+        }
+        var vinylTag = document.getElementById('tag-vinyl');
+        if (vinylTag) {
+            vinylTag.style.display = (APP_VARIANT === 'common') ? 'none' : '';
+        }
+
         // 3）标题版本角标：common 显示“通用版”
-    const badge = document.querySelector('.version-badge');
-    if (badge) {
-        const base = badge.textContent.replace(/\s*通用版\s*/g, '').trim(); // 先清掉旧的，避免叠加
-        badge.textContent = (APP_VARIANT === 'common') ? (base + ' 通用版') : base;
+        const badge = document.querySelector('.version-badge');
+        if (badge) {
+            const base = badge.textContent.replace(/\s*通用版\s*/g, '').trim(); // 先清掉旧的，避免叠加
+            badge.textContent = (APP_VARIANT === 'common') ? (base + ' 通用版') : base;
+        }
+
+        // 4）Personal 版才显示云端面板
+        const cloudPanel = document.getElementById('cloudSyncPanel');
+        if (cloudPanel) {
+            cloudPanel.style.display = (APP_VARIANT === 'personal') ? 'block' : 'none';
+        }
     }
-}
 
 /* --- 页面载入后自动选择筛选默认值 --- */
 document.addEventListener("DOMContentLoaded", function() {
