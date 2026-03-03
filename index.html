@@ -3431,7 +3431,7 @@ body.immersive-locked {
         <!-- 历史记录（最近完成） -->
         <div class="section-history" style="margin-top:12px;">
             <details id="historyDetails">
-               <summary><span style="font-size:0.95rem; font-weight:bold;">📅 历史记录（最近 30 天）</span></summary>
+               <summary><span style="font-size:0.95rem; font-weight:bold;">📅 历史记录（最近 180 天）</span></summary>
                 <div class="manual-content" id="historyContent">
                     <p style="font-size:0.8rem; color:#777;">
                         这里会汇总最近一段时间的完成记录，仅在你想回顾时再展开查看。
@@ -6554,7 +6554,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             byDate[log.date].push({ ...log, _index: idx });
         });
         const dateKeys = Object.keys(byDate).sort((a,b) => new Date(b) - new Date(a));
-        const maxDays = 30;
+        const maxDays = 180;
         let htmlStr = "";
         dateKeys.slice(0, maxDays).forEach(dateStr => {
             const dayLogs = byDate[dateStr];
