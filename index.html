@@ -10953,10 +10953,10 @@ function initOnboarding() {
             top += 110;
         }
 
-        // v6.9.3：PWA 引导步骤（pwaHintTarget）——卡片略靠上，箭头向下指向底部分享区域
+        // v6.9.3：PWA 引导步骤（pwaHintTarget）——卡片略靠下，箭头向下指向底部分享区域
         if (step && step.targetId === 'pwaHintTarget') {
             arrowOnTop = false; // 始终让箭头朝下
-            const idealTop = Math.min(window.innerHeight * 0.45, rect.top - 80);
+            const idealTop = Math.min(window.innerHeight * 0.7, rect.top - 80);
             top = Math.max(12, idealTop);
         }
 
