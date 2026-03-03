@@ -9811,7 +9811,7 @@ if (!userOverrideFlash) {
     }
 
     // 导入/导出逻辑保持原样
-    // 【备份导出/导入升级 v6.3-backup2】executeImport: 支持新版格式并兼容旧版，显示选择对话框
+    // 【备份导出/导入升级 v6.8-backup】executeImport: 支持新版格式并兼容旧版，显示选择对话框
     function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) { alert("⚠️ 请先粘贴代码！"); return; }
@@ -9821,14 +9821,26 @@ if (!userOverrideFlash) {
             // 兼容旧版格式（直接有 db/archive/dailyLog/userStats）和新版格式（有 version/data/local）
             let incomingDB, incomingArchive, incomingDailyLog, incomingStats;
             let localData = null;
+            let backupVersion = json.version || '';
+            let hasCustomPlaylists = false;
+            let hasUsername = false;
             
             if (json.version && json.data) {
-                // 新版格式：v6.3-backup2
+                // 新版格式：v6.3-backup2 / v6.8.3-backup / v6.8-backup
                 incomingDB = json.data.db || [];
                 incomingArchive = json.data.archive || [];
                 incomingDailyLog = json.data.dailyLog || [];
                 incomingStats = json.data.userStats || {};
                 localData = json.local || null;
+
+                // v6.8-backup 起：customPlaylists 也可以挂在 data 层
+                if (json.data && json.data.customPlaylists !== undefined) {
+                    if (!localData) localData = {};
+                    // 如果 local 中还没有，则优先从 data 层补充
+                    if (localData.customPlaylists === undefined || localData.customPlaylists === null) {
+                        localData.customPlaylists = json.data.customPlaylists;
+                    }
+                }
             } else {
                 // 旧版格式：直接有 db/archive/dailyLog/userStats
                 incomingDB = json.db || (Array.isArray(json) ? json : []);
@@ -9845,7 +9857,28 @@ if (!userOverrideFlash) {
             const taskCount = incomingDB.length;
             const archiveCount = incomingArchive.length;
             const logCount = incomingDailyLog.length;
-            const hasLocalData = localData && (localData.ritualMorning || localData.ritualNight || localData.openedDays || localData.posterShownDay || localData.customPlaylists || localData.playlistStats);
+            // 标记备份中实际是否包含部分 local 配置（避免默认值造成“假阳性”）
+            if (localData) {
+                hasCustomPlaylists = Object.prototype.hasOwnProperty.call(localData, 'customPlaylists');
+                hasUsername = Object.prototype.hasOwnProperty.call(localData, 'username');
+            }
+            const hasLocalData = !!(localData && (
+                localData.ritualMorning ||
+                localData.ritualNight ||
+                localData.openedDays ||
+                localData.posterShownDay ||
+                hasCustomPlaylists ||
+                localData.playlistStats ||
+                hasUsername ||
+                Object.prototype.hasOwnProperty.call(localData, 'dayStartOffset') ||
+                Object.prototype.hasOwnProperty.call(localData, 'energyMode') ||
+                Object.prototype.hasOwnProperty.call(localData, 'visitedV66')
+            ));
+
+            // 为后续处理补上默认值，避免旧备份缺字段时报错
+            if (!localData) localData = {};
+            if (!hasCustomPlaylists) localData.customPlaylists = [];
+            if (!hasUsername) localData.username = 'Anchor';
             
             // 保存待导入的数据
             pendingImportData = {
@@ -9854,10 +9887,13 @@ if (!userOverrideFlash) {
                 incomingDailyLog,
                 incomingStats,
                 localData,
+                backupVersion,
                 taskCount,
                 archiveCount,
                 logCount,
-                hasLocalData
+                hasLocalData,
+                hasCustomPlaylists,
+                hasUsername
             };
             
             // 显示选择对话框
@@ -9897,7 +9933,20 @@ if (!userOverrideFlash) {
             return;
         }
 
-        const { incomingDB, incomingArchive, incomingDailyLog, incomingStats, localData, taskCount, archiveCount, logCount, hasLocalData } = pendingImportData;
+        const { 
+            incomingDB, 
+            incomingArchive, 
+            incomingDailyLog, 
+            incomingStats, 
+            localData, 
+            backupVersion,
+            taskCount, 
+            archiveCount, 
+            logCount, 
+            hasLocalData,
+            hasCustomPlaylists,
+            hasUsername
+        } = pendingImportData;
         pendingImportData = null;
 
         if (action === 'overwrite') {
@@ -10019,8 +10068,8 @@ if (!userOverrideFlash) {
                     localStorage.setItem(KEY_POSTER_SHOWN_DAY, localData.posterShownDay);
                 }
 
-                // 👉 恢复专属清单
-                if (localData.customPlaylists !== undefined && localData.customPlaylists !== null) {
+                // 👉 恢复专属清单（仅当备份中实际包含 customPlaylists 字段时）
+                if (hasCustomPlaylists && localData.customPlaylists !== undefined && localData.customPlaylists !== null) {
                   if (action === 'merge') {
                     // 尝试合并：按 ID 去重
                     let existing = [];
@@ -10039,7 +10088,7 @@ if (!userOverrideFlash) {
                       localStorage.setItem('anchor_custom_playlists', JSON.stringify(existing));
                     }
                   } else {
-                    // 覆盖模式
+                    // 覆盖模式：本地专属清单与备份保持一致
                     const val = typeof localData.customPlaylists === 'string'
                       ? localData.customPlaylists
                       : JSON.stringify(localData.customPlaylists);
@@ -10058,6 +10107,67 @@ if (!userOverrideFlash) {
                   } else {
                     localStorage.setItem('anchor_playlist_stats', JSON.stringify(localData.playlistStats));
                   }
+                }
+
+                // 👉 恢复本机身份（Username）
+                if (hasUsername && localData.username !== undefined && localData.username !== null) {
+                    const backupName = localData.username || 'Anchor';
+                    if (action === 'overwrite') {
+                        // 覆盖模式：直接以备份为准
+                        try {
+                            localStorage.setItem(KEY_USERNAME, backupName);
+                            currentUsername = backupName;
+                            if (typeof updateUsernameUI === 'function') {
+                                updateUsernameUI();
+                            }
+                        } catch (e) {
+                            console.warn('恢复用户名失败', e);
+                        }
+                    } else if (action === 'merge') {
+                        // 合并模式：给用户一次选择机会
+                        try {
+                            const ok = confirm(`检测到备份中的身份标识为「${backupName}」，是否覆盖本机身份？`);
+                            if (ok) {
+                                localStorage.setItem(KEY_USERNAME, backupName);
+                                currentUsername = backupName;
+                                if (typeof updateUsernameUI === 'function') {
+                                    updateUsernameUI();
+                                }
+                            }
+                        } catch (e) {
+                            console.warn('恢复用户名确认失败', e);
+                        }
+                    }
+                }
+
+                // 👉 夜猫子时钟起始偏移
+                if (Object.prototype.hasOwnProperty.call(localData, 'dayStartOffset')) {
+                    try {
+                        const off = parseInt(localData.dayStartOffset, 10);
+                        if (!isNaN(off)) {
+                            localStorage.setItem('anchor_day_start_offset', String(off));
+                        }
+                    } catch (e) {
+                        console.warn('恢复 dayStartOffset 失败', e);
+                    }
+                }
+
+                // 👉 能量模式（如果备份中有）
+                if (Object.prototype.hasOwnProperty.call(localData, 'energyMode') && localData.energyMode) {
+                    try {
+                        localStorage.setItem('energyMode', localData.energyMode);
+                    } catch (e) {
+                        console.warn('恢复 energyMode 失败', e);
+                    }
+                }
+
+                // 👉 新手引导访问标记
+                if (Object.prototype.hasOwnProperty.call(localData, 'visitedV66') && localData.visitedV66) {
+                    try {
+                        localStorage.setItem('anchor_visited_v66', localData.visitedV66);
+                    } catch (e) {
+                        console.warn('恢复 visitedV66 失败', e);
+                    }
                 }
             } catch (e) {
                 console.warn('恢复 localStorage 数据时出错', e);
@@ -10323,15 +10433,19 @@ if (!userOverrideFlash) {
         showToast('✨ 已恢复默认仪式');
     }
 
-    // 【备份导出/导入升级 v6.3-backup2】exportToFile: 导出包含版本信息和 localStorage 数据的新格式
+    // 【备份导出/导入升级 v6.8-backup】exportToFile: 导出包含版本信息和 localStorage 数据的新格式
     function exportToFile() { 
-        // 读取 localStorage 中的仪式、打卡和专属清单数据
+        // 读取 localStorage 中的仪式、打卡和专属清单数据 & 个性化设置
         let ritualMorning = null;
         let ritualNight = null;
         let openedDays = [];
         let posterShownDay = null;
         let customPlaylists = [];
         let playlistStats = {};
+        let usernameForBackup = currentUsername || 'Anchor';
+        let dayStartOffset = 0;
+        let visitedV66 = null;
+        let energyModeBackup = null;
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -10363,23 +10477,59 @@ if (!userOverrideFlash) {
             }
             const storedStats = localStorage.getItem('anchor_playlist_stats');
             if (storedStats) playlistStats = JSON.parse(storedStats);
+
+            // 👉 用户身份（Username）
+            const storedUsername = localStorage.getItem(KEY_USERNAME);
+            if (storedUsername && storedUsername.trim()) {
+                usernameForBackup = storedUsername.trim();
+            }
+
+            // 👉 夜猫子时钟起始偏移
+            dayStartOffset = getDayStartOffset();
+
+            // 👉 新手引导访问标记
+            visitedV66 = localStorage.getItem('anchor_visited_v66') || null;
+
+            // 👉 能量模式（如果有持久化）
+            try {
+                const storedEnergy = localStorage.getItem('energyMode');
+                if (storedEnergy) {
+                    energyModeBackup = storedEnergy;
+                } else if (typeof energyMode !== 'undefined') {
+                    energyModeBackup = energyMode;
+                }
+            } catch (e) {
+                energyModeBackup = typeof energyMode !== 'undefined' ? energyMode : null;
+            }
         } catch (e) {
             console.warn('读取 localStorage 数据时出错', e);
         }
         
         // 构建新格式的备份对象
         const backupData = {
-            version: "v6.8.3-backup",
+            version: "v6.8-backup",
             exportedAt: new Date().toISOString(),
-            data: { db, archive, dailyLog, userStats },
+            data: { 
+                db, 
+                archive, 
+                dailyLog, 
+                userStats,
+                // v6.8 起：自定义专属清单也视为核心数据
+                customPlaylists: customPlaylists
+            },
             local: {
                 ritualMorning: ritualMorning,
                 ritualNight: ritualNight,
                 openedDays: openedDays,
                 posterShownDay: posterShownDay,
-                // 👉 备份清单数据
+                // 👉 备份清单数据（保留原有结构，向后兼容）
                 customPlaylists: customPlaylists,
-                playlistStats: playlistStats
+                playlistStats: playlistStats,
+                // 👉 v6.9.1：本机身份与设置
+                username: usernameForBackup,
+                dayStartOffset: dayStartOffset,
+                visitedV66: visitedV66,
+                energyMode: energyModeBackup
             }
         };
         
@@ -10390,15 +10540,19 @@ if (!userOverrideFlash) {
         a.click(); 
     }
 
-    // 【备份导出/导入升级 v6.3-backup2】copyToClip: 复制包含版本信息和 localStorage 数据的新格式
+    // 【备份导出/导入升级 v6.8-backup】copyToClip: 复制包含版本信息和 localStorage 数据的新格式
     function copyToClip() { 
-        // 读取 localStorage 中的仪式、打卡和专属清单数据
+        // 读取 localStorage 中的仪式、打卡和专属清单数据 & 个性化设置
         let ritualMorning = null;
         let ritualNight = null;
         let openedDays = [];
         let posterShownDay = null;
         let customPlaylists = [];
         let playlistStats = {};
+        let usernameForBackup = currentUsername || 'Anchor';
+        let dayStartOffset = 0;
+        let visitedV66 = null;
+        let energyModeBackup = null;
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -10429,22 +10583,56 @@ if (!userOverrideFlash) {
             }
             const storedStats = localStorage.getItem('anchor_playlist_stats');
             if (storedStats) playlistStats = JSON.parse(storedStats);
+
+            // 👉 用户身份（Username）
+            const storedUsername = localStorage.getItem(KEY_USERNAME);
+            if (storedUsername && storedUsername.trim()) {
+                usernameForBackup = storedUsername.trim();
+            }
+
+            // 👉 夜猫子时钟起始偏移
+            dayStartOffset = getDayStartOffset();
+
+            // 👉 新手引导访问标记
+            visitedV66 = localStorage.getItem('anchor_visited_v66') || null;
+
+            // 👉 能量模式（如果有持久化）
+            try {
+                const storedEnergy = localStorage.getItem('energyMode');
+                if (storedEnergy) {
+                    energyModeBackup = storedEnergy;
+                } else if (typeof energyMode !== 'undefined') {
+                    energyModeBackup = energyMode;
+                }
+            } catch (e) {
+                energyModeBackup = typeof energyMode !== 'undefined' ? energyMode : null;
+            }
         } catch (e) {
             console.warn('读取 localStorage 数据时出错', e);
         }
         
         // 构建新格式的备份对象
         const backupData = {
-            version: "v6.8.3-backup",
+            version: "v6.8-backup",
             exportedAt: new Date().toISOString(),
-            data: { db, archive, dailyLog, userStats },
+            data: { 
+                db, 
+                archive, 
+                dailyLog, 
+                userStats,
+                customPlaylists: customPlaylists
+            },
             local: {
                 ritualMorning: ritualMorning,
                 ritualNight: ritualNight,
                 openedDays: openedDays,
                 posterShownDay: posterShownDay,
                 customPlaylists: customPlaylists,
-                playlistStats: playlistStats
+                playlistStats: playlistStats,
+                username: usernameForBackup,
+                dayStartOffset: dayStartOffset,
+                visitedV66: visitedV66,
+                energyMode: energyModeBackup
             }
         };
         
