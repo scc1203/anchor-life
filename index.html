@@ -1258,7 +1258,7 @@
         }
         .heatmap-y-axis {
           display: flex; flex-direction: column; justify-content: space-between;
-          font-size: 0.6rem; color: #999; height: 96px; padding-top: 4px;
+          font-size: 0.6rem; color: #999; height: 94px; padding-top: 0;
         }
         .heatmap-scroll {
           flex: 1; overflow-x: auto; overflow-y: hidden; padding-bottom: 8px;
@@ -1273,7 +1273,7 @@
           grid-template-rows: repeat(7, 1fr);
           grid-auto-flow: column;
           gap: 4px;
-          height: 96px;
+          height: 94px;
         }
         .heatmap-cell {
           width: 10px; height: 10px; border-radius: 2px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s;
@@ -2885,7 +2885,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.8.4 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.8.5 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3677,6 +3677,7 @@ body.immersive-locked {
       <li><b>v6.8.2：</b> 新增「1分钟预告片」，支持微启动正计时，无压破冰。</li>
       <li><b>v6.8.3：</b> 上线「📑 专属清单」，支持大任务一键拆解为子步骤，支持自定义 Emoji 隧道与轻量打卡。</li>
       <li><b>v6.8.4：</b> 数据轮回闭环：历史任务支持点击「♻️ 携记忆复活」；长线任务支持手动「🏆 归档」不再刷屏。</li>
+      <li><b>v6.8.5：</b> 新增「岁月热力图」：以 GitHub 风格渲染过去半年活跃度；支持点击任意日期，在下方「记忆放映机」中查看当日完成记录与未来日期的温柔提示。</li>
     </ul>
   </details>
 
