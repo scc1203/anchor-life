@@ -2982,12 +2982,26 @@ body.immersive-locked {
         <div class="task-dialog-box">
             <div class="task-dialog-title" id="taskDialogTitle">任务操作</div>
             <div class="task-dialog-message" id="taskDialogMessage"></div>
-            <div class="task-dialog-buttons">
-                <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">修改</button>
-                <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">记忆</button>
-                <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉去做</button>
+            <div class="task-dialog-buttons" style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+              <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+              <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+              <button class="task-dialog-btn" style="background:#fff3e0; color:#e65100; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;" onclick="handleTaskArchive()">🏆 归档</button>
+              <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉 去做</button>
             </div>
         </div>
+    </div>
+
+    <!-- 历史记录/荣誉殿堂：记忆详情与复活弹窗 -->
+    <div id="historyTaskDialog" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; align-items:center; justify-content:center;">
+      <div class="task-dialog-overlay" onclick="document.getElementById('historyTaskDialog').style.display='none'"></div>
+      <div class="task-dialog-box" style="width: 85%; max-width: 320px; background:#fff; border-radius:16px; padding:20px; z-index:2; position:relative; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+        <div class="task-dialog-title" id="htTitle" style="font-size:1.1rem; font-weight:bold; color:#333; margin-bottom:10px; text-align:center;"></div>
+        <div class="task-dialog-message" id="htMessage" style="margin-bottom:16px;"></div>
+        <div class="task-dialog-buttons" style="display:flex; flex-direction:column; gap:8px;">
+          <button class="task-dialog-btn" onclick="resurrectHistoryTask()" style="background:#e8f5e9; color:#2e7d32; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;">♻️ 无损恢复至任务库</button>
+          <button class="task-dialog-btn" onclick="document.getElementById('historyTaskDialog').style.display='none'" style="background:#f5f5f5; color:#666; border:none; padding:10px; border-radius:8px; font-size:0.95rem; cursor:pointer;">🔙 关闭</button>
+        </div>
+      </div>
     </div>
 
     <!-- v6.5：记忆面板（底部滑出） -->
@@ -6348,7 +6362,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             const badge = (item.isFrog || item.type === 'important') ? ' 🏅' : '';
 
             div.innerHTML = `
-                <span style="flex:1;">${icon} ${item.title}${badge}</span>
+                <span style="flex:1; cursor:pointer; color:#555;" onclick="showHistoryTaskDetail('archive', ${i})">${icon} ${item.title}${badge}</span>
                 <span class="archive-del" onclick="deleteArchiveItem(${i})">🗑️</span>
             `;
             list.appendChild(div);
@@ -6373,7 +6387,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             li.innerHTML = `
                 <div style="display:flex;align-items:center;gap:0px;width:100%;font-size:0.8rem;">
                     <span class="footprint-time">${log.timeStr || ''}</span>
-                    <span class="footprint-item" style="flex:1;">${log.icon || ''} ${log.title}${suffix}</span>
+                    <span class="footprint-item" style="flex:1; cursor:pointer;" onclick="showHistoryTaskDetail('log', ${idx})">${log.icon || ''} ${log.title}${suffix}</span>
                     <span style="cursor:pointer;color:#c44;margin-left:auto;" title="删除" onclick="deleteLogEntry(${idx})">🗑️</span>
                 </div>
             `;
@@ -6459,7 +6473,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 }
                 
                 htmlStr += `<div style="font-size:0.8rem; color:#444; display:flex; align-items:center; gap:4px; margin-bottom:2px;">
-                    <span style="flex:1;">${log.icon || ''} ${log.title}${suffix}</span>
+                    <span style="flex:1; cursor:pointer;" onclick="showHistoryTaskDetail('log', ${log._index})">${log.icon || ''} ${log.title}${suffix}</span>
                     <span style="font-size:0.75rem; color:#999;">${memoryInfo}</span>
                 </div>`;
             });
@@ -8371,14 +8385,9 @@ function openRitual(type) {
                 }
             } else {
                 // 📚 书 / 杂志 / 剧集 / 其他长线文化内容：
-                // 不从媒体篮移除，只在荣誉殿堂记进度
-                archive.unshift({
-                    ...task,
-                    finishDate: now.toLocaleDateString()
-                });
+                // 修复 Bug：日常进度绝不自动进入荣誉殿堂，仅在上方记录今日足迹
                 save();
-                renderArchive();
-                showToast("📚 已记录到荣誉殿堂");
+                showToast("📚 已记录到今日足迹");
             }
         }
         // 3）普通任务：完成后从任务池删除；如果是重要任务（青蛙），同时放入荣誉殿堂
@@ -8471,13 +8480,61 @@ function openRitual(type) {
         showTaskActionDialog(task, msg);
     }
 
-    // v6.3-edit-buttons-enter：显示任务操作对话框
+    // 👉 动态任务操作对话框（带记忆上下文 & 动态按钮排版）
     function showTaskActionDialog(task, message) {
-        currentDialogTask = task;
-        const dialog = document.getElementById('taskActionDialog');
-        const msgEl = document.getElementById('taskDialogMessage');
-        if (msgEl) msgEl.innerText = message;
-        if (dialog) dialog.style.display = 'flex';
+      currentDialogTask = task;
+      const dialog = document.getElementById('taskActionDialog');
+      if (!dialog) return;
+      const msgEl = document.getElementById('taskDialogMessage');
+      const btnContainer = dialog.querySelector('.task-dialog-buttons');
+      if (!msgEl || !btnContainer) return;
+
+      // 1. 构造记忆情报微卡片
+      let statsHtml = '';
+      const hasTime = task.totalMinutes && task.totalMinutes > 0;
+      const hasBookmark = task.bookmarkText && task.bookmarkText.trim();
+
+      if (hasTime || hasBookmark) {
+        statsHtml += `<div style="background:#f9fafb; padding:10px 12px; border-radius:8px; font-size:0.85rem; color:#555; margin-top:12px; margin-bottom:4px; text-align:left; border:1px solid #eee;">`;
+        if (hasTime) {
+          const h = Math.floor(task.totalMinutes / 60);
+          const m = task.totalMinutes % 60;
+          statsHtml += `<div style="margin-bottom:4px;">⏱ <b>累计投入:</b> ${h > 0 ? h + 'h ' : ''}${m}m</div>`;
+        }
+        if (hasBookmark) {
+          statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}</div>`;
+        }
+        statsHtml += `</div>`;
+      }
+
+      msgEl.innerHTML = `<div style="font-weight:500;">${message}</div>${statsHtml}`;
+
+      // 2. 动态构造按钮区（区分媒体类与普通任务）
+      const isMedia = (task.type === 'culture' || task.type === 'vinyl');
+
+      // 重置样式确保使用 Grid 布局
+      btnContainer.style.display = 'grid';
+      btnContainer.style.gridTemplateColumns = '1fr 1fr';
+      btnContainer.style.gap = '8px';
+
+      if (isMedia) {
+        // 媒体类：2x2 网格，包含归档按钮
+        btnContainer.innerHTML = `
+          <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+          <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+          <button class="task-dialog-btn" style="background:#fff3e0; color:#e65100; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;" onclick="handleTaskArchive()">🏆 归档</button>
+          <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉 去做</button>
+        `;
+      } else {
+        // 普通类：无归档按钮，"去做" 按钮横跨两列，极度稳重
+        btnContainer.innerHTML = `
+          <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+          <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+          <button class="task-dialog-btn task-dialog-btn-complete" style="grid-column: span 2;" onclick="handleTaskComplete()">👉 去做</button>
+        `;
+      }
+
+      dialog.style.display = 'flex';
     }
 
     // v6.3-edit-buttons-enter：关闭对话框
@@ -8843,6 +8900,120 @@ function openRitual(type) {
         }
 
         closeMemoryPanel();
+    }
+
+    // 核心操作：长线任务手动彻底完结，移入荣誉殿堂
+    function handleTaskArchive() {
+      if (!currentDialogTask) return;
+      const task = currentDialogTask;
+      closeTaskActionDialog();
+
+      const cleanTitle = (task.title || '').replace(/《|》/g, '');
+      const ok = confirm(`确定已彻底完成/看完《${cleanTitle}》并将其移入荣誉殿堂吗？`);
+      if (!ok) return;
+
+      db = db.filter(t => t.id !== task.id);
+      const archiveItem = { ...task, finishDate: new Date().toLocaleDateString() };
+      archive.unshift(archiveItem);
+
+      save();
+      if (typeof renderList === 'function') renderList();
+      if (typeof renderArchive === 'function') renderArchive();
+      if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
+      showToast("🏆 伟大里程碑！已收入荣誉殿堂");
+    }
+
+    let currentResurrectItem = null;
+    let currentResurrectType = null; // 记录是从 'archive' 还是 'log' 来的
+    let currentResurrectIndex = -1;  // 记录在原数组中的索引
+
+    // 渲染历史任务记忆快照
+    function showHistoryTaskDetail(type, index) {
+      currentResurrectType = type;
+      currentResurrectIndex = index;
+
+      let item;
+      if (type === 'archive') item = archive[index];
+      else if (type === 'log') item = dailyLog[index];
+      if (!item) return;
+
+      currentResurrectItem = JSON.parse(JSON.stringify(item));
+      let memoryText = "";
+
+      if (type === 'archive') {
+        if (item.totalMinutes) {
+          const h = Math.floor(item.totalMinutes / 60);
+          const m = item.totalMinutes % 60;
+          memoryText += `<div style="margin-bottom:6px;">⏱ <b>累计投入:</b> ${h > 0 ? h + 'h ' : ''}${m}m</div>`;
+        }
+        if (item.bookmarkText) memoryText += `<div style="margin-bottom:6px;">🔖 <b>最终进度:</b> ${item.bookmarkText}</div>`;
+        if (item.noteText) memoryText += `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0e0e0;">📝 <b>沉淀备注:</b> <br><span style="color:#666; font-size:0.85rem; line-height:1.5;">${item.noteText.replace(/\n/g, '<br>')}</span></div>`;
+      } else {
+        if (item.lastAddMinutes) memoryText += `<div style="margin-bottom:6px;">⏱ <b>当次投入:</b> ${item.lastAddMinutes}m</div>`;
+        if (item.bookmarkSnapshot) memoryText += `<div style="margin-bottom:6px;">🔖 <b>当次进度:</b> ${item.bookmarkSnapshot}</div>`;
+        if (item.noteSnapshot) memoryText += `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0e0e0;">📝 <b>当次备注:</b> <br><span style="color:#666; font-size:0.85rem; line-height:1.5;">${item.noteSnapshot.replace(/\n/g, '<br>')}</span></div>`;
+      }
+
+      if (!memoryText) memoryText = `<div style="color:#999; font-size:0.85rem; text-align:center; padding:10px 0;">(无附加记忆记录)</div>`;
+
+      const htTitleEl = document.getElementById('htTitle');
+      const htMsgEl = document.getElementById('htMessage');
+      const dlg = document.getElementById('historyTaskDialog');
+      if (!htTitleEl || !htMsgEl || !dlg) return;
+
+      htTitleEl.innerText = `${item.icon || ''} ${item.title}`;
+      htMsgEl.innerHTML = `<div style="text-align:left; background:#f9fafb; padding:12px 14px; border-radius:10px; font-size:0.9rem; color:#444;">${memoryText}</div>`;
+      dlg.style.display = 'flex';
+    }
+
+    // 👉 无损一键回库（修复类型丢失 & 荣誉殿堂拔出）
+    function resurrectHistoryTask() {
+      if (!currentResurrectItem) return;
+      const dlg = document.getElementById('historyTaskDialog');
+      if (dlg) dlg.style.display = 'none';
+
+      const targetId = currentResurrectItem.taskId || currentResurrectItem.id;
+      if (db.find(t => t.id === targetId)) {
+        showToast("⚠️ 该任务已在任务库中，无需重复提取");
+        return;
+      }
+
+      let newTask = { ...currentResurrectItem };
+      newTask.id = targetId || (Date.now() + Math.floor(Math.random() * 1000));
+
+      // 👉 修复 Bug 1：从足迹复活时，若缺失 type，根据图标推断，确保回正确的库房
+      if (!newTask.type) {
+        if (newTask.icon === '📖') { newTask.type = 'culture'; newTask.subtype = 'book'; }
+        else if (newTask.icon === '🎬') { newTask.type = 'culture'; newTask.subtype = 'movie'; }
+        else if (newTask.icon === '📺') { newTask.type = 'culture'; newTask.subtype = 'series'; newTask.isSeries = true; }
+        else if (newTask.icon === '💿') { newTask.type = 'vinyl'; }
+        else { newTask.type = 'indoor'; } // 兜底
+      }
+
+      // 清洗旧状态
+      delete newTask.finishDate;
+      delete newTask.done;
+      delete newTask.timeStr;
+      delete newTask.date;
+
+      if (newTask.bookmarkSnapshot) newTask.bookmarkText = newTask.bookmarkSnapshot;
+      if (newTask.noteSnapshot) newTask.noteText = newTask.noteSnapshot;
+      if (!newTask.totalMinutes && newTask.lastAddMinutes) newTask.totalMinutes = newTask.lastAddMinutes;
+
+      db.unshift(newTask);
+
+      // 👉 修复 Bug 2：如果是从荣誉殿堂复活的，彻底删除原有的墓志铭，防止未来重复
+      if (currentResurrectType === 'archive' && currentResurrectIndex > -1) {
+        archive.splice(currentResurrectIndex, 1);
+        if (typeof renderArchive === 'function') renderArchive();
+      }
+
+      save();
+      if (typeof renderList === 'function') renderList();
+
+      const sec03 = document.querySelector('.section-list');
+      if (sec03) sec03.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      showToast("✨ 已携记忆无损回库！");
     }
 
     function recordLog() { renderLog(); }
