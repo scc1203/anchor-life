@@ -3587,7 +3587,7 @@ body.immersive-locked {
                   📑 专属清单 (项目 / 任务拆分)
                 </div>
                 <div style="font-size:0.75rem; color:#888; margin-bottom:10px;">
-                  建立你的专属沉浸隧道。点击下方按钮添加新清单。
+                  建立你的专属沉浸隧道。点击 📑 可为清单设置专属图标。
                 </div>
                 <div id="playlistsEditorZone" style="display:flex; flex-direction:column; gap:12px; margin-bottom:12px;">
                   <!-- 清单卡片将由 JS 动态渲染在这里 -->
@@ -6912,8 +6912,18 @@ function renderResultCard(result) {
           }
           if (activePlaylist.tasks.length > 0) {
             const discardedText = currentTask ? currentTask.rawTaskText : null;
-            drawFromPlaylist();
-            if (discardedText) activePlaylist.tasks.push(discardedText);
+
+            // 制造一个视觉上的卡片消失感
+            const card = document.getElementById('resultCard');
+            if (card) {
+              card.style.animation = 'none';
+              card.style.opacity = 0;
+            }
+
+            setTimeout(() => {
+              drawFromPlaylist();
+              if (discardedText) activePlaylist.tasks.push(discardedText);
+            }, 80); // 极短延迟，让视觉上有“换走”的感觉
           } else {
             showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
           }
@@ -7853,9 +7863,13 @@ function closePlaylistOverlay() {
 
             titleEl.textContent = targetPl.name;
             stepsUl.innerHTML = '';
-            targetPl.tasks.forEach(t => {
+            targetPl.tasks.forEach((t, i) => {
               const li = document.createElement('li');
-              li.textContent = t;
+              li.style.cssText = "display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; font-size:0.9rem;";
+              li.innerHTML = `
+                <input type="checkbox" class="pl-step-checkbox" id="plStep_${i}" data-task="${t.replace(/"/g, '&quot;')}" style="margin-top:4px; width:16px; height:16px;">
+                <label for="plStep_${i}" style="cursor:pointer; flex:1; line-height:1.4;">${t}</label>
+              `;
               stepsUl.appendChild(li);
             });
             overlay.style.display = 'block';
@@ -7921,13 +7935,23 @@ function startPlaylist(playMode) {
   const targetPl = customPlaylists.find(p => p.id === targetId);
   if (!targetPl) return;
 
+  // 👉 修复 2：只收集面板上没有被打钩的任务
+  const checkboxes = document.querySelectorAll('.pl-step-checkbox');
+  const remainingTasks = [];
+  checkboxes.forEach(cb => {
+    if (!cb.checked) {
+      remainingTasks.push(cb.getAttribute('data-task'));
+    }
+  });
+
   activePlaylist = {
-    id: targetPl.id, // 👉 核心：保存 ID
+    id: targetPl.id,
     name: targetPl.name,
     icon: targetPl.icon || '📑', // 👉 记住该清单的专属图标
-    tasks: Array.isArray(targetPl.tasks) ? [...targetPl.tasks] : [],
+    tasks: remainingTasks, // 只将未完成的任务送入牌堆
     mode: playMode
   };
+
   closePlaylistOverlay();
   drawFromPlaylist();
 }
@@ -8032,6 +8056,13 @@ function drawFromPlaylist() {
   if (ph) ph.style.display = 'none';
   if (gachaLayer) gachaLayer.style.display = 'none';
 
+  // 👉 修复 Bug：在渲染新卡前，清除上一张卡（换一个）遗留的透明度“隐身斗篷”
+  const cardEl = document.getElementById('resultCard');
+  if (cardEl) {
+    cardEl.style.opacity = '';
+  }
+
+  // 直接调用原有的渲染逻辑，它内部自带了 stripOpen 入场动画
   renderResultCard(currentTask);
 }
 
@@ -9673,13 +9704,19 @@ if (!userOverrideFlash) {
 
         card.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-            <!-- 👉 Emoji 专属输入框 -->
-            <input type="text" value="${pl.icon || '📑'}" onchange="updatePlaylistData(${index}, 'icon', this.value)" placeholder="📑" style="width:38px; text-align:center; padding:6px 2px; border:1px solid #ddd; border-radius:8px; font-size:1rem; outline:none; background:#fff;">
+            <!-- 👉 增强暗示：虚线框 + 焦点自动清空 + 失去焦点自动复原 -->
+            <input type="text" value="${pl.icon || '📑'}"
+              title="点击自定义图标"
+              onfocus="if(this.value==='📑') { this.value=''; this.style.opacity='1'; this.style.border='1px solid #75B79E'; }"
+              onblur="if(this.value.trim()==='') { this.value='📑'; this.style.opacity='0.4'; this.style.border='1px dashed #bbb'; updatePlaylistData(${index}, 'icon', '📑'); }"
+              oninput="this.style.opacity='1'; this.style.border='1px solid #ddd';"
+              onchange="updatePlaylistData(${index}, 'icon', this.value)"
+              style="width:38px; cursor:text; text-align:center; padding:6px 2px; border:${(!pl.icon || pl.icon === '📑') ? '1px dashed #bbb' : '1px solid #ddd'}; border-radius:8px; font-size:1.1rem; outline:none; background:#fff; opacity: ${(!pl.icon || pl.icon === '📑') ? '0.4' : '1'}; transition: all 0.2s;">
             <input type="text" value="${pl.name}" onchange="updatePlaylistData(${index}, 'name', this.value)" placeholder="清单名称 (如: 我的画画课)" style="flex:1; padding:6px 10px; border:1px solid #ddd; border-radius:8px; font-weight:bold; font-size:0.9rem; outline:none;">
             <span style="font-size:0.75rem; color:#FF9AA2; font-weight:bold;">🏆 ${count}次</span>
             <button type="button" onclick="deletePlaylist(${index})" style="background:transparent; border:none; cursor:pointer; font-size:1rem; opacity:0.6;">🗑️</button>
           </div>
-          <textarea onchange="updatePlaylistData(${index}, 'tasks', this.value)" placeholder="输入任务，每行一个" style="width:100%; min-height:70px; border:1px solid #ddd; border-radius:8px; padding:8px; font-size:0.85rem; outline:none; resize:vertical; background:#fff;">${pl.tasks.join('\n')}</textarea>
+          <textarea onchange="updatePlaylistData(${index}, 'tasks', this.value)" placeholder="⬆自定义专属图标。输入任务，每行一个" style="width:100%; min-height:70px; border:1px solid #ddd; border-radius:8px; padding:8px; font-size:0.85rem; outline:none; resize:vertical; background:#fff;">${pl.tasks.join('\n')}</textarea>
         `;
         zone.appendChild(card);
       });
