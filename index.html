@@ -2515,6 +2515,9 @@ html.onboarding-lock {
   border-radius: 12px !important;  /* 保持和页面圆角风格一致 */
   /* 高亮过渡：给元素赋予"被选中"的呼吸感 */
   transition: box-shadow 0.3s ease, border-radius 0.3s ease;
+
+  /* 【v6.9.3】防御性升级：高亮元素仅作视觉提示，不响应点击，事件交给全屏遮罩推进引导 */
+  pointer-events: none !important;
 }
 
 /* 浮动引导文案框：白底圆角，马卡龙色文字 */
@@ -2885,7 +2888,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.1 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.3 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3670,7 +3673,11 @@ body.immersive-locked {
             <summary>📑 更新日志</summary>
             <div class="manual-content" style="padding-top: 10px;">
 
-  <details open style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
+  <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+    <li><b>v6.9.3：</b> ☁️ 开启云端纪元！向所有测试用户开放本地机房同步；重构数据方舟面板；升级全新新手引导流程（加入身份认领与清单提示）。</li>
+  </ul>
+
+  <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
     <summary style="font-size: 0.85rem; padding: 8px; border-bottom: none;">🚀 v6.8：心流引擎与数据轮回</summary>
     <ul style="margin-top:0; padding-left:24px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
       <li><b>v6.8.1：</b> 新增「夜猫子时钟」，自定义一天开始的时间，让足迹纪录待在今天。</li>
@@ -3785,33 +3792,8 @@ body.immersive-locked {
 <!-- 设置 & 备份 -->
     <div class="section-settings" id="settingSec">
 
-        <!-- ☁️ 极空间 NAS 云端同步 (Beta) -->
-        <details id="cloudSyncPanel" style="margin-bottom:10px; display: none;">
-          <summary>☁️ 本地云端机房 (Beta)</summary>
-          <div class="manual-content">
-            <div style="font-size:0.8rem; color:#6B4A3B; margin-bottom:5px; font-weight:bold;">
-              机房连接状态：<span style="color:#2E7D32;">已准备好</span>
-            </div>
-            <p style="font-size:0.75rem; color:#777; margin-bottom:12px;">
-              基于当前的本机身份标识，向 192.168.1.219 发送或拉取你的专属档案。拉取后会触发安全的「合并/覆盖」确认。
-            </p>
-
-            <div class="backup-grid">
-              <button id="btnSyncCloud" class="btn-file" onclick="syncToCloud()" style="background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;">☁️ 推送当前进度至云端</button>
-              <button id="btnPullCloud" class="btn-file" onclick="fetchFromCloud()" style="background:#fff3e0; border-color:#ffcc80; color:#e65100;">☁️ 从云端拉取存档</button>
-            </div>
-          </div>
-        </details>
-        <script>
-          // 仅当 variant 为 personal 时显示云端面板
-          if (typeof APP_VARIANT !== 'undefined' && APP_VARIANT === 'personal') {
-            const pnl = document.getElementById('cloudSyncPanel');
-            if (pnl) pnl.style.display = 'block';
-          }
-        </script>
-
         <details>
-            <summary>📡 数据方舟 (Offline)</summary>
+            <summary>📡 数据方舟 (Sync & Backup)</summary>
             <div class="manual-content">
         <div style="font-size:0.8rem; color:#6B4A3B; margin-bottom:5px; font-weight:bold;">👤 本机身份标识 (为云端做准备)</div>
         <div style="display:flex; gap:8px; margin-bottom:15px; align-items:center;">
@@ -3825,20 +3807,40 @@ body.immersive-locked {
             if (unInp && currentUsername !== 'Anchor') unInp.value = currentUsername;
           }, 100);
         </script>
-        <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 文件备份 (电脑端推荐)</div>
+
+        <!-- 1. 云端同步 (Beta) -->
+        <div id="cloudSyncPanelInner">
+          <div style="font-size:0.8rem; color:#6B4A3B; margin-bottom:5px; font-weight:bold;">
+            ☁️ 专属云端机房
+            <span style="font-size:0.7rem; font-weight:normal; color:#777; margin-left:5px;">(基于上方填写的「身份标识」)</span>
+          </div>
+          <div class="backup-grid">
+            <button id="btnSyncCloud" class="btn-file" onclick="syncToCloud()" style="background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;">☁️ 推送进度至云端</button>
+            <button id="btnPullCloud" class="btn-file" onclick="fetchFromCloud()" style="background:#fff3e0; border-color:#ffcc80; color:#e65100;">☁️ 从云端拉取存档</button>
+          </div>
+        </div>
+
+        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+        <!-- 2. 本地文件备份 -->
+        <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">📂 本地文件备份 (防断网保底)</div>
         <div class="backup-grid">
             <button class="btn-file" onclick="exportToFile()">📥 导出文件</button>
             <button class="btn-file" onclick="triggerImport()">📤 导入文件 (Merge)</button>
         </div>
-        <hr style="border:0; border-top:1px solid #ddd; margin:15px 0;">
-        <div style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:bold;">📝 文本操作 (手机端)</div>
+
+        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+
+        <!-- 3. 文本操作 -->
+        <div style="font-size:0.8rem; color:#666; margin-bottom:5px; font-weight:bold;">📝 文本代码 (跨设备接力)</div>
         <div class="backup-grid">
             <button class="btn-outline" onclick="copyToClip()">📋 复制文本码</button>
             <button class="btn-outline" onclick="document.getElementById('dataArea').value=''">🗑️ 清空</button>
         </div>
         <textarea id="dataArea" class="setting-textarea" placeholder="在此长按粘贴数据代码..."></textarea>
         <button class="btn-file" style="width:100%; background:#E8F5E9; border-color:#A5D6A7; color:#2E7D32;" onclick="executeImport()">✅ 确认导入 (Merge)</button>
-        <button class="btn-danger" onclick="tryResetAll()">🗑️ 格式化/重置所有数据</button>
+
+        <button class="btn-danger" style="margin-top:15px;" onclick="tryResetAll()">🗑️ 格式化/重置本机数据</button>
         <input type="file" id="fileInput" style="display:none" onchange="importFromFile(this)">
                 </div>
         </details>
@@ -3935,6 +3937,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const KEY_VISITED = 'anchor_has_visited_v55_personal';
     const KEY_RITUAL_MORNING = 'anchor_ritual_morning_v55';
     const KEY_RITUAL_NIGHT  = 'anchor_ritual_night_v55';
+    const ONBOARDING_VISITED_KEY = 'anchor_visited_v693';
 
     let currentUsername = localStorage.getItem(KEY_USERNAME) || 'Anchor';
 
@@ -4657,8 +4660,7 @@ function showDailyPosterIfNeeded(openDaysCount) {
     if (localStorage.getItem(phaseKey)) return;
 
     // 修复：新手第一次来，绝对不弹打卡图；把纯净主界面完全留给新手引导的聚光灯。
-    const VISITED_KEY = 'anchor_visited_v66';
-    if (!localStorage.getItem(VISITED_KEY)) {
+    if (!localStorage.getItem(ONBOARDING_VISITED_KEY)) {
         markPosterPhase(phaseKey);
         return;
     }
@@ -10686,11 +10688,6 @@ if (!userOverrideFlash) {
             badge.textContent = (APP_VARIANT === 'common') ? (base + ' 通用版') : base;
         }
 
-        // 4）Personal 版才显示云端面板
-        const cloudPanel = document.getElementById('cloudSyncPanel');
-        if (cloudPanel) {
-            cloudPanel.style.display = (APP_VARIANT === 'personal') ? 'block' : 'none';
-        }
     }
 
 /* --- 页面载入后自动选择筛选默认值 --- */
@@ -10715,34 +10712,38 @@ document.addEventListener("DOMContentLoaded", function() {
 // ============================================================
 function initOnboarding() {
 
-    // --- 守卫：老用户直接跳出 ---
-    // Why: 'anchor_visited_v66' 是这个版本的专属 key，
-    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
-    const VISITED_KEY = 'anchor_visited_v66';
-    if (localStorage.getItem(VISITED_KEY)) return;
+   // --- 守卫：老用户直接跳出 ---
+   // Why: 'anchor_visited_v693' 是 v6.9.3 的专属 key，
+   //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
+    if (localStorage.getItem(ONBOARDING_VISITED_KEY)) return;
 
-    // --- 三步引导配置 ---
-    // 🔮 未来扩展点：将 steps 抽出为配置对象，新增步骤只需加数组条目。
+    // --- 四步引导配置（v6.9.3） ---
     const steps = [
-        {
-            // Step 1：任务输入区——核心起点
-            targetId: 'inpTitle',
-            text: '📍 <b>第 1 步：清空大脑。</b><br>把最近想做的事全写在这里，一行一个<br>（例：看电影 / 整理桌面），存入任务库。'
-        },
-        {
-            // Step 2：抽卡按钮——核心动作
-            targetId: 'mainBtn',
-            text: '🎲 <b>第 2 步：交出决定权。</b><br>不用纠结下一步做什么，直接点这里。系统会像扭蛋一样，随机为你抽出一张待办卡片。'
-        },
-        {
-            // Step 3：糖果按钮——情绪出口
-            targetId: 'candyButton',
-            text: '🍬 <b>紧急出口：</b><br>如果此刻什么都不想做，先点这里「吃颗糖」（捏泡泡 / 涂鸦 / 听歌）。别有压力，玩够了、回血了，再去抽卡行动。'
-        }
+      {
+        // Step 1：认领数字身份（定位到 04 区的用户名输入框）
+        targetId: 'settingUsernameInp',
+        text: '🛂 <b>第 1 步：认领数字护照。</b><br>欢迎来到 Anchor。请先在这里输入一个<b>独一无二的代号</b>（如名字缩写、小名+生日）。它将作为你连接云端机房、找回数据的唯一凭证。多设备间一键同步'
+      },
+      {
+        // Step 2：任务输入区与清单
+        targetId: 'inpTitle',
+        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：如果是长期大项目，也可以点击✂️设定为「专属清单」功能哦)</span>'
+      },
+      {
+        // Step 3：抽卡按钮
+        targetId: 'mainBtn',
+        text: '🎲 <b>第 3 步：交出决定权。</b><br>不用纠结先做哪个，直接点这里。系统会像扭蛋一样，为你随机抽出一张当下的锚点卡片。'
+      },
+      {
+        // Step 4：糖果按钮
+        targetId: 'candyButton',
+        text: '🍬 <b>紧急出口：吃颗糖。</b><br>如果此刻什么都不想做，别有压力，先点这里「吃颗糖」（捏泡泡/涂鸦/听歌）。回血了，再出发。'
+      }
     ];
 
     let currentStep = 0;
     let lastTarget  = null;
+    let extraHighlightTargets = [];
 
     const overlay = document.getElementById('onboardingOverlay');
     const tooltip = document.getElementById('onboardingTooltip');
@@ -10786,11 +10787,29 @@ function initOnboarding() {
             lastTarget.classList.remove('onboarding-highlight');
             lastTarget = null;
         }
+        if (extraHighlightTargets && extraHighlightTargets.length) {
+            extraHighlightTargets.forEach(el => {
+                if (el && el.classList) {
+                    el.classList.remove('onboarding-highlight');
+                }
+            });
+            extraHighlightTargets = [];
+        }
 
+        // 容错：如果目标元素不存在，跳过
         if (!target) {
             currentStep++;
             showStep(currentStep);
             return;
+        }
+
+        // 核心修复：如果目标被包裹在折叠的 <details> 中，必须先将其展开，否则无体积、无法定位
+        let parent = target.parentElement;
+        while (parent) {
+            if (parent.tagName && parent.tagName.toLowerCase() === 'details') {
+                parent.open = true;
+            }
+            parent = parent.parentElement;
         }
 
         // --- 滚动到目标元素 ---
@@ -10844,6 +10863,15 @@ function initOnboarding() {
 
         target.classList.add('onboarding-highlight');
         lastTarget = target;
+
+        // Step 2 额外高亮：输入框右上角的「✂️ 拆分为子步骤/清单」按钮
+        if (step.targetId === 'inpTitle') {
+            const splitBtn = document.querySelector('.section-input .section-title span[onclick^=\"shortcutToNewPlaylist\"]');
+            if (splitBtn && splitBtn.classList) {
+                splitBtn.classList.add('onboarding-highlight');
+                extraHighlightTargets.push(splitBtn);
+            }
+        }
     }
 
     // --- tooltip 定位与显示（从 showStep 中抽出，供同步/异步两条路径复用）---
@@ -10901,7 +10929,7 @@ function initOnboarding() {
         overlay.style.display = 'none';
         tooltip.style.display = 'none';
         unlockScroll();
-        localStorage.setItem(VISITED_KEY, 'true');
+        localStorage.setItem(ONBOARDING_VISITED_KEY, 'true');
     }
 
     function handleOverlayClick() {
@@ -11131,8 +11159,8 @@ function initLobby() {
   const greeting = document.getElementById('lobbyGreeting');
   if (!lobby || !greeting) return;
 
-  // 1. 获取当前状态标识
-  const isNewUser = !localStorage.getItem('anchor_visited_v66');
+  // 1. 获取当前状态标识（与新版 Onboarding 使用同一 VISITED_KEY，避免冲突）
+  const isNewUser = !localStorage.getItem(ONBOARDING_VISITED_KEY);
   const phase = typeof getCurrentPhase === 'function' ? getCurrentPhase() : 'morning';
   const today = typeof getTodayDateStr === 'function' ? getTodayDateStr() : new Date().toISOString().slice(0, 10);
   const phaseKey = `anchor_poster_phase_v67_${today}_${phase}`;
