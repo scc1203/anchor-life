@@ -2885,7 +2885,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.8.5 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.1 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -4020,6 +4020,13 @@ coloringBgImg.onload = function () {
           const caller = currentUsername === 'Anchor' ? '你' : currentUsername;
           dayContainer.innerHTML = `这是 ${caller} 和 Anchor 的第 <span id="dailyPosterDayCount">${count}</span> 天`;
         }
+      }
+
+      // 👉 新增修复：同步更新 04 区的输入框，防止导入备份后 UI 脱节
+      const unInp = document.getElementById('settingUsernameInp');
+      if (unInp) {
+        // 如果是默认的 Anchor，输入框留空以展示 placeholder；否则填入专属名
+        unInp.value = currentUsername === 'Anchor' ? '' : currentUsername;
       }
     }
 
@@ -10536,7 +10543,10 @@ if (!userOverrideFlash) {
         const blob = new Blob([JSON.stringify(backupData, null, 2)], {type: "application/json"}); 
         const a = document.createElement('a'); 
         a.href = URL.createObjectURL(blob); 
-        a.download = "anchor_backup_" + new Date().toISOString().slice(0,10) + ".json"; 
+        // 👉 体验升级：让导出的 JSON 文件带上用户的专属 ID
+        const safeName = currentUsername === 'Anchor' ? 'backup' : currentUsername;
+        const dateStr = new Date().toISOString().slice(0,10);
+        a.download = `anchor_${safeName}_${dateStr}.json`; 
         a.click(); 
     }
 
