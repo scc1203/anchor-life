@@ -7847,6 +7847,10 @@ function closePlaylistOverlay() {
           const titleEl = document.getElementById('plOverlayTitle');
           const stepsUl = document.getElementById('plOverlaySteps');
           if (overlay && titleEl && stepsUl) {
+            // 👉 动态替换面板顶部的大图标
+            const iconEl = overlay.querySelector('.card-icon');
+            if (iconEl) iconEl.textContent = targetPl.icon || '📑';
+
             titleEl.textContent = targetPl.name;
             stepsUl.innerHTML = '';
             targetPl.tasks.forEach(t => {
@@ -7920,6 +7924,7 @@ function startPlaylist(playMode) {
   activePlaylist = {
     id: targetPl.id, // 👉 核心：保存 ID
     name: targetPl.name,
+    icon: targetPl.icon || '📑', // 👉 记住该清单的专属图标
     tasks: Array.isArray(targetPl.tasks) ? [...targetPl.tasks] : [],
     mode: playMode
   };
@@ -8015,7 +8020,7 @@ function drawFromPlaylist() {
     title: `【${activePlaylist.name}】 ${taskText}`,
     rawTaskText: taskText,
     type: 'playlist',
-    icon: '📑',
+    icon: activePlaylist.icon || '📑', // 👉 使用清单的专属图标
     desc: `专属清单进行中`,
     time: 0,
     isPlaylist: true
@@ -9668,6 +9673,8 @@ if (!userOverrideFlash) {
 
         card.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+            <!-- 👉 Emoji 专属输入框 -->
+            <input type="text" value="${pl.icon || '📑'}" onchange="updatePlaylistData(${index}, 'icon', this.value)" placeholder="📑" style="width:38px; text-align:center; padding:6px 2px; border:1px solid #ddd; border-radius:8px; font-size:1rem; outline:none; background:#fff;">
             <input type="text" value="${pl.name}" onchange="updatePlaylistData(${index}, 'name', this.value)" placeholder="清单名称 (如: 我的画画课)" style="flex:1; padding:6px 10px; border:1px solid #ddd; border-radius:8px; font-weight:bold; font-size:0.9rem; outline:none;">
             <span style="font-size:0.75rem; color:#FF9AA2; font-weight:bold;">🏆 ${count}次</span>
             <button type="button" onclick="deletePlaylist(${index})" style="background:transparent; border:none; cursor:pointer; font-size:1rem; opacity:0.6;">🗑️</button>
@@ -9679,7 +9686,8 @@ if (!userOverrideFlash) {
     }
 
     function addNewPlaylistCard() {
-      customPlaylists.push({ id: 'pl_' + Date.now(), name: '新专属清单', tasks: [] });
+      // 👉 新增 icon 字段，默认给 📑
+      customPlaylists.push({ id: 'pl_' + Date.now(), icon: '📑', name: '新专属清单', tasks: [] });
       renderPlaylistEditor();
     }
 
@@ -9695,8 +9703,8 @@ if (!userOverrideFlash) {
         plName = firstLine.replace(/《|》|!|！|\*/g, '').trim() || plName;
       }
 
-      // 2. 创建新清单
-      customPlaylists.push({ id: newId, name: plName, tasks: [] });
+      // 2. 创建新清单（带默认图标）
+      customPlaylists.push({ id: newId, icon: '📑', name: plName, tasks: [] });
 
       // 3. 如果用户正在通过“修改”功能编辑某个旧任务，则视为“转化”：将旧任务从任务池彻底移除
       if (typeof editingTaskId !== 'undefined' && editingTaskId) {
@@ -9747,8 +9755,10 @@ if (!userOverrideFlash) {
 
     function updatePlaylistData(index, field, value) {
       if (!customPlaylists[index]) return;
+      // 👉 处理图标更新，如果用户清空了，兜底用 📑
+      if (field === 'icon') customPlaylists[index].icon = (value || '').trim() || '📑';
       if (field === 'name') customPlaylists[index].name = value;
-      if (field === 'tasks') customPlaylists[index].tasks = value.split('\n').map(t => t.trim()).filter(t => t !== '');
+      if (field === 'tasks') customPlaylists[index].tasks = value.split('\n').filter(t => t.trim() !== '');
     }
 
     function deletePlaylist(index) {
@@ -9769,7 +9779,8 @@ if (!userOverrideFlash) {
         if (!pl || !Array.isArray(pl.tasks) || pl.tasks.length === 0) return; // 空清单不上桌
         const opt = document.createElement('option');
         opt.value = pl.id; // 👉 核心修复：以 ID 为 value
-        opt.textContent = `📑 限定：${pl.name} (${pl.tasks.length}项)`;
+        // 👉 优先读取 pl.icon，旧数据没有则使用 📑
+        opt.textContent = `${pl.icon || '📑'} 限定：${pl.name} (${pl.tasks.length}项)`;
         sel.appendChild(opt);
       });
       // 尝试恢复旧选择
