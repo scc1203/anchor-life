@@ -4057,9 +4057,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let trailerTimeElapsed = 0; // 正计时，记录已过去的秒数
     let switchState = { cycle: false, flash: false };
 
-    // --- v6.9.X: 状态装甲与计时器引擎 ---
+    // --- v6.9.4: 状态装甲与计时器引擎 ---
     const KEY_LIVE_STATE = 'anchor_live_state_v69';
-    let isTimerEnabled = localStorage.getItem('anchor_timer_enabled') === 'true';
+    // 默认开启计时器：若本地尚无设置，则视为 true
+    const _storedTimer = localStorage.getItem('anchor_timer_enabled');
+    let isTimerEnabled = (_storedTimer === null) ? true : (_storedTimer === 'true');
     let liveTimerId = null;
 
     function toggleSettingTimer(checked) {
