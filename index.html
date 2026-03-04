@@ -3806,6 +3806,13 @@ body.immersive-locked {
           <div style="font-size:0.8rem; color:#666; margin-bottom:10px;">
             如果你是夜猫子，可以重定义一天的界限。凌晨打卡将自动归档到昨天。
           </div>
+
+          <div style="font-size:0.8rem; color:#1565C0; margin-bottom:5px; font-weight:bold;">⏳ 专注计时器</div>
+          <label style="font-size:0.85rem; color:#555; display:flex; align-items:center; gap:6px; margin-bottom:15px; cursor:pointer;">
+              <input type="checkbox" id="settingTimerCheckbox" onchange="toggleSettingTimer(this.checked)">
+              开启卡片专属计时（任务进行中显示秒表）
+          </label>
+
           <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">
             🌅 新一天开启时间
           </div>
@@ -4049,6 +4056,40 @@ document.addEventListener('DOMContentLoaded', () => {
     let trailerTimer = null;
     let trailerTimeElapsed = 0; // 正计时，记录已过去的秒数
     let switchState = { cycle: false, flash: false };
+
+    // --- v6.9.X: 状态装甲与计时器引擎 ---
+    const KEY_LIVE_STATE = 'anchor_live_state_v69';
+    let isTimerEnabled = localStorage.getItem('anchor_timer_enabled') === 'true';
+    let liveTimerId = null;
+
+    function toggleSettingTimer(checked) {
+        isTimerEnabled = checked;
+        localStorage.setItem('anchor_timer_enabled', checked);
+        if (currentStatus === 'anchor') startLiveTimer();
+    }
+
+    function startLiveTimer() {
+        if (liveTimerId) clearInterval(liveTimerId);
+        liveTimerId = setInterval(() => {
+            if (currentStatus !== 'anchor' || !anchorStartTime) return;
+            const ingEl = document.getElementById('rIngPulse');
+            if (!ingEl) return;
+
+            const isRelax = (currentTask && (currentTask.type === 'culture' || currentTask.type === 'vinyl'));
+
+            if (isTimerEnabled) {
+                const diff = Math.floor((Date.now() - anchorStartTime) / 1000);
+                const h = Math.floor(diff / 3600);
+                const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                const timeStr = h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+                ingEl.innerText = (isRelax ? '✨ 蓄能 ' : '📌 专注 ') + timeStr;
+            } else {
+                ingEl.innerText = '正在进行中 · · ·';
+            }
+        }, 1000);
+    }
+
     let gachaAnimating = false;
     // v6.4 抽屉展开状态
     let filterDrawerExpanded = false;
@@ -6462,6 +6503,37 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         // v6.5：每次刷新页面都重置为 anchor 中间档
         energyMode = 'anchor';
         updateEnergyPillUI();
+
+        const ts = document.getElementById('settingTimerCheckbox');
+        if (ts) ts.checked = isTimerEnabled;
+
+        // v6.9.X：恢复意外刷新丢失的进行中任务
+        const savedState = localStorage.getItem(KEY_LIVE_STATE);
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                if (parsed.task && parsed.startTime) {
+                    currentTask = parsed.task;
+                    anchorStartTime = parsed.startTime;
+                    // 隐藏占位符，先渲染卡片
+                    const ph = document.getElementById('placeholder');
+                    if (ph) ph.style.display = 'none';
+                    renderResultCard(currentTask);
+                    // ⚠️ 必须在 renderResultCard 之后强行锁定为 anchor，防止被内部覆写为 suggest
+                    currentStatus = 'anchor';
+                    // 强行调整为 ING 状态 UI
+                    const statusEl = document.getElementById('rStatus');
+                    const primaryBtn = document.getElementById('btnPrimary');
+                    const ingEl = document.getElementById('rIngPulse');
+                    if (statusEl) statusEl.style.display = 'block';
+                    if (ingEl) ingEl.style.display = 'block';
+                    if (primaryBtn) primaryBtn.innerText = '已完成';
+                    document.getElementById('resultCard').style.display = 'block';
+                    document.getElementById('btnChange').style.display = 'inline-block';
+                    startLiveTimer();
+                }
+            } catch(e) {}
+        }
 });
 
         // 🌅🌙 仪式步骤：勾选时给文字加上划线
@@ -6615,8 +6687,21 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             const icon = item.icon || getSmartIcon(item);
             const badge = (item.isFrog || item.type === 'important') ? ' 🏅' : '';
 
+            // 荣誉殿堂也继承记忆小圆点：如果任务有书签 / 总时长 / 备注，则在右上角点亮
+            const hasMemory = (item.bookmarkText && item.bookmarkText.trim()) ||
+                              (item.totalMinutes && item.totalMinutes > 0) ||
+                              (item.noteText && item.noteText.trim());
+            const memoryDot = hasMemory
+                ? '<span style="position:absolute;top:-2px;right:-6px;width:4px;height:4px;background:#6b9bd1;border-radius:50%;"></span>'
+                : '';
+
             div.innerHTML = `
-                <span style="flex:1; cursor:pointer; color:#555;" onclick="showHistoryTaskDetail('archive', ${i})">${icon} ${item.title}${badge}</span>
+                <span style="flex:1; cursor:pointer; color:#555;" onclick="showHistoryTaskDetail('archive', ${i})">
+                    <span style="position:relative; display:inline-block;">
+                        ${icon} ${item.title}${badge}
+                        ${memoryDot}
+                    </span>
+                </span>
                 <span class="archive-del" onclick="deleteArchiveItem(${i})">🗑️</span>
             `;
             list.appendChild(div);
@@ -6638,10 +6723,24 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             const li = document.createElement('li');
             li.className = 'task-item';
             const suffix = log.isTrailer ? ' 🐾' : (log.done ? ' ✅' : '');
+
+            // 提取快照数据，优化降噪排版
+            const displayLastAdd = (log.lastAddMinutes && log.lastAddMinutes > 0) ? log.lastAddMinutes : null;
+            let timeAreaHint = ""; // 移到时间戳后面
+
+            if (displayLastAdd) {
+                const h = Math.floor(displayLastAdd / 60);
+                const m = displayLastAdd % 60;
+                const durationStr = h > 0 ? (m > 0 ? h+'h'+m+'m' : h+'h') : m+'m';
+                // 将时长加在时间流后面，使用绿色强调
+                timeAreaHint = ` <span class="manual-tag" style="color:#75B79E; font-weight:bold;">⏱ +${durationStr}</span>`;
+            }
+
+            // 降噪：今日足迹中不再渲染 🔖 和 📝，让视觉聚焦在时间和进度上
             li.innerHTML = `
-                <div style="display:flex;align-items:center;gap:0px;width:100%;font-size:0.8rem;">
-                    <span class="footprint-time">${log.timeStr || ''}</span>
-                    <span class="footprint-item" style="flex:1; cursor:pointer;" onclick="showHistoryTaskDetail('log', ${idx})">${log.icon || ''} ${log.title}${suffix}</span>
+                <div style="display:flex;align-items:center;gap:6px;width:100%;font-size:0.8rem; flex-wrap:wrap;">
+                    <span class="footprint-time" style="color:#999; font-size:0.75rem; white-space:nowrap;">${log.timeStr || ''}${timeAreaHint}</span>
+                    <span class="footprint-item" style="flex:1; min-width:120px;">${log.icon || ''} ${log.title}${suffix}</span>
                     <span style="cursor:pointer;color:#c44;margin-left:auto;" title="删除" onclick="deleteLogEntry(${idx})">🗑️</span>
                 </div>
             `;
@@ -6858,7 +6957,15 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (log.bookmarkSnapshot || log.lastAddMinutes) {
           const b = log.bookmarkSnapshot || '';
           const t = log.lastAddMinutes ? `${log.lastAddMinutes}m` : '';
-          snapshot = `<span style="color:#81C784; font-size:0.75rem; margin-left:6px;">[${b} ${t}]</span>`;
+          let inner = '';
+          if (b && t) {
+            inner = `${b}, ${t}`;
+          } else if (b) {
+            inner = b;
+          } else {
+            inner = t;
+          }
+          snapshot = `<span style="color:#81C784; font-size:0.75rem; margin-left:6px;">[${inner}]</span>`;
         }
         listHtml += `<li style="margin-bottom:4px;">${icon} ${title} ${timeNote} ${snapshot}</li>`;
       });
@@ -7167,47 +7274,28 @@ function renderResultCard(result) {
         }, 300);
     }
 
-    function setCardAsAnchor() {
+    function setCardAsAnchor(keepTime = false) {
         if (!currentTask || currentTask.type === 'sos') return;
         const statusEl = document.getElementById('rStatus');
         const primaryBtn = document.getElementById('btnPrimary');
         const ingEl = document.getElementById('rIngPulse');
-
-        // 👉 [修复] 只要进入正式锚定/ING 状态，就必须隐藏微启动的入口，防止视觉累赘
-        const btnStartTrailer = document.getElementById('btnStartTrailer');
-        if (btnStartTrailer) btnStartTrailer.style.display = 'none';
-
-        // v6.6.3 静音多巴胺：休闲任务用"蓄能"文案替代"锚点"
-        // Why: "锚点"暗示任务/执行，对 culture/vinyl 来说语气太硬；
-        //      "蓄能·享受ING"传递"你在充电而非偷懒"的信号。
         const isRelax = (currentTask.type === 'culture' || currentTask.type === 'vinyl');
+
         if (statusEl) {
             statusEl.style.display = 'block';
             statusEl.innerText = isRelax ? '✨ 蓄能 · 享受ING...' : '📌 锚点 · ING...';
         }
-        if (ingEl) {
-            ingEl.style.display = 'block';
-        }
-        if (primaryBtn) {
-            primaryBtn.innerText = '已完成';
-        }
-        currentStatus = 'anchor';
-        anchorStartTime = Date.now();
+        if (ingEl) ingEl.style.display = 'block';
+        if (primaryBtn) primaryBtn.innerText = '已完成';
 
-        // v6.3-edit-buttons-enter：就它啦后写入今日足迹（未完成）
-        const dt = new Date();
-        const timeStr = dt.getHours().toString().padStart(2, '0') + ":" + dt.getMinutes().toString().padStart(2, '0');
-        dailyLog.unshift({
-            title: currentTask.title,
-            icon: currentTask.icon || getSmartIcon(currentTask),
-            timeStr,
-            date: getAnchorDate().toDateString(),
-            done: false,
-            taskId: currentTask.id
-        });
-        save();
-        renderLog();
-        renderHistory();
+        currentStatus = 'anchor';
+        // 如果不是动能继承，或者之前没有开始时间，才重新计时
+        if (!keepTime || !anchorStartTime) {
+            anchorStartTime = Date.now();
+        }
+        // v6.9.4：刻入墙壁，防刷新丢失（继承或新建）
+        localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({ task: currentTask, startTime: anchorStartTime }));
+        startLiveTimer();
     }
 
     function formatTrailerTime(seconds) {
@@ -7374,6 +7462,8 @@ function renderResultCard(result) {
         currentTask = null;
         currentStatus = 'idle';
         anchorStartTime = null;
+        localStorage.removeItem(KEY_LIVE_STATE);
+        if (liveTimerId) clearInterval(liveTimerId);
         const statusEl = document.getElementById('rStatus');
         const ingEl = document.getElementById('rIngPulse');
         if (statusEl) statusEl.style.display = 'none';
@@ -8664,7 +8754,7 @@ function openRitual(type) {
      * - task: 要完成的任务对象（可以来自 currentTask，也可以来自列表 db）
      * - options.silentCard: true 时不动结果卡片 / 锚点状态（用于列表手动完成）
      */
-    function completeTaskCore(task, options) {
+    async function completeTaskCore(task, options) {
         if (!task) return;
 
         const opts = options || {};
@@ -8683,21 +8773,59 @@ function openRitual(type) {
                 currentTask = null;
                 if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
                 if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+                localStorage.removeItem(KEY_LIVE_STATE);
+                if (liveTimerId) clearInterval(liveTimerId);
                 if (statusEl) statusEl.style.display = 'none';
                 if (ingEl) ingEl.style.display = 'none';
             }
             return;
         }
 
-        // 写入「今日足迹 / 历史记录」：如果已有“就它啦”记录则标记为完成，否则补一条完成记录
+        // 写入「今日足迹 / 历史记录」
         const now = new Date();
-        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+        let timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
         const anchorTodayStr = getAnchorDate().toDateString();
 
         // v6.5：保存书签和备注快照（使用任务的最新状态）
         // 如果任务在 db 中，使用 db 中的最新状态；否则使用传入的 task
         const taskInDb = db.find(t => t.id === task.id);
         const finalTask = taskInDb || task;
+
+        // 如果任务是进行中，且有开始时间，生成时间跨度 (如 14:00 - 15:30)
+        if (!silent && currentStatus === 'anchor' && anchorStartTime) {
+            const startDt = new Date(anchorStartTime);
+            const startStr = startDt.getHours().toString().padStart(2, '0') + ":" + startDt.getMinutes().toString().padStart(2, '0');
+            if (startStr !== timeStr) {
+                timeStr = `${startStr} - ${timeStr}`;
+            }
+        }
+
+        // v6.9.4：时间收割机（支持 10秒起步算1分钟）
+        let harvestMins = 0;
+        if (!silent && currentStatus === 'anchor' && anchorStartTime) {
+            const elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
+            let elapsedMins = Math.floor(elapsedSecs / 60);
+            // 容错：哪怕只专注了 10秒~59秒，只要点了完成，就给你算 1 分钟
+            if (elapsedSecs >= 10 && elapsedSecs < 60) {
+                elapsedMins = 1;
+            }
+            if (elapsedMins >= 1) {
+                harvestMins = await openHarvestDialogAsync(elapsedMins);
+            }
+        }
+
+        // 如果有有效收割时间，更新任务本体的记忆时长
+        if (harvestMins > 0) {
+            finalTask.totalMinutes = (finalTask.totalMinutes || 0) + harvestMins;
+            finalTask.lastAddMinutes = harvestMins;
+            finalTask.totalUpdatedAt = Date.now();
+            const idx = db.findIndex(t => t.id === finalTask.id);
+            if (idx > -1) {
+                db[idx].totalMinutes = finalTask.totalMinutes;
+                db[idx].lastAddMinutes = finalTask.lastAddMinutes;
+            }
+        }
+
         const bookmarkSnapshot = finalTask.bookmarkText || '';
         const noteSnapshot = finalTask.noteText || '';
         const lastAddMinutes = finalTask.lastAddMinutes || 0;
@@ -8747,45 +8875,49 @@ function openRitual(type) {
             renderList();
             showToast("✅ 今日打卡成功！");
         }
-        // 2）书 / 影 / 剧 等 culture 类
+        // 2）书 / 影 / 剧 / 文娱 等 culture 类
         else if (task.type === 'culture') {
             const subtype = task.subtype || null;
             const icon = task.icon || getSmartIcon(task);
             const isSeries = !!task.isSeries;
-
-            // 把“电影”的判断放宽：
-            // 1）subtype === 'movie'
-            // 2）或者 图标就是 🎬
             const isMovie = (subtype === 'movie') || icon === '🎬';
+            const isEvent = (subtype === 'other') || icon === '🎭' || icon === '🖼️';
 
-            // 🎬 电影（非系列）：一次性看完
-            if (isMovie && !isSeries) {
+            // 2.1 🎭/🖼️ 线下文娱活动：一次性结项，直接进荣誉殿堂
+            if (isEvent) {
+                db = db.filter(t => t.id !== task.id);
+                archive.unshift({
+                    ...task,
+                    finishDate: now.toLocaleDateString()
+                });
+                save(); renderList(); renderArchive();
+                showToast("🏆 体验达成，已入荣誉殿堂");
+            }
+            // 2.2 🎬 电影（非系列）：询问是否彻底看完
+            else if (isMovie && !isSeries) {
                 const ok = confirm(`《${task.title}》这部电影彻底看完了吗？\n[确定]=归档 [取消]=仅记录本次观看`);
                 if (ok) {
-                    // 完整看完：从任务池删除，并进入荣誉殿堂
                     db = db.filter(t => t.id !== task.id);
                     archive.unshift({
                         ...task,
                         finishDate: now.toLocaleDateString()
                     });
-                    save();
-                    renderList();
-                    renderArchive();
+                    save(); renderList(); renderArchive();
                     showToast("🏆 已归档");
                 } else {
-                    // 只记录到今日足迹，但视为“尚未完全看完”，不打 ✅
-                    if (Array.isArray(dailyLog) && dailyLog.length > 0) {
-                        dailyLog[0].done = false;
-                    }
-                    save();
-                    renderLog();
+                    if (Array.isArray(dailyLog) && dailyLog.length > 0) dailyLog.done = false;
+                    save(); renderLog(); renderList(); // 补充 renderList 触发小圆点刷新
                     showToast("🎬 已记录到今日足迹");
                 }
-            } else {
-                // 📚 书 / 杂志 / 剧集 / 其他长线文化内容：
-                // 修复 Bug：日常进度绝不自动进入荣誉殿堂，仅在上方记录今日足迹
-                save();
-                showToast("📚 已记录到今日足迹");
+            }
+            // 2.3 📚 书 / 剧集 / 其他：长期推进，不移除，记进度
+            else {
+                archive.unshift({
+                    ...task,
+                    finishDate: now.toLocaleDateString()
+                });
+                save(); renderArchive(); renderList(); // 关键修复：补充 renderList 触发小圆点刷新
+                showToast("📚 已记录到荣誉殿堂");
             }
         }
         // 3）普通任务：完成后从任务池删除；如果是重要任务（青蛙），同时放入荣誉殿堂
@@ -8829,6 +8961,8 @@ function openRitual(type) {
             currentTask = null;
             if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
             if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+            localStorage.removeItem(KEY_LIVE_STATE);
+            if (liveTimerId) clearInterval(liveTimerId);
 
             // 👉 [修复4] 如果在专属清单模式下完成了任务，直接自动弹出下一张，保持心流
             if (typeof activePlaylist !== 'undefined' && activePlaylist) {
@@ -11148,6 +11282,42 @@ document.addEventListener("DOMContentLoaded", function() {
     handleUrlRouting();
 });
 
+// v6.9.X：异步唤起时间收割弹窗
+function openHarvestDialogAsync(defaultMins) {
+    return new Promise(resolve => {
+        const dlg = document.getElementById('harvestDialog');
+        const selH = document.getElementById('harvestH');
+        const selM = document.getElementById('harvestM');
+
+        if (!dlg || !selH || !selM) {
+            resolve(0);
+            return;
+        }
+
+        selH.innerHTML = '';
+        selM.innerHTML = '';
+        for (let i = 0; i <= 23; i++) selH.innerHTML += `<option value="${i}">${i}h</option>`;
+        for (let i = 0; i <= 59; i++) selM.innerHTML += `<option value="${i}">${i.toString().padStart(2, '0')}m</option>`;
+
+        selH.value = Math.floor(defaultMins / 60);
+        selM.value = defaultMins % 60;
+
+        const msgEl = document.getElementById('harvestMsg');
+        if (msgEl) {
+            msgEl.innerText = defaultMins > 180
+                ? `似乎挂机了 ${Math.floor(defaultMins/60)} 小时😅 请手动修正：`
+                : `本次专注了 ${defaultMins} 分钟，要存入记忆吗？`;
+        }
+
+        dlg.style.display = 'flex';
+
+        window._resolveHarvest = (val) => {
+            dlg.style.display = 'none';
+            resolve(val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0);
+        };
+    });
+}
+
 // ============================================================
 // v6.7.3 一键保存海报 — Canvas 暗房合成
 // ============================================================
@@ -11381,6 +11551,22 @@ function lobbyEnter(action) {
 
     <!-- v6.6.1 新手引导：浮动文案框（内容由 JS 填充）-->
     <div id="onboardingTooltip" class="onboarding-tooltip" style="display:none;"></div>
+
+    <!-- v6.9.4 时间收割原生滚轮弹窗 -->
+    <div id="harvestDialog" class="cold-dialog-backdrop" style="z-index:10001; display:none;">
+        <div class="cold-dialog" style="text-align:center;">
+            <div class="cold-dialog-title" id="harvestTitle" style="font-size:1rem; margin-bottom:5px;">✅ 专注结算</div>
+            <div style="margin-bottom:15px; color:#666; font-size:0.85rem;" id="harvestMsg">本次专注了 45 分钟，存入记忆吗？</div>
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:20px;">
+                <select id="harvestH" class="memory-time-select" style="font-size:1.1rem; padding:8px 12px;"></select> <span style="font-weight:bold;">:</span>
+                <select id="harvestM" class="memory-time-select" style="font-size:1.1rem; padding:8px 12px;"></select>
+            </div>
+            <div class="cold-dialog-buttons">
+                <button type="button" class="cold-btn-cancel" onclick="window._resolveHarvest(0)">不记录</button>
+                <button type="button" class="backup-btn-merge" onclick="window._resolveHarvest(-1)" style="background:#d3f3d6; color:#2d6a3a; font-weight:bold;">💾 存为时长</button>
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>
