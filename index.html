@@ -3264,6 +3264,7 @@ body.immersive-locked {
 <div class="tag" data-v="culture" data-sub="book" onclick="pickTag(this)">📖 书籍</div>
 <div class="tag" data-v="culture" data-sub="movie" onclick="pickTag(this)">🎬 电影</div>
 <div class="tag" data-v="culture" data-sub="series" onclick="pickTag(this)">📺 剧集</div>
+<div class="tag" data-v="culture" data-sub="other" onclick="pickTag(this)">🖼️ 文娱</div>
 
 
     <!-- 唱片按钮保留，由 APP_VARIANT 决定是否显示 -->
@@ -3297,6 +3298,7 @@ body.immersive-locked {
                 • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
                 • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
                 • <b>户外行动：</b>首字写「去」，如「去散步/去拿快递」。<br>
+                • <b>文娱展览：</b>首词写「演出/观看」为 🎭，写「逛/展览」为 🖼️。<br>
                 • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
                 • <b>每日循环：</b>包含「每天、每日」字眼。
             </div>
@@ -3474,10 +3476,10 @@ body.immersive-locked {
     <!-- 用户手册 & 数据方舟 -->
     <!-- 04 区：统一淡紫底色 + 4 张同类卡片 -->
     <div class="section-footer-area" id="sec04">
-        <div class="section-title">04 · 用户手册 & 数据方舟</div>
+        <div class="section-title" id="sec04Title">04 · 用户手册 & 数据方舟</div>
 
           <!-- ① 用户手册 & 逻辑词典（默认折叠，优化性能） -->
-        <div class="section-manual">
+        <div class="section-manual" id="manualCardWrapper">
           <details>
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
@@ -3609,6 +3611,10 @@ body.immersive-locked {
                   <li>
                     <b>🎬📖 书影剧自动归类：</b>
                     用 <span class="manual-tag">看/读/书/影/剧/追</span> 开头会走文化逻辑（自动书名号等）。
+                  </li>
+                  <li>
+                    <b>🎭🖼️ 文娱展览自动归类：</b>
+                    用 <span class="manual-tag">演出/观看/展览/欣赏/逛</span> 开头会录入🖼️展览、🎭演出。
                   </li>
                   <li>
                     <b>⚡️ 速办任务：</b>
@@ -6932,6 +6938,9 @@ function parseTimeFromInput(str) {
     }
 
 function getSmartIcon(item) {
+    // 最高优先级：如果数据库中已经锁定了图标快照，绝对尊重它，不再重新计算！
+    if (item.icon) return item.icon;
+
     const titleRaw = item.title || "";
     const title = titleRaw.trim();
     const firstChar = title.charAt(0) || '';
@@ -6946,6 +6955,13 @@ function getSmartIcon(item) {
         // 1.1 有 subtype 时最可靠
         if (item.subtype === 'book')  return '📖';
         if (item.subtype === 'movie') return '🎬';
+        // 新增：文娱类绝对不能被后面的“书影”关键字误伤
+        if (item.subtype === 'other') {
+            if (title.includes('演出') || title.includes('音乐') || title.includes('话剧') || title.includes('舞剧') || title.includes('脱口秀') || title.toLowerCase().includes('live')) {
+                return '🎭';
+            }
+            return '🖼️';
+        }
 
         // 1.2 没有 subtype，再看首字
         if (firstChar === '读' || firstChar === '书') {
@@ -6964,15 +6980,22 @@ function getSmartIcon(item) {
         ) {
             return '📖';
         }
-        if (
-            title.includes('电影') ||
-            title.includes('影') ||
-            title.includes('片')
-        ) {
+
+        if (title.includes('电影') || title.includes('影') || title.includes('片')) {
             return '🎬';
         }
 
-        // 实在分不出，就给一个中性的文化图标
+        // 新增：动态演艺类
+        if (title.includes('演出') || title.includes('音乐会') || title.includes('音乐节') || title.includes('演唱会') || title.includes('话剧') || title.includes('舞剧') || title.includes('脱口秀') || title.toLowerCase().includes('live')) {
+            return '🎭';
+        }
+
+        // 新增：静态展览类
+        if (title.includes('展') || title.includes('画') || title.includes('博物馆')) {
+            return '🖼️';
+        }
+
+        // 实在分不出，给一个中性的文化图标
         return '🖼️';
     }
 
@@ -9440,6 +9463,10 @@ function openRitual(type) {
     } else if (firstChar === '去') {
         // 去 开头 → 外出任务
         t = 'outdoor';
+    } else if (firstChar === '逛' || firstChar === '赏' || firstChar === '演' || trimmed.startsWith('文娱') || trimmed.startsWith('欣赏') || trimmed.startsWith('演出')) {
+        // 逛 / 赏 / 演 / 文娱 / 欣赏 / 演出 开头 → 归入媒体库房，采用中性文化图标
+        t = 'culture';
+        // 不设置 specific subtype, 让后面兜底逻辑分配为默认 🖼️
     } else {
         // 3.2 关键词兜底（只在没命中首字规则时用）
         // 家务 / 室内（注意：这里没有单独的“理”）
@@ -9455,8 +9482,10 @@ function openRitual(type) {
         else if (v.includes('书') || v.includes('读') || v.includes('杂志')) {
             t = 'culture';
         }
-        // 影视关键词
-        else if (v.includes('电影') || v.includes('影') || v.includes('剧') || v.includes('片')) {
+        // 影视及演艺展览关键词（扩大捕获网）
+        else if (v.includes('电影') || v.includes('影') || v.includes('片') ||
+                 v.includes('剧') || v.includes('展') || v.includes('音乐会') ||
+                 v.includes('演出') || v.includes('音乐节') || v.includes('演唱会') ||v.includes('音乐剧') || v.includes('live')) {
             t = 'culture';
         }
         // 运动相关
@@ -9479,16 +9508,28 @@ function openRitual(type) {
 
     let selector = `.tag[data-v="${t}"]`;
 
-    // 如果是书影类，根据首字选 📖 / 🎬 / 📺
+    // 如果是书影类，根据首字和内容选 📖 / 🎬 / 📺 / 🖼️ / 🎭
     if (t === 'culture') {
         const firstChar = trimmed.charAt(0) || '';
         let sub = 'book'; // 默认书
 
         if (firstChar === '看' || firstChar === '影') {
             sub = 'movie';
-        } else if (firstChar === '追' || firstChar === '剧' || /第.+集/.test(trimmed)) {
+        }
+        // 强拦截：文娱演艺类（增加“观看”首字，并确保 includes('演出') 防漏）
+        else if (firstChar === '逛' || firstChar === '赏' || firstChar === '演' || firstChar === '观' ||
+                 trimmed.startsWith('文娱') || trimmed.startsWith('欣赏') || trimmed.startsWith('演出') || trimmed.startsWith('观看') ||
+                 trimmed.includes('展') || trimmed.includes('音乐会') || trimmed.includes('话剧') ||
+                 trimmed.includes('舞剧') || trimmed.includes('歌剧') || trimmed.includes('音乐剧') ||
+                 trimmed.includes('音乐节') || trimmed.includes('演唱会') || trimmed.includes('脱口秀') ||
+                 trimmed.includes('live') || trimmed.includes('演出')) {
+            sub = 'other';
+        }
+        // 常规剧集：追剧，或者包含“剧”字（且被上面的音乐剧/话剧漏掉的）
+        else if (firstChar === '追' || /第.+集/.test(trimmed) || trimmed.includes('剧')) {
             sub = 'series';
-        } else if (trimmed.includes('杂志') || trimmed.includes('周刊')) {
+        }
+        else if (trimmed.includes('杂志') || trimmed.includes('周刊')) {
             sub = 'book';
         }
 
@@ -9702,8 +9743,8 @@ if (!userOverrideFlash) {
     }
 }
 
-            // 先拿一份“用于判定剧集”的原始标题：去掉去/看/读/听/做，但还没加《》
-            const rawForSeries = title.replace(/^(去|看|读|听|做)\s*/, '').trim();
+            // 升级清洗机：剥离动作前缀及多余的类别词，保持最终标题干净
+            const rawForSeries = title.replace(/^(去|看展|看|读|听|做|逛展|逛|赏|展览|欣赏|演出|文娱|观看|音乐剧|话剧|舞剧|歌剧)[:：\s]*/, '').trim();
 
             let isSeries = false;
             if (type === 'culture' && subtype === 'series') {
@@ -9737,44 +9778,50 @@ if (!userOverrideFlash) {
 
             title = displayTitle;
 
-            if (!isQuick && (type === 'culture' || type === 'vinyl')) { 
+            // 书影音加书名号，但文娱/展览（subtype: 'other'）豁免，保持文字清爽
+            if (!isQuick && (type === 'vinyl' || (type === 'culture' && subtype !== 'other'))) {
                 if (title && !title.startsWith('《') && !title.endsWith('》')) {
-                    title = `《${title}》`; 
+                    title = `《${title}》`;
                 }
             }
 
-            
-            let recurrence = switchState.cycle ? 'daily' : 'none'; 
+            let recurrence = switchState.cycle ? 'daily' : 'none';
             if (recurrence === 'none' && (title.includes('每天') || title.includes('每日'))) { recurrence = 'daily'; }
             if (recurrence === 'daily') title = title.replace(/每天|每日/g, '').trim();
+
+            // 终极图标锁定：基于原始输入 (line) 判定，不受洗稿机影响，且绝对尊重用户的手动标签
+            let finalIcon = null;
+            if (type === 'culture' && subtype === 'other') {
+                if (/(演出|音乐会|音乐节|演唱会|话剧|舞剧|歌剧|音乐剧|脱口秀|live|演)/i.test(line)) {
+                    finalIcon = '🎭';
+                } else {
+                    finalIcon = '🖼️'; // 静态展览默认
+                }
+            }
+            // 注意：如果用户手动点选了其他标签（如电影🎬），这里 finalIcon 保持 null，之后由 getSmartIcon 自动补全，绝对尊重用户意志。
 
             // v6.3-edit-buttons-enter：编辑模式覆盖原任务，保留其他属性（如🐸）
             if (editingTaskId) {
                 const idx = db.findIndex(t => t.id === editingTaskId);
-                const base = (idx > -1) ? { ...db[idx] } : (editingTaskOriginal ? { ...editingTaskOriginal } : {});
-
-                db[idx] = {
-                    ...base,
-                    id: editingTaskId,
-                    title,
-                    type,
-                    subtype,
-                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""),
-                    isSeries,
-                    time: timeVal,
-                    recurrence,
-                    isFrog: base.isFrog || isFrog,
-                    isQuick: isQuick,
-                };
-                addedCount++;
+                if (idx > -1) {
+                    db[idx].title = title;
+                    db[idx].type = type;
+                    db[idx].subtype = subtype;
+                    db[idx].isSeries = isSeries;
+                    db[idx].time = timeVal;
+                    db[idx].isFrog = isFrog;
+                    db[idx].isQuick = isQuick;
+                    if (finalIcon) db[idx].icon = finalIcon;
+                }
             } else {
-                db.push({ 
-                    id: Date.now() + Math.floor(Math.random() * 10000), 
-                    title: title, type: type, subtype: subtype, 
-                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""), 
-                    isSeries: isSeries, time: timeVal, recurrence: recurrence, 
-                    isFrog: isFrog, isQuick: isQuick, lastDone: '' 
-                }); 
+                db.push({
+                    id: Date.now() + Math.floor(Math.random() * 10000),
+                    title: title, type: type, subtype: subtype,
+                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""),
+                    isSeries: isSeries, time: timeVal, recurrence: recurrence,
+                    isFrog: isFrog, isQuick: isQuick, lastDone: '',
+                    icon: finalIcon // 直接写入锁定图标，如果为 null，渲染时会 fallback
+                });
                 addedCount++;
             }
         });
@@ -10747,7 +10794,7 @@ function initOnboarding() {
    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
     if (localStorage.getItem(ONBOARDING_VISITED_KEY)) return;
 
-    // --- 五步引导配置（v6.9.3） ---
+    // --- 六步引导配置（v6.9.3） ---
     const steps = [
       {
         // Step 1：认领数字身份
@@ -10778,6 +10825,11 @@ function initOnboarding() {
         // Step 6 (新增)：PWA 沉浸模式引导，指向底部隐形锚点
         targetId: 'pwaHintTarget',
         text: '📱 <b>最后 1 步：添加到主屏幕。</b><br>强烈建议：点击屏幕底部的「分享 <b>↑</b>」图标，选择「添加到主屏幕」。<br><span style="font-size:0.8rem; color:#888;">这样它就会变成一个独立的 App，没有浏览器边框，体验最沉浸！</span>'
+      },
+      {
+        // Step 7 (新增)：完结撒花，引导视线到 04 区用户手册
+        targetId: 'manualCardWrapper',
+        text: '🎉 <b>恭喜通关！新手指引已完成。</b><br>关于标签、记忆和冷库的更多细节，详见这里的「用户手册与逻辑词典」。<br><span style="font-size:0.8rem; color:#888;">提示：想复习时，随时可点击本区的「👀 重看引导」。<br><br>👉 <b>现在点击屏幕，正式启航！</b></span>'
       }
     ];
 
