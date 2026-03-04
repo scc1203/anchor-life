@@ -2916,7 +2916,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.4 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.5 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3015,7 +3015,7 @@ body.immersive-locked {
             <div id="controls-playlist" class="control-group" style="display:flex; margin-top:6px;">
               <div class="select-wrapper" style="flex:1;">
                 <select id="selPlaylist" onchange="handlePlaylistChange()" style="text-align: center; text-align-last: center; font-weight: bold; appearance: none; padding-right: 16px;">
-                  <option value="">🔮 不限定清单 (全域抽卡)</option>
+                  <option value="">🔮 --- 默认 (不限定清单) ---</option>
                   <!-- 选项由 JS 动态生成 -->
                 </select>
               </div>
@@ -3252,11 +3252,23 @@ body.immersive-locked {
 
     <!-- 输入区 -->
     <div class="section-input">
-        <div class="section-title" style="display:flex; justify-content:space-between; align-items:flex-end;">
-          <span>02 · 新任务入库</span>
-          <span onclick="shortcutToNewPlaylist()" style="font-size:0.75rem; color:#75B79E; font-weight:normal; cursor:pointer; text-decoration:underline;">
-            ✂️ 任务太庞大？拆分为子步骤/清单
-          </span>
+        <div class="section-title" style="margin-bottom: 16px;">02 · 新任务入库</div>
+
+        <!-- 模块 A：单次任务 -->
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; padding-left: 4px;">
+            <div style="font-size: 0.85rem; color: #555; font-weight: bold;">✍🏻 散装单次任务</div>
+            <!-- 悬浮智能小抄 (Tooltip) -->
+            <div style="position:relative;">
+                <span onclick="const b=document.getElementById('cheatSheetBox'); b.style.display=b.style.display==='none'?'block':'none'" style="font-size:0.7rem; color:#90A4AE; cursor:pointer; text-decoration:underline; text-underline-offset:2px;">💡 智能小抄</span>
+                <div id="cheatSheetBox" style="display:none; position:absolute; right:0; top:24px; width:230px; padding:12px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.12); z-index:100; font-size:0.75rem; line-height:1.6; color:#666; border:1px solid #eee; text-align:left;">
+                    • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
+                    • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
+                    • <b>户外行动：</b>首字写「去」，如「去散步/去拿快递」。<br>
+                    • <b>文娱展览：</b>首词写「演出/观看」为 🎭，写「逛/展览」为 🖼️。<br>
+                    • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
+                    • <b>每日循环：</b>包含「每天、每日」字眼。
+                </div>
+            </div>
         </div>
         <div class="input-box">
     <textarea id="inpTitle"
@@ -3305,17 +3317,40 @@ body.immersive-locked {
         <div id="timeFeedback" style="font-size:0.7rem; color:#75B79E; margin-top:5px; margin-left:5px; height:1rem;"></div>
 
         <!-- 新增：智能输入指令词典 (弱化版) -->
-        <details style="margin-top: 8px; font-size: 0.75rem; color: #999;">
-            <summary style="cursor: pointer; opacity: 0.8; outline: none; padding-left: 5px;">💡 智能识别小抄（点击展开）</summary>
-            <div style="padding: 8px 10px; background: rgba(0,0,0,0.02); border-radius: 8px; margin-top: 6px; line-height: 1.6; border: 1px dashed rgba(0,0,0,0.06);">
-                • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
-                • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
-                • <b>户外行动：</b>首字写「去」，如「去散步/去拿快递」。<br>
-                • <b>文娱展览：</b>首词写「演出/观看」为 🎭，写「逛/展览」为 🖼️。<br>
-                • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
-                • <b>每日循环：</b>包含「每天、每日」字眼。
+        <!-- v6.9.5：分离输入区设计，建立任务组 (工厂区) -->
+        <div style="margin-top: 24px; border-top: 1px dashed #cfd8dc; padding-top: 18px; padding-bottom: 12px;">
+
+            <!-- 模块 B 对称标题与气泡 -->
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; padding-left: 4px;">
+                <div style="font-size: 0.85rem; color: #555; font-weight: bold;">📦 建立任务组 (清单 / SOP)</div>
+                <!-- 悬浮清单玩法说明 (Tooltip) -->
+                <div style="position:relative;">
+                    <span onclick="const b=document.getElementById('playlistCheatSheet'); b.style.display=b.style.display==='none'?'block':'none'" style="font-size:0.7rem; color:#90A4AE; cursor:pointer; text-decoration:underline; text-underline-offset:2px;">❓ 清单怎么玩</span>
+                    <div id="playlistCheatSheet" style="display:none; position:absolute; right:0; top:24px; width:240px; padding:12px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.12); z-index:100; font-size:0.75rem; line-height:1.6; color:#666; border:1px solid #eee; text-align:left;">
+                        • <b>1. 建造：</b>点击下方按钮创建并存入档案柜。<br>
+                        • <b>2. 召唤：</b>前往顶部「01区」，展开「🔽高级筛选」，在清单列表中选中它。<br>
+                        • <b>3. 心流：</b>点击抽取，开启沉浸式的隧道连抽体验！
+                    </div>
+                </div>
             </div>
-        </details>
+
+            <!-- 按钮区增加了底部留白 -->
+            <div style="display:flex; gap:8px; margin-bottom: 16px;">
+                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px; border-radius:10px;" onclick="openNewSopCreator()">➕ 新建 SOP</button>
+                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px; background:#f0f7ff; border-color:#d0e3ff; color:#3b82f6; border-radius:10px;" onclick="createDailyTodo()">📅 今日待办</button>
+            </div>
+            <div id="playlistCreator" style="display:none; margin-top: 12px; background:#f9fafb; padding:12px; border-radius:12px; border:1px solid #eee;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input type="text" id="newPlIcon" class="emoji-input-hint" title="点击可自定义图标" placeholder="📑" style="width:48px; text-align:center; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; box-sizing:border-box;">
+                    <input type="text" id="newPlTitle" placeholder="清单名称 (如: 周末大扫除)" style="flex:1; border:1px solid #ddd; padding:8px; border-radius:8px; font-size:0.9rem; box-sizing:border-box;">
+                </div>
+                <textarea id="newPlTasks" placeholder="输入子任务，每行一个..." style="width:100%; border:1px solid #ddd; padding:8px; border-radius:8px; min-height:80px; margin-bottom:8px; font-size:0.85rem; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-file" style="flex:1; padding:6px; border-radius:8px;" onclick="submitNewPlaylist()">💾 存入档案柜</button>
+                    <button class="btn-outline" style="flex:1; padding:6px; border-radius:8px;" onclick="hidePlaylistCreator()">取消</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- 四大块列表 -->
@@ -3323,12 +3358,13 @@ body.immersive-locked {
         <div class="section-list-title">03 · 任务库 & 记录</div>
 
         <!-- 📁 档案柜 (项目 & 临时清单) -->
-        <div class="section-archive-cabinet" style="margin-bottom: 12px; background: #fff; border-radius: 16px; padding: 4px 12px;">
+        <div class="section-cold" style="margin-bottom: 12px;">
             <details id="cabinetDetails">
-                <summary style="font-size:0.95rem; font-weight:bold; color:#455A64; padding: 6px 0; border-bottom: none;">
-                    📁 档案柜 <span style="font-size:0.75rem; color:#999; font-weight:normal;">(轻量清单 & 项目)</span>
+                <summary>
+                    <span style="font-size:0.95rem; font-weight:bold; color:#444;">📁 档案柜</span>
+                    <span style="font-size:0.75rem; color:#999; margin-left:auto; margin-right:6px;">(轻量清单 & 项目)</span>
                 </summary>
-                <div class="manual-content" style="padding-top:10px; padding-bottom: 10px;" id="cabinetContent">
+                <div class="manual-content" id="cabinetContent" style="padding-top:10px; padding-bottom: 10px;">
                     <!-- JS 动态渲染清单内容 -->
                 </div>
             </details>
@@ -3740,6 +3776,7 @@ body.immersive-locked {
     <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
     <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
     <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器，自动记录任务时长。</li>
+    <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -6538,14 +6575,18 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 if (parsed.task && parsed.startTime) {
                     currentTask = parsed.task;
                     anchorStartTime = parsed.startTime;
+                    // v6.9.5 修复：找回丢失的清单上下文
+                    if (parsed.activePl) {
+                        activePlaylist = parsed.activePl;
+                    }
                     // 隐藏占位符，先渲染卡片
                     const ph = document.getElementById('placeholder');
                     if (ph) ph.style.display = 'none';
                     renderResultCard(currentTask);
                     // ⚠️ 必须在 renderResultCard 之后强行锁定为 anchor，防止被内部覆写为 suggest
                     currentStatus = 'anchor';
-                    // 如果是清单，恢复后自动唤起 Overlay 浮层
-                    if (currentTask.type === 'playlist') {
+                    // v6.9.5 修复：只有在恢复的是“清单主卡片”时才唤起 Overlay，如果是“正在执行的子任务(isPlaylist:true)”则不唤起
+                    if (currentTask.type === 'playlist' && !currentTask.isPlaylist) {
                         setTimeout(() => {
                             if (typeof openPlaylistOverlay === 'function') openPlaylistOverlay(currentTask);
                         }, 300);
@@ -6621,26 +6662,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const scrollBox = container.querySelector('.cabinet-scroll-area');
         const savedScrollTop = scrollBox ? scrollBox.scrollTop : 0;
 
-        // v6.9.5：置顶兵工厂（分离 Emoji 与 标题，移除长条删除按钮）
         let html = '';
-        html += `
-            <div style="margin-bottom: 12px; display:flex; gap:8px;">
-                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px;" onclick="openNewSopCreator()">➕ 新建 SOP</button>
-                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px; background:#f0f7ff; border-color:#d0e3ff; color:#3b82f6;" onclick="createDailyTodo()">📅 今日待办</button>
-            </div>
-            <div id="playlistCreator" style="display:none; margin-bottom: 16px; background:#fff; padding:12px; border-radius:12px; border:1px solid #eee;">
-                <div style="display:flex; gap:8px; margin-bottom:8px;">
-                    <input type="text" id="newPlIcon" class="emoji-input-hint" title="点击可自定义图标" placeholder="📑" style="width:48px; text-align:center; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; box-sizing:border-box;">
-                    <input type="text" id="newPlTitle" placeholder="清单名称 (如: 周末大扫除)" style="flex:1; border:1px solid #ddd; padding:8px; border-radius:8px; font-size:0.9rem; box-sizing:border-box;">
-                </div>
-                <textarea id="newPlTasks" placeholder="输入子任务，每行一个..." style="width:100%; border:1px solid #ddd; padding:8px; border-radius:8px; min-height:80px; margin-bottom:8px; font-size:0.85rem; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-file" style="flex:1; padding:6px; border-radius:8px;" onclick="submitNewPlaylist()">💾 存入</button>
-                    <button class="btn-outline" style="flex:1; padding:6px; border-radius:8px;" onclick="hidePlaylistCreator()">取消</button>
-                </div>
-            </div>
-        `;
-
         if (!customPlaylists || customPlaylists.length === 0) {
             container.innerHTML = html + '<div style="font-size:0.8rem; color:#999; text-align:center; padding:10px 0;">当前档案柜空空如也。<br>未来可在此处导入你的轻量待办或 SOP。</div>';
             return;
@@ -6657,13 +6679,14 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 return; // v6.9.5: 彻底移出档案柜显示，交由底部的真实冷库去渲染
             }
 
-            html += `<div style="margin-bottom: 12px; background: #F9FAFB; border-radius: 12px; padding: 10px;">`;
+            // 极简树状排版：无底色，仅底部虚线分割
+            html += `<div style="padding: 10px 4px; border-bottom: 1px dashed #f0f1f5;">`;
 
             const countBadge = (pl.playlistType === 'sop' || !pl.playlistType) && pl.completeCount
                 ? `<span class="manual-tag" style="color:#75B79E; background:#e8f5e9; font-weight:bold;">🏆 ${pl.completeCount}次</span>`
                 : '';
 
-            html += `<div style="font-size: 0.85rem; font-weight: bold; color: #333; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
+            html += `<div style="font-size: 0.85rem; font-weight: bold; color: #555; display:flex; justify-content:space-between; align-items:center;">
                         <span>${plIcon} ${pl.title || '未命名清单'} ${countBadge}</span>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="editPlaylist(${pIdx})" title="编辑">✏️</span>
@@ -6673,10 +6696,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                      </div>`;
 
             if (pl.items && pl.items.length > 0) {
-                html += `<div style="display:flex; flex-direction:column; gap:6px;">`;
+                // 增加左侧 padding，形成视觉上的树状缩进从属关系
+                html += `<div style="display:flex; flex-direction:column; gap:8px; padding-left: 22px; margin-top: 10px;">`;
                 pl.items.forEach((item, iIdx) => {
                     const isDone = !!item.done;
-                    const textStyle = isDone ? 'text-decoration: line-through; color: #999;' : 'color: #555;';
+                    const textStyle = isDone ? 'text-decoration: line-through; color: #bbb;' : 'color: #666;';
                     html += `
                         <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; cursor:pointer;">
                             <input type="checkbox" class="ritual-step-checkbox" style="margin-top:3px;"
@@ -6902,6 +6926,14 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         hidePlaylistCreator();
         savePlaylists();
         renderCabinet();
+        // v6.9.5：保存后自动展开档案柜并平滑滚动，建立空间感
+        const cabinet = document.getElementById('cabinetDetails');
+        if (cabinet) {
+            cabinet.open = true;
+            setTimeout(() => {
+                cabinet.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
+        }
     }
 
     function editPlaylist(pIdx) {
@@ -6921,15 +6953,69 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     }
 
     // 神经桥接：强制挂载全局，解决 Overlay 动态拼接找不到作用域的 Bug
+    // v6.9.5 冗余防御：Overlay 打钩除了调用底层 toggleCabinetItem，还兜底一次足迹写入，避免任何路径差异导致子任务丢失
     window.toggleCardPlaylistItem = function(playlistId, taskIndex, isChecked) {
         const pIdx = customPlaylists.findIndex(p => String(p.id) === String(playlistId));
         if (pIdx > -1) {
-            // 传入 fromCard = true 的信号
+            // 传入 fromCard = true 的信号（底层会做持久化 + 足迹写入 + 进度重算）
             toggleCabinetItem(pIdx, taskIndex, isChecked, true);
 
             // 内存级同步 currentTask，防止卡片被再次刷新时丢失状态
             if (typeof currentTask !== 'undefined' && currentTask && String(currentTask.id) === String(playlistId) && currentTask.items) {
                 if (currentTask.items[taskIndex]) currentTask.items[taskIndex].done = isChecked;
+            }
+
+            // 再做一层兜底：确保“✅ 【清单名】子任务名” 一定写入 dailyLog（即使底层链路因为历史原因被短路）
+            try {
+                if (typeof dailyLog !== 'undefined' && Array.isArray(dailyLog)) {
+                    const pl = customPlaylists[pIdx];
+                    if (pl) {
+                        const items = Array.isArray(pl.items) ? pl.items : null;
+                        const item = (items && items[taskIndex]) ? items[taskIndex] : null;
+                        const taskName = item && (item.text || item.title) ? (item.text || item.title) : null;
+                        if (taskName) {
+                            const anchorDateStr = getAnchorDate().toDateString();
+                            const logTitle = `【${pl.title || '清单'}】${taskName}`;
+
+                            if (isChecked) {
+                                const existed = dailyLog.some(l => l.date === anchorDateStr && l.title === logTitle && l.type === 'checklist_item');
+                                if (!existed) {
+                                    const now = new Date();
+                                    const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                                    dailyLog.unshift({
+                                        id: Date.now(),
+                                        title: logTitle,
+                                        icon: (pl && pl.icon) ? pl.icon : '📑',
+                                        timeStr,
+                                        date: anchorDateStr,
+                                        done: true,
+                                        type: 'checklist_item'
+                                    });
+                                    if (typeof save === 'function') save();
+                                    if (typeof renderLog === 'function') renderLog();
+                                    if (typeof renderHistory === 'function') renderHistory();
+                                }
+                            } else {
+                                const idx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === logTitle && l.type === 'checklist_item');
+                                if (idx > -1) {
+                                    dailyLog.splice(idx, 1);
+                                    if (typeof save === 'function') save();
+                                    if (typeof renderLog === 'function') renderLog();
+                                    if (typeof renderHistory === 'function') renderHistory();
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+
+            // v6.9.5 修复：打钩时更新装甲，同样需要带上清单上下文
+            if (typeof KEY_LIVE_STATE !== 'undefined' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
+                localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
+                    task: currentTask,
+                    startTime: anchorStartTime,
+                    activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
+                }));
             }
         }
     };
@@ -7139,17 +7225,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             result.push(log);
         });
         return result;
-    }
-
-    // v6.9.5：判断一条记录是否属于“次日时段”（真实时间在锚点日的凌晨偏移之前）
-    function isNextDayLog(log) {
-        if (!log || !log.timeStr || typeof getDayStartOffset !== 'function') return false;
-        const parts = String(log.timeStr).split(':');
-        const h = parseInt(parts[0], 10);
-        if (isNaN(h)) return false;
-        const offset = getDayStartOffset();
-        // 例如 offset = 4，则 00:00-03:59 视为“次日凌晨”时段
-        return h < offset;
     }
 
     function renderLog() {
@@ -7792,8 +7867,12 @@ function renderResultCard(result) {
         if (!keepTime || !anchorStartTime) {
             anchorStartTime = Date.now();
         }
-        // v6.9.4：刻入墙壁，防刷新丢失（继承或新建）
-        localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({ task: currentTask, startTime: anchorStartTime }));
+        // v6.9.5 修复：把 activePlaylist 一并刻入墙壁，防止刷新后失去连抽上下文
+        localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
+            task: currentTask,
+            startTime: anchorStartTime,
+            activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
+        }));
         startLiveTimer();
     }
 
@@ -9097,19 +9176,17 @@ function drawFromPlaylist() {
       }
     }
 
-    // 🎉 结算终点：视觉反馈 + 专注隧道统计
+    // 🎉 结算终点：视觉反馈 + 真实完成次数读取
     if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
 
-    // 使用 ID 进行统计（专注隧道完成次数）
-    let stats = {};
-    try {
-      stats = JSON.parse(localStorage.getItem('anchor_playlist_stats') || '{}') || {};
-    } catch (e) {
-      stats = {};
+    // v6.9.5：直接从底层档案柜读取真实的完成次数
+    let finishCount = 1;
+    if (typeof customPlaylists !== 'undefined') {
+        const realPl = customPlaylists.find(p => String(p.id) === String(activePlaylist.id));
+        if (realPl && realPl.completeCount) {
+            finishCount = realPl.completeCount;
+        }
     }
-    stats[activePlaylist.id] = (stats[activePlaylist.id] || 0) + 1;
-    localStorage.setItem('anchor_playlist_stats', JSON.stringify(stats));
-    const finishCount = stats[activePlaylist.id];
 
     const plName = activePlaylist.name;
     activePlaylist = null;
@@ -9409,12 +9486,13 @@ function openRitual(type) {
                         const rawText = (task.rawTaskText || '').toString();
                         const plTitle = pl.title || pl.name || '清单';
 
-                        // 1）为该子任务写入一条轻量足迹：✅ 【清单名】子任务名
+                        // 1）为该子任务写入一条轻量足迹：清单图标 【清单名】子任务名
                         if (rawText) {
+                            const subIcon = pl.icon || '📑';
                             dailyLog.unshift({
                                 id: Date.now(),
                                 title: `【${plTitle}】${rawText}`,
-                                icon: '✅',
+                                icon: subIcon,
                                 timeStr: subTimeStr,
                                 date: anchorDateStr,
                                 done: true,
@@ -11330,11 +11408,6 @@ if (!userOverrideFlash) {
       renderPlaylistEditor();
     }
 
-    // 智能传送门入口：跳转到 03 区档案柜的新建清单兵工厂
-    function shortcutToNewPlaylist() {
-      openPlaylistEditor();
-    }
-
     function updatePlaylistData(index, field, value) {
       if (!customPlaylists[index]) return;
       // 👉 处理图标更新，如果用户清空了，兜底用 📑
@@ -11356,7 +11429,7 @@ if (!userOverrideFlash) {
       const sel = document.getElementById('selPlaylist');
       if (!sel) return;
       const oldVal = sel.value;
-      sel.innerHTML = '<option value="">🔮 不限定清单 (全域抽卡)</option>';
+      sel.innerHTML = '<option value="">🔮 --- 默认 (不限定清单) ---</option>';
       customPlaylists.forEach(pl => {
         // v6.9.5：严禁被冷冻的清单进入抽卡筛选器
         if (pl.inColdStorage === true) return;
@@ -11650,7 +11723,7 @@ function initOnboarding() {
       {
         // Step 2：任务输入区
         targetId: 'inpTitle',
-        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：大项目可使用右上方✂️「专属清单」)</span>'
+        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：大项目可使用下方的📦「任务清单」)</span>'
       },
       {
         // Step 3 (新增)：高亮能量药丸与筛选区
