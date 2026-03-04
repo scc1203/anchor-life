@@ -8877,6 +8877,12 @@ function openRitual(type) {
             renderList();
             showToast("✅ 今日打卡成功！");
         }
+        // 1.5）黑胶唱片 / 音乐任务：长期陪跑，不进荣誉殿堂，不移出媒体库
+        else if (task.type === 'vinyl') {
+            save();
+            renderList();
+            showToast("💿 已记录到今日足迹");
+        }
         // 2）书 / 影 / 剧 / 文娱 等 culture 类
         else if (task.type === 'culture') {
             const subtype = task.subtype || null;
