@@ -3247,7 +3247,7 @@ body.immersive-locked {
         </div>
         <div class="input-box">
     <textarea id="inpTitle"
-      placeholder="输入事项…（支持批量输入）&#10;例：！写导言30m / 整理书桌 / 看好东西…"
+      placeholder="智能识别输入任务类别与时长…&#10;例：！写导言30m / 整理书桌 / 看好东西…"
       oninput="autoTag()"
       onkeydown="handleEnter(event)"></textarea>
     <button class="btn-add" onclick="addNew()">＋</button>
@@ -3482,7 +3482,10 @@ body.immersive-locked {
             <summary>📖 用户手册 & 逻辑词典</summary>
             <div class="manual-content">
 
-        <div class="manual-h3">🚀 3 分钟上手（按区走一遍）</div>
+        <div class="manual-h3" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>🚀 3 分钟上手</span>
+            <button class="btn-outline" style="font-size:0.75rem; padding:3px 8px; border-radius:6px; margin:0;" onclick="restartOnboarding()" title="重新播放新手引导流程">👀 重看新手引导</button>
+        </div>
         <ol style="margin-top:6px; padding-left:18px; line-height:1.65;">
           <li>
             <b> 02 · 新任务入库：</b>
@@ -11004,6 +11007,20 @@ function initOnboarding() {
         lockScroll();
         showStep(0);
     }, 400);
+}
+
+// v6.9.3：手动重启新手引导（擦除记忆并重载页面以保证 DOM 初始态纯净）
+function restartOnboarding() {
+    if (confirm("要重新播放新手引导吗？页面将刷新。")) {
+        // 擦除已访问标记
+        if (typeof ONBOARDING_VISITED_KEY !== 'undefined') {
+            localStorage.removeItem(ONBOARDING_VISITED_KEY);
+        } else {
+            localStorage.removeItem('anchor_visited_v693'); // 兜底
+        }
+        // 刷新页面
+        window.location.reload();
+    }
 }
 
 // ============================================================
