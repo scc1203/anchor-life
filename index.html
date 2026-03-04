@@ -11191,7 +11191,8 @@ function saveDailyPoster() {
 
     // --- 4. 绘制文字（天数 + 日期文案） ---
     // 字号按图片宽度自适应，确保不同分辨率的图片都美观
-    const dayText = daySpan ? `这是你和 Anchor 的第 ${daySpan.textContent.trim()} 天` : '';
+    const caller = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
+    const dayText = daySpan ? `这是 ${caller} 和 Anchor 的第 ${daySpan.textContent.trim()} 天` : '';
     const subText = dateEl  ? dateEl.textContent.trim() : '';
 
     // 天数行：较大字号，加粗
