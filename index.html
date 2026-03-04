@@ -7290,6 +7290,12 @@ function renderResultCard(result) {
         if (ingEl) ingEl.style.display = 'block';
         if (primaryBtn) primaryBtn.innerText = '已完成';
 
+        // 进入正式锚定后，弱化微启动入口：不再提示“觉得太难？”
+        const btnStartTrailer = document.getElementById('btnStartTrailer');
+        const trailerZone = document.getElementById('trailerZone');
+        if (btnStartTrailer) btnStartTrailer.style.display = 'none';
+        if (trailerZone) trailerZone.style.display = 'none';
+
         currentStatus = 'anchor';
         // 如果不是动能继承，或者之前没有开始时间，才重新计时
         if (!keepTime || !anchorStartTime) {
