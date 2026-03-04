@@ -3404,7 +3404,7 @@ body.immersive-locked {
     </details>
 </div>
     <!-- 冷库操作小弹窗：选择 删除 / 冷库 / 取消 -->
-    <div id="coldDialog" class="cold-dialog-backdrop" onclick="if(event.target===this) this.style.display='none';">
+    <div id="coldDialog" class="cold-dialog-backdrop">
         <div class="cold-dialog">
             <div class="cold-dialog-title">
                 要怎么处理这条任务？
@@ -6560,24 +6560,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                     document.getElementById('resultCard').style.display = 'block';
                     document.getElementById('btnChange').style.display = 'inline-block';
                     startLiveTimer();
-                    return; // 已恢复进行中任务，后续不再尝试恢复 Overlay
                 }
             } catch(e) {}
         }
-
-        // v6.9.5：如果没有进行中任务，但上次停留在清单主卡片 Overlay，刷新后自动恢复该 Overlay
-        try {
-            const lastPlId = localStorage.getItem('anchor_last_playlist_overlay');
-            if (lastPlId) {
-                const selPl = document.getElementById('selPlaylist');
-                if (selPl) {
-                    selPl.value = lastPlId;
-                    if (typeof handlePlaylistChange === 'function') handlePlaylistChange();
-                    // 复用 draw() 的 Overlay 打开逻辑，保持单一入口
-                    draw();
-                }
-            }
-        } catch(e) {}
 });
 
         // 🌅🌙 仪式步骤：勾选时给文字加上划线
@@ -6718,7 +6703,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         // 2. 足迹发射与撤销引擎
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const anchorDateStr = getAnchorDate().toDateString();
         const taskName = item.text || item.title || '未知子任务';
         const plIcon = customPlaylists[pIdx].icon || '📑';
         const logTitle = `【${customPlaylists[pIdx].title || '清单'}】${taskName}`; // 恢复【】格式
@@ -6726,10 +6710,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (isChecked) {
             dailyLog.unshift({
                 id: Date.now(), title: logTitle, icon: plIcon, timeStr: timeStr,
-                date: anchorDateStr, done: true, type: 'checklist_item'
+                date: now.toDateString(), done: true, type: 'checklist_item'
             });
             save(); renderLog();
-            if (typeof renderHistory === 'function') renderHistory();
 
             const allDone = customPlaylists[pIdx].items.every(i => i && i.done);
             if (allDone) {
@@ -6738,10 +6721,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 if (customPlaylists[pIdx].playlistType === 'once') {
                     dailyLog.unshift({
                         id: Date.now(), title: `【整体完成】${customPlaylists[pIdx].title}`,
-                        icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done'
+                        icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done'
                     });
                     save(); renderLog();
-                    if (typeof renderHistory === 'function') renderHistory();
 
                     if (fromCard) {
                         setTimeout(() => {
@@ -6758,7 +6740,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
                         dailyLog.unshift({
                             id: Date.now(), title: `【+${customPlaylists[pIdx].completeCount}】${customPlaylists[pIdx].title}`,
-                            icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done'
+                            icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done'
                         });
 
                         if (customPlaylists[pIdx].items) {
@@ -6767,7 +6749,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
                         savePlaylists(); renderCabinet();
                         save(); renderLog();
-                        if (typeof renderHistory === 'function') renderHistory();
 
                         showToast(`🔄 SOP 已重置，累计完成 ${customPlaylists[pIdx].completeCount} 次`);
                         if (fromCard && typeof closePlaylistOverlay === 'function') closePlaylistOverlay(true);
@@ -6778,20 +6759,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             }
         } else {
             // 撤销打卡：在今日足迹中寻找并抹除这一条
-            const targetIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === logTitle && l.type === 'checklist_item');
+            const targetIdx = dailyLog.findIndex(l => l.date === now.toDateString() && l.title === logTitle && l.type === 'checklist_item');
             if (targetIdx > -1) {
                 dailyLog.splice(targetIdx, 1);
                 save(); renderLog();
                 showToast('↩️ 已撤销打卡记录');
-            }
-
-            // 额外防御：如果之前因为一次性清单全部完成而写入了整体完成记录，这里一旦有子任务被撤销，就一并撤销整体完成足迹
-            const plTitleFull = `【整体完成】${customPlaylists[pIdx].title}`;
-            const doneIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === plTitleFull && l.type === 'playlist_done');
-            if (doneIdx > -1) {
-                dailyLog.splice(doneIdx, 1);
-                save(); renderLog();
-                if (typeof renderHistory === 'function') renderHistory();
             }
         }
         // 3. 刷新档案柜 UI（更新进度比例和删除线）
@@ -7122,47 +7094,14 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
     
 
-    // v6.9.5：历史/足迹视图去重工具 —— 隐藏“主任务 + 清单子任务”的视觉重复
-    function dedupeChecklistTwins(logs) {
-        if (!Array.isArray(logs)) return [];
-        const result = [];
-        logs.forEach(log => {
-            if (log && log.type === 'checklist_item') {
-                const normTitle = (log.title || '').replace(/\s+/g, '');
-                const hasMainTwin = logs.some(other => {
-                    if (other === log) return false;
-                    const otherTitleNorm = (other.title || '').replace(/\s+/g, '');
-                    return otherTitleNorm === normTitle && (other.icon || '') !== '✅';
-                });
-                if (hasMainTwin) return; // 跳过这条 checklist_item
-            }
-            result.push(log);
-        });
-        return result;
-    }
-
-    // v6.9.5：判断一条记录是否属于“次日时段”（真实时间在锚点日的凌晨偏移之前）
-    function isNextDayLog(log) {
-        if (!log || !log.timeStr || typeof getDayStartOffset !== 'function') return false;
-        const parts = String(log.timeStr).split(':');
-        const h = parseInt(parts[0], 10);
-        if (isNaN(h)) return false;
-        const offset = getDayStartOffset();
-        // 例如 offset = 4，则 00:00-03:59 视为“次日凌晨”时段
-        return h < offset;
-    }
-
     function renderLog() {
         const list = document.getElementById('logList');
         if(!list) return;
         list.innerHTML = "";
         const today = getAnchorDate().toDateString();
         let count = 0;
-        // 先筛出“今天”的所有足迹，并做一次清单子任务去重
-        const todayLogsRaw = Array.isArray(dailyLog) ? dailyLog.filter(log => log.date === today) : [];
-        const todayLogs = dedupeChecklistTwins(todayLogsRaw);
-
-        todayLogs.forEach((log, idx) => {
+        dailyLog.forEach((log, idx) => {
+            if (log.date !== today) return;
             count++;
             const li = document.createElement('li');
             li.className = 'task-item';
@@ -7222,35 +7161,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         let htmlStr = "";
         dateKeys.slice(0, maxDays).forEach(dateStr => {
             const dayLogs = byDate[dateStr];
-            // v6.9.5：历史记录中也做一次“主任务 + 清单子任务”去重
-            const dedupedLogs = dedupeChecklistTwins(dayLogs);
             const dateLabel = new Date(dateStr).toLocaleDateString();
             htmlStr += `<div style="margin-bottom:8px;">`;
             htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:2px;">${dateLabel}</div>`;
-            let foundNextDayLog = false;
-            let insertedDivider = false;
-            dedupedLogs.forEach(log => {
+            dayLogs.forEach(log => {
                 const suffix = log.isTrailer ? ' 🐾' : (log.done ? ' ✅' : '');
-                // 提取时间小时数，判断是否属于客观上的次日凌晨（夜猫子时段）
-                let isNext = false;
-                if (log.timeStr) {
-                    const h = parseInt(log.timeStr.split(':')[0], 10);
-                    const offset = typeof getDayStartOffset === 'function' ? getDayStartOffset() : 0;
-                    if (h >= 0 && h < offset) isNext = true;
-                }
-
-                if (isNext) {
-                    // 遇到凌晨任务，做好标记
-                    foundNextDayLog = true;
-                } else if (foundNextDayLog && !insertedDivider) {
-                    // 遇到当日任务，且之前有凌晨任务，说明到达了交界处！插入“跨日线”
-                    htmlStr += `<div style="display:flex; align-items:center; gap:6px; margin: 6px 0 8px;">
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-    <span style="flex:none; font-size:0.7rem; color:#b0b0b0; white-space:nowrap; letter-spacing:1px;">🌙 跨日线</span>
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-</div>`;
-                    insertedDivider = true;
-                }
                 
                 // v6.7.2-fix: 历史记录必须使用"当时的快照"，而非 db 中的最新状态
                 // Why: 历史记录的意义在于"回看那一刻的切片"——
@@ -7349,8 +7264,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
           // 未来日期：固定浅色，但仍可点击查看“还没到来”的提示
           html += `<div class="heatmap-cell level-0" onclick="showHeatmapDay('${dateKey}', '${displayDate}', this)" title="${displayDate} (未到来)"></div>`;
         } else {
-          const rawItems = logMap[dateKey] || [];
-          const items = dedupeChecklistTwins(rawItems);
+          const items = logMap[dateKey] || [];
           const count = items.length;
 
           let level = 0;
@@ -7402,12 +7316,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         return;
       }
 
-      const itemsRaw = Array.isArray(dailyLog) ? dailyLog.filter(log => {
+      const items = Array.isArray(dailyLog) ? dailyLog.filter(log => {
         const d = new Date(log.date);
         if (isNaN(d.getTime())) return false;
         return (d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()) === dateKey;
       }) : [];
-      const items = dedupeChecklistTwins(itemsRaw);
 
       // 标题恢复“完成多少项”的统计信息
       projDate.innerText = `📅 ${displayDate} · 完成 ${items.length} 项`;
@@ -7419,17 +7332,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
       // 列表渲染：标题 + 时间 + 快照
       let listHtml = '<ul style="margin:0; padding-left:20px;">';
-      let foundNextDayLog = false;
-      let insertedDivider = false;
       items.forEach(log => {
         const title = log.title || '未知记录';
         const icon = log.icon || '';
-        let isNext = false;
-        if (log.timeStr) {
-          const h = parseInt(log.timeStr.split(':')[0], 10);
-          const offset = typeof getDayStartOffset === 'function' ? getDayStartOffset() : 0;
-          if (h >= 0 && h < offset) isNext = true;
-        }
         const timeNote = log.timeStr ? `<span style="color:#aaa; font-size:0.75rem; margin-left:4px;">${log.timeStr}</span>` : '';
         let snapshot = '';
         if (log.bookmarkSnapshot || log.lastAddMinutes) {
@@ -7445,21 +7350,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
           }
           snapshot = `<span style="color:#81C784; font-size:0.75rem; margin-left:6px;">[${inner}]</span>`;
         }
-
-        // 首次遇到“次日时段→当日”的交界处时，插入一条几乎贯通的“跨日线”
-        if (isNext) {
-          foundNextDayLog = true;
-        } else if (foundNextDayLog && !insertedDivider) {
-          listHtml += `<li style="margin:6px 0 8px; list-style:none;">
-  <div style="display:flex; align-items:center; gap:6px;">
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-    <span style="flex:none; font-size:0.7rem; color:#b0b0b0; white-space:nowrap; letter-spacing:1px;">🌙 跨日线</span>
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-  </div>
-</li>`;
-          insertedDivider = true;
-        }
-
         listHtml += `<li style="margin-bottom:4px;">${icon} ${title} ${timeNote} ${snapshot}</li>`;
       });
       listHtml += '</ul>';
@@ -8894,10 +8784,6 @@ function closePlaylistOverlay(isCompleted = false) {
         currentTask = null;
         if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
     }
-    // 不论是否完成，只要关闭了 Overlay，就清除上次记录的清单 ID
-    try {
-        localStorage.removeItem('anchor_last_playlist_overlay');
-    } catch(e) {}
 }
 
  function draw() {
@@ -8952,10 +8838,6 @@ function closePlaylistOverlay(isCompleted = false) {
               stepsUl.appendChild(li);
             });
             overlay.style.display = 'block';
-                // 记录当前展开的清单 Overlay，防止刷新后丢失
-                try {
-                  localStorage.setItem('anchor_last_playlist_overlay', String(targetPl.id));
-                } catch(e) {}
           }
           // 清理旧的活跃清单状态
           activePlaylist = null;
@@ -9048,59 +8930,10 @@ function drawFromPlaylist() {
   }
 
   if (activePlaylist.tasks.length === 0) {
-    // v6.9.5：清单心流隧道终点 —— 挂钩 Once / SOP 生命周期与足迹
-    if (typeof customPlaylists !== 'undefined' && Array.isArray(customPlaylists)) {
-      const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
-      if (pIdx > -1) {
-        const pl = customPlaylists[pIdx];
-        const now = new Date();
-        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const anchorDateStr = getAnchorDate().toDateString();
-        const plTitle = pl.title || pl.name || activePlaylist.name || '清单';
-
-        if (pl.playlistType === 'once') {
-          // 一次性清单：整体完成 + 出库
-          dailyLog.unshift({
-            id: Date.now(),
-            title: `【整体完成】${plTitle}`,
-            icon: '🏆',
-            timeStr,
-          date: anchorDateStr,
-            done: true,
-            type: 'playlist_done'
-          });
-          customPlaylists.splice(pIdx, 1);
-        } else {
-          // SOP 清单：本次 +1，并重置所有子任务打钩
-          pl.completeCount = (pl.completeCount || 0) + 1;
-          dailyLog.unshift({
-            id: Date.now(),
-            title: `【本次+1】${plTitle}`,
-            icon: '🏆',
-            timeStr,
-          date: anchorDateStr,
-            done: true,
-            type: 'playlist_done'
-          });
-          if (Array.isArray(pl.items)) {
-            pl.items.forEach(item => { if (item) item.done = false; });
-          }
-        }
-
-        if (typeof savePlaylists === 'function') savePlaylists();
-        if (typeof renderCabinet === 'function') renderCabinet();
-        if (typeof save === 'function') {
-          save();
-          if (typeof renderLog === 'function') renderLog();
-          if (typeof renderHistory === 'function') renderHistory();
-        }
-      }
-    }
-
-    // 🎉 结算终点：视觉反馈 + 专注隧道统计
+    // 🎉 结算终点
     if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
 
-    // 使用 ID 进行统计（专注隧道完成次数）
+    // 使用 ID 进行统计
     let stats = {};
     try {
       stats = JSON.parse(localStorage.getItem('anchor_playlist_stats') || '{}') || {};
@@ -9396,59 +9229,51 @@ function openRitual(type) {
         const statusEl = silent ? null : document.getElementById('rStatus');
         const ingEl    = silent ? null : document.getElementById('rIngPulse');
 
-        // v6.9.5：清单子任务完成时的底层同步与足迹补写（不会阻断后续通用完成逻辑）
-        if (task && task.isPlaylist && typeof activePlaylist !== 'undefined' && activePlaylist && activePlaylist.id) {
-            try {
-                if (typeof customPlaylists !== 'undefined' && Array.isArray(customPlaylists)) {
-                    const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
-                    if (pIdx > -1) {
-                        const pl = customPlaylists[pIdx];
-                        const nowSub = new Date();
-                        const subTimeStr = nowSub.getHours().toString().padStart(2, '0') + ":" + nowSub.getMinutes().toString().padStart(2, '0');
-                        const anchorDateStr = getAnchorDate().toDateString();
-                        const rawText = (task.rawTaskText || '').toString();
-                        const plTitle = pl.title || pl.name || '清单';
+        // ==========================================
+        // 🚨 v6.9.5：清单与仪式专属拦截器 (VIP 通道)
+        // ==========================================
+        if (task.type === 'playlist' || task.type === 'ritual') {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
 
-                        // 1）为该子任务写入一条轻量足迹：✅ 【清单名】子任务名
-                        if (rawText) {
-                            dailyLog.unshift({
-                                id: Date.now(),
-                                title: `【${plTitle}】${rawText}`,
-                                icon: '✅',
-                                timeStr: subTimeStr,
-                                date: anchorDateStr,
-                                done: true,
-                                type: 'checklist_item'
-                            });
-                        }
-
-                        // 2）同步到底层 customPlaylists.items 的 done 状态
-                        let items = Array.isArray(pl.items) ? pl.items : null;
-                        if ((!items || items.length === 0) && Array.isArray(pl.tasks) && pl.tasks.length > 0) {
-                            items = pl.tasks.map(text => ({ text, done: false }));
-                            pl.items = items;
-                        }
-                        if (items && items.length > 0 && rawText) {
-                            const matchIdx = items.findIndex(it => it && (it.text === rawText || it.title === rawText));
-                            if (matchIdx > -1 && items[matchIdx]) {
-                                items[matchIdx].done = true;
-                            }
-                        }
-
-                        if (typeof savePlaylists === 'function') savePlaylists();
-                        if (typeof renderCabinet === 'function') renderCabinet();
-
-                        // 3）补一次 save / renderLog，以防止与主线写入存在竞态
-                        if (rawText && typeof save === 'function') {
-                            save();
-                            if (typeof renderLog === 'function') renderLog();
-                            if (typeof renderHistory === 'function') renderHistory();
-                        }
+            if (typeof customPlaylists !== 'undefined' && Array.isArray(customPlaylists)) {
+                const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(task.id));
+                if (pIdx > -1) {
+                    const pl = customPlaylists[pIdx];
+                    if (pl.playlistType === 'once') {
+                        // 1. 一次性清单：记录整体完成并彻底销毁
+                        dailyLog.unshift({ id: Date.now(), title: `【整体完成】${pl.title || pl.name}`, icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done' });
+                        customPlaylists.splice(pIdx, 1);
+                        showToast('⚡️ 一次性清单已完成并自动清理');
+                    } else {
+                        // 2. SOP清单：计次并重置子任务
+                        pl.completeCount = (pl.completeCount || 0) + 1;
+                        if (Array.isArray(pl.items)) pl.items.forEach(item => { if(item) item.done = false; });
+                        dailyLog.unshift({ id: Date.now(), title: `【+${pl.completeCount}】${pl.title || pl.name}`, icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done' });
+                        showToast(`🔄 SOP 已完成，累计执行 ${pl.completeCount} 次`);
                     }
+                    if (typeof savePlaylists === 'function') savePlaylists();
+                    if (typeof renderCabinet === 'function') renderCabinet();
+
+                    // 确保日志落盘
+                    save();
+                    renderLog();
+                    if (typeof renderHistory === 'function') renderHistory();
                 }
-            } catch (e) {
-                console.warn('completeTaskCore playlist-subtask sync error', e);
             }
+
+            // 彻底清理卡片 UI 状态，并阻断后续逻辑
+            if (!silent) {
+                if (card) { card.style.display = 'none'; card.style.animation = ''; }
+                if (statusEl) statusEl.style.display = 'none';
+                if (ingEl) ingEl.style.display = 'none';
+                currentTask = null;
+                if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+                if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+                if (typeof closePlaylistOverlay === 'function') closePlaylistOverlay(true);
+            }
+            // 🚨 绝对铁律：拦截完毕后必须 return，不能让清单流入普通任务的记账流程！
+            return;
         }
 
         // SOS 模式：只重置状态，不记入足迹/荣誉殿堂（理论上不会从列表触发）
@@ -9604,23 +9429,12 @@ function openRitual(type) {
             }
             // 2.3 📚 书 / 剧集 / 其他：长期推进，不移除，记进度
             else {
-                // 保底：若今日足迹中尚无这条任务的记录，为其写入一条极简足迹
-                const hasTodayLog = Array.isArray(dailyLog) && dailyLog.some(l => l.date === anchorTodayStr && l.taskId === task.id);
-                if (!hasTodayLog) {
-                    dailyLog.unshift({
-                        title: task.title,
-                        icon: task.icon || getSmartIcon(task),
-                        timeStr: timeStr,
-                        date: anchorTodayStr,
-                        done: true,
-                        taskId: task.id
-                    });
-                }
-                save();
-                renderLog();
-                if (typeof renderHistory === 'function') renderHistory();
-                renderList(); // 触发小圆点刷新
-                showToast("📚 进度已更新，记录至今日足迹");
+                archive.unshift({
+                    ...task,
+                    finishDate: now.toLocaleDateString()
+                });
+                save(); renderArchive(); renderList(); // 关键修复：补充 renderList 触发小圆点刷新
+                showToast("📚 已记录到荣誉殿堂");
             }
         }
         // 3）普通任务：完成后从任务池删除；如果是重要任务（青蛙），同时放入荣誉殿堂
@@ -9744,15 +9558,30 @@ function openRitual(type) {
 
       msgEl.innerHTML = `<div style="font-weight:500;">${message}</div>${statsHtml}`;
 
-      // 2. 统一的 3 按钮布局（修改、记忆、去做）
+      // 2. 动态构造按钮区（区分媒体类与普通任务）
+      const isMedia = (task.type === 'culture' || task.type === 'vinyl');
+
+      // 重置样式确保使用 Grid 布局
       btnContainer.style.display = 'grid';
       btnContainer.style.gridTemplateColumns = '1fr 1fr';
       btnContainer.style.gap = '8px';
-      btnContainer.innerHTML = `
-        <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
-        <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
-        <button class="task-dialog-btn task-dialog-btn-complete" style="grid-column: span 2;" onclick="handleTaskComplete()">👉 去做</button>
-      `;
+
+      if (isMedia) {
+        // 媒体类：2x2 网格，包含归档按钮
+        btnContainer.innerHTML = `
+          <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+          <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+          <button class="task-dialog-btn" style="background:#fff3e0; color:#e65100; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;" onclick="handleTaskArchive()">🏆 归档</button>
+          <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉 去做</button>
+        `;
+      } else {
+        // 普通类：无归档按钮，"去做" 按钮横跨两列，极度稳重
+        btnContainer.innerHTML = `
+          <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+          <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+          <button class="task-dialog-btn task-dialog-btn-complete" style="grid-column: span 2;" onclick="handleTaskComplete()">👉 去做</button>
+        `;
+      }
 
       dialog.style.display = 'flex';
     }
@@ -10668,31 +10497,13 @@ if (!userOverrideFlash) {
         } 
     }
        // 点击任务列表里的冰块：打开弹窗，后续具体操作在 confirmColdAction 里执行
-   function handleColdOrDelete(id) {
+    function handleColdOrDelete(id) {
         const item = db.find(t => t.id === id);
         if (!item) return;
         pendingColdId = id;
+
         const dlg = document.getElementById('coldDialog');
         if (dlg) {
-            const titleEl = dlg.querySelector('.cold-dialog-title');
-            if (titleEl) titleEl.innerText = "要怎么处理这条任务？";
-
-            // 动态改变第三个按钮：媒体类显示“归档”，普通类显示“取消”
-            const cancelBtn = dlg.querySelector('.cold-btn-cancel');
-            const isMedia = (item.type === 'culture' || item.type === 'vinyl');
-            if (cancelBtn) {
-                if (isMedia) {
-                    cancelBtn.innerText = '🏆 归档';
-                    cancelBtn.onclick = () => confirmColdAction('archive');
-                    cancelBtn.style.background = '#fff3e0';
-                    cancelBtn.style.color = '#e65100';
-                } else {
-                    cancelBtn.innerText = '🔙 取消';
-                    cancelBtn.onclick = () => confirmColdAction('cancel');
-                    cancelBtn.style.background = '#f5f5f5';
-                    cancelBtn.style.color = '#333';
-                }
-            }
             dlg.style.display = 'flex';
         }
     }
@@ -10743,45 +10554,18 @@ if (!userOverrideFlash) {
             return;
         }
 
-        const item = db.find(t => t.id === id);
-        if (!item) return;
-
-        if (action === 'archive') {
-            // 专属于文化类任务的归档操作
-            const cleanTitle = (item.title || '').replace(/《|》/g, '');
-            if (confirm(`确定已彻底完成/看完《${cleanTitle}》并将其移入荣誉殿堂吗？`)) {
-                db = db.filter(t => t.id !== id);
-                archive.unshift({ ...item, finishDate: new Date().toLocaleDateString() });
-                save(); renderList(); renderArchive();
-                if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
-                showToast("🏆 伟大里程碑！已收入荣誉殿堂");
-            }
-        } else if (action === 'cold') {
+        if (action === 'cold') {
             moveToColdStorage(id);
         } else if (action === 'delete') {
-            // 防呆设计：如果有记忆心血，强烈建议归档而不是删除
-            const hasMemory = (item.bookmarkText && item.bookmarkText.trim()) ||
-                              (item.totalMinutes && item.totalMinutes > 0) ||
-                              (item.noteText && item.noteText.trim());
-            if (hasMemory) {
-                const wantArchive = confirm("⚠️ 这条任务包含你记录的进度/时长/备注等心血。\n强烈建议将其【归档】至荣誉殿堂以保留记录。\n\n[确定] = 🏆 安全归档\n[取消] = 🗑️ 执意删除");
-                if (wantArchive) {
-                    db = db.filter(t => t.id !== id);
-                    archive.unshift({ ...item, finishDate: new Date().toLocaleDateString() });
-                    save(); renderList(); renderArchive();
-                    showToast("🏆 已为你安全归档至荣誉殿堂");
-                    return;
-                }
-            }
-            // 最终无情删除
             const ok = confirm("确定要彻底删除这条任务吗？\n此操作不可恢复。");
             if (ok) {
-                db = db.filter(t => t.id !== id);
-                save(); renderList();
+                db = db.filter(item => item.id !== id);
+                save();
+                renderList();
                 showToast("🗑️ 已删除");
             }
         } else {
-            return; // cancel
+            return;
         }
     }
 
