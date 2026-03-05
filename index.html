@@ -2916,7 +2916,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.6 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.7 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3109,9 +3109,9 @@ body.immersive-locked {
             <!-- 第一行：空间坐标 (书签与目标) -->
             <div class="memory-panel-row1" style="margin-bottom: 12px; gap: 6px; align-items: center;">
                 <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">🔖 进度:</span>
-                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="当前(如P120)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 45%;" />
-                <span class="memory-separator" style="color: #ccc; margin: 0 2px;">/</span>
-                <input type="text" id="memoryTotal" class="memory-input-bookmark" placeholder="目标(如300)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 45%;" />
+                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="当前" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 120px; text-align: center;" />
+                <span class="memory-separator" style="color: #ccc; margin: 0 6px;">/</span>
+                <input type="text" id="memoryTotal" class="memory-input-bookmark" placeholder="目标" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 120px; text-align: center;" />
             </div>
             
             <!-- 第二行：时间流逝 (本次时长) -->
@@ -3787,6 +3787,7 @@ body.immersive-locked {
     <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器⏱️，自动记录任务时长。</li>
     <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜🗄️，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
     <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
+    <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -12582,7 +12583,7 @@ function lobbyEnter(action) {
             </div>
             <div class="cold-dialog-buttons">
                 <button type="button" class="cold-btn-cancel" onclick="window._resolveHarvest(0)">不记录</button>
-                <button type="button" class="backup-btn-merge" onclick="window._resolveHarvest(-1)" style="background:#d3f3d6; color:#2d6a3a; font-weight:bold;">💾 存为时长</button>
+                <button type="button" class="backup-btn-merge" onclick="window._resolveHarvest(-1)" style="background:#d3f3d6; color:#2d6a3a; font-weight:bold;">💾 存入记忆</button>
             </div>
         </div>
     </div>
