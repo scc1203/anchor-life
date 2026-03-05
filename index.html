@@ -8104,13 +8104,13 @@ function renderResultCard(result) {
         }
     }
 
-    // v6.9.7 升级为异步函数，支持中途放弃时的时间收割与足迹记录
+    // v6.9.7 升级为异步函数，支持中途放弃时的时间收割与足迹记录（修复作用域崩溃 Bug）
     async function changeTask() {
       // 1. 退出沉浸模式
       exitImmersiveMode();
 
       // 2. 清单模式的退回逻辑
-      if (activePlaylist) {
+      if (typeof activePlaylist !== 'undefined' && activePlaylist) {
         if (!Array.isArray(activePlaylist.tasks)) activePlaylist.tasks = [];
         if (activePlaylist.tasks.length > 0) {
           const discardedText = currentTask ? currentTask.rawTaskText : null;
@@ -8120,39 +8120,36 @@ function renderResultCard(result) {
             card.style.opacity = 0;
           }
           setTimeout(() => {
-            drawFromPlaylist();
+            if (typeof drawFromPlaylist === 'function') drawFromPlaylist();
             if (discardedText) activePlaylist.tasks.push(discardedText);
           }, 80);
         } else {
-          showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
+          if (typeof showToast === 'function') showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
         }
         return;
       }
 
       if (!currentTask) {
-        draw();
+        if (typeof draw === 'function') draw();
         return;
       }
 
       // 👉 v6.9.7 核心修复：如果任务已开始进行且超过 10 秒，放弃时触发时长收割
-      if (currentStatus === 'anchor' && anchorStartTime) {
+      if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
         const elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
         if (elapsedSecs >= 10) { 
           let elapsedMins = Math.floor(elapsedSecs / 60);
           if (elapsedSecs >= 10 && elapsedSecs < 60) elapsedMins = 1; // 满10秒保底1分钟
 
           let harvestMins = 0;
-          if (elapsedMins >= 1 && elapsedMins <= 180) {
-            // 复用时间收割滚轮弹窗 + 顺手更新进度
-            const harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
-            harvestMins = harvestResult.mins;
-            const newBookmark = harvestResult.bookmark;
-            const taskInDb = db.find(t => t.id === currentTask.id) || currentTask;
+          let newBookmark = null; // 🚨 提权：将变量声明移至安全作用域
 
-            // v6.9.7：更新进度书签
-            if (newBookmark !== null && newBookmark !== taskInDb.bookmarkText) {
-              taskInDb.bookmarkText = newBookmark;
-              taskInDb.bookmarkUpdatedAt = Date.now();
+          if (elapsedMins >= 1 && elapsedMins <= 180) {
+            // 弹出时间收割滚轮
+            if (typeof openHarvestDialogAsync === 'function') {
+              const harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
+              harvestMins = harvestResult.mins;
+              newBookmark = harvestResult.bookmark;
             }
           } else if (elapsedMins > 180) {
             // 挂机过长兜底
@@ -8160,7 +8157,16 @@ function renderResultCard(result) {
             harvestMins = parseInt(ans) || 0;
           }
 
-          // 更新任务本体的累计时间
+          // 🚨 提权：在最外层确立原任务对象，防止 ReferenceError 导致程序猝死
+          const taskInDb = db.find(t => t.id === currentTask.id) || currentTask;
+
+          // 更新进度书签
+          if (newBookmark !== null && newBookmark !== taskInDb.bookmarkText) {
+            taskInDb.bookmarkText = newBookmark;
+            taskInDb.bookmarkUpdatedAt = Date.now();
+          }
+
+          // 更新累计时间
           if (harvestMins > 0) {
             taskInDb.totalMinutes = (taskInDb.totalMinutes || 0) + harvestMins;
             taskInDb.lastAddMinutes = harvestMins;
@@ -8178,14 +8184,12 @@ function renderResultCard(result) {
           dailyLog.unshift({
             id: Date.now(),
             title: taskInDb.title,
-            icon: taskInDb.icon || getSmartIcon(taskInDb),
+            icon: taskInDb.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(taskInDb) : ''),
             timeStr: timeStr,
-            date: getAnchorDate().toDateString(),
+            date: typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString(),
             done: false, // 🚨 核心：没有绿色的勾！
             taskId: taskInDb.id,
-            bookmarkSnapshot: taskInDb.bookmarkText
-              ? (taskInDb.bookmarkTotal ? taskInDb.bookmarkText + ' / ' + taskInDb.bookmarkTotal : taskInDb.bookmarkText)
-              : '',
+            bookmarkSnapshot: taskInDb.bookmarkText || '',
             noteSnapshot: taskInDb.noteText || '',
             lastAddMinutes: harvestMins
           });
@@ -8193,18 +8197,23 @@ function renderResultCard(result) {
           if (typeof save === 'function') save();
           if (typeof renderLog === 'function') renderLog();
           if (typeof renderHistory === 'function') renderHistory();
-          showToast("🐾 已记录一次勇敢的尝试");
+          if (typeof showToast === 'function') showToast("🐾 已记录一次勇敢的尝试");
         }
       }
 
-      // 3. 彻底清空状态，重新抽卡
+      // 3. 彻底清空状态，恢复 UI，重新抽卡
       currentTask = null;
-      currentStatus = 'idle';
-      anchorStartTime = null;
+      if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+      if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
       localStorage.removeItem(KEY_LIVE_STATE);
       if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
       
-      draw();
+      const statusEl = document.getElementById('rStatus');
+      const ingEl = document.getElementById('rIngPulse');
+      if (statusEl) statusEl.style.display = 'none';
+      if (ingEl) ingEl.style.display = 'none';
+      
+      if (typeof draw === 'function') draw();
     }
 
 function playGachaAnimation(result) {
