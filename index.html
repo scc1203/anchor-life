@@ -7867,7 +7867,7 @@ function renderResultCard(result) {
             if (title) title.innerText = result.title || "";
             if (badge) {
                 let badgesHtml = "";
-                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
+                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 重要</span>`;
                 if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
                 // 👉 补充：循环生命周期徽章 (What: 视觉提示; Why: 让用户一眼看出这是个长期循环任务)
                 const recurSource = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
@@ -7879,17 +7879,23 @@ function renderResultCard(result) {
                     badgesHtml += `<span class="card-badge" style="background:#e3f2fd; color:#1565c0;">🔄 每周</span>`;
                 } else if (recurSource && recurSource.recurrence === 'monthly') {
                     badgesHtml += `<span class="card-badge" style="background:#f3e5f5; color:#4527a0;">🔄 每月</span>`;
+                } else if (recurSource && (recurSource.recurrence === 'long_term' || recurSource.type === 'long_term')) {
+                    badgesHtml += `<span class="card-badge" style="background:#fff3e0; color:#e65100;">🚀 长期</span>`;
                 }
                 badge.innerHTML = badgesHtml;
             }
             let displayDesc = result.desc;
             if (!displayDesc || displayDesc === "自定义") displayDesc = getDescByType(result.type);
 
-            // v6.6.3 静音多巴胺：对 culture / vinyl 给予心理许可文案 + 呼吸光晕
-            // Why: 用户抽到休闲任务时常有"我是不是在摸鱼"的罪恶感，
-            //      用温柔文案 + 视觉暗示告诉他们：这是你应得的。
+            const recurSourceDesc = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
+                ? currentTask : result;
+            const isLongTerm = recurSourceDesc && (recurSourceDesc.recurrence === 'long_term' || recurSourceDesc.type === 'long_term');
+            if (isLongTerm) {
+                displayDesc = '持续推进，每一步都算数。';
+            }
+            // v6.6.3 静音多巴胺：对 culture / vinyl 给予心理许可文案（长期任务优先显示持续推进）
             const isRelaxType = (result.type === 'culture' || result.type === 'vinyl');
-            if (isRelaxType) {
+            if (isRelaxType && !isLongTerm) {
                 displayDesc = '✨ 放下顾虑去享受吧，这是你应得的。';
             }
 
@@ -11034,6 +11040,11 @@ if (!userOverrideFlash) {
                     db[idx].time = timeVal;
                     db[idx].isFrog = isFrog;
                     db[idx].isQuick = isQuick;
+                    // 👉 核心修复：同步修改后的生命周期属性
+                    db[idx].recurrence = recurrence; 
+                    // 同步更新描述文案
+                    db[idx].desc = (recurrence === 'long_term') ? "长期任务" : 
+                                   (isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""));
                     if (finalIcon) db[idx].icon = finalIcon;
                 }
             } else {
