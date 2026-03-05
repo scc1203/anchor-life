@@ -2916,7 +2916,7 @@ body.immersive-locked {
 
 <div class="container">
     <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.5 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.6 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3774,10 +3774,11 @@ body.immersive-locked {
   <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">☁️ v6.9：云端纪元与时空生命力</div>
   <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
     <li><b>v6.9.1：</b> ☁️ <b>多端同步：</b>建立云端专属账号 🆔，打通多设备数据拉取与推送，数据不再局限于单机。</li>
-    <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
-    <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
-    <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器，自动记录任务时长。</li>
-    <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
+    <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式♻️新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
+    <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」🖼️/🎭智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
+    <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器⏱️，自动记录任务时长。</li>
+    <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜🗄️，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
+    <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -4038,6 +4039,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentUsername = localStorage.getItem(KEY_USERNAME) || 'Anchor';
 
+    const KEY_PASSWORD = 'anchor_live_password';
+    let currentPassword = localStorage.getItem(KEY_PASSWORD) || '';
+
 
     const defaultDB = [
         { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
@@ -4192,17 +4196,97 @@ coloringBgImg.onload = function () {
       }
     }
 
-    // 保存并应用新用户名
-    function saveUsername() {
-      const inp = document.getElementById('settingUsernameInp');
-      if (!inp) return;
-      let newName = inp.value.trim();
-      if (!newName) newName = 'Anchor'; // 兜底
+    // 升级为 async 异步函数，加入状态机与 UI 回滚机制
+    async function saveUsername() {
+        const inp = document.getElementById('settingUsernameInp');
+        const btn = document.querySelector('button[onclick="saveUsername()"]');
+        if (!inp) return;
 
-      currentUsername = newName;
-      localStorage.setItem(KEY_USERNAME, currentUsername);
-      updateUsernameUI();
-      showToast(`✨ 身份已变更为：${currentUsername}`);
+        let newName = inp.value.trim();
+        if (!newName) newName = 'Anchor'; // 兜底
+
+        // 👉 逻辑 1：打破死锁。如果名字没变，给用户重新输入密码的机会
+        if (newName === currentUsername && currentPassword && currentUsername !== 'Anchor') {
+            const wantChange = confirm(`当前身份已经是 [${currentUsername}]。\n是否需要修改/重新验证本地通行证密码？`);
+            if (!wantChange) {
+                inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
+                return;
+            }
+        }
+
+        // 👉 逻辑 2：呼出原生弹窗索要密码 (加入忘记密码提示)
+        const inputPwd = prompt(`👋 欢迎来到云端，${newName}！\n\n请输入你的专属通行密码：\n(新身份将自动绑定此密码，已有身份请输入原密码。本机会自动记住，无需重复输入)\n\n💡 提示：如果忘记密码，请联系管理员重置。`);
+
+        // 如果用户点了取消
+        if (inputPwd === null) {
+            // 核心修复：UI 回滚，绝不让未验证的名字占位
+            inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
+            return;
+        }
+
+        const pwdTrimmed = inputPwd.trim();
+        if (!pwdTrimmed) {
+            alert("⚠️ 密码不能为空！");
+            inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
+            return;
+        }
+
+        // 👉 逻辑 3：敲门问路（拿着账号密码去后台大姐那验证）
+        try {
+            if (typeof CLOUD_API_BASE !== 'undefined') {
+                // UI 交互：按钮变为 Loading 状态
+                const oldBtnText = btn ? btn.innerText : '更新身份';
+                if(btn) btn.innerText = '验证中...';
+
+                // 发起轻量校验请求
+                const res = await fetch(`${CLOUD_API_BASE}/${newName}`, {
+                    headers: { 'X-Anchor-Auth': pwdTrimmed }
+                });
+
+                if(btn) btn.innerText = oldBtnText; // 恢复按钮
+
+                // 🚨 验证失败：密码错误或被拦截
+                if (res.status === 403 || res.status === 401) {
+                    alert("🔒 档案室大姐拦截：密码错误！\n该身份已被注册，请重新输入正确的密码，或更换一个新的身份标识。");
+                    // 核心修复：UI 回滚，将输入框强行退回原合法账号，绝不占位！
+                    inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
+                    return; // 拒绝落盘，直接终止！
+                }
+
+                // ✅ 验证成功
+                if (res.ok) {
+                    const json = await res.json();
+                    // 核心修复：通过大姐给的档案袋是否为空，判断是“初次建档”还是“老客回归”
+                    const isNewUser = Object.keys(json).length === 0;
+
+                    // 只有大姐放行了，才真正在本地持久化落盘
+                    currentUsername = newName;
+                    currentPassword = pwdTrimmed;
+                    localStorage.setItem(KEY_USERNAME, currentUsername);
+                    localStorage.setItem(KEY_PASSWORD, currentPassword);
+
+                    if (typeof updateUsernameUI === 'function') updateUsernameUI();
+
+                    // 👉 逻辑 4：动态情绪价值提示与万能钥匙识别
+                    if (currentPassword === 'SccAdmin2026') {
+                        // What: 如果用户使用了万能钥匙，提醒其立刻修改密码
+                        // Why: 防止用户一直停留在超级管理员状态，引导其形成闭环
+                        showToast(`🔑 万能钥匙验证成功！请再次点击【更新身份】设定新密码`);
+                    } else if (isNewUser) {
+                        showToast(`✨ 欢迎！身份 [${currentUsername}] 绑定成功`);
+                    } else {
+                        showToast(`✨ 欢迎回来！身份 [${currentUsername}] 登录成功`);
+                    }
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn("网络校验受阻", e);
+            alert("⚠️ 无法连接到云端机房，请检查网络或稍后再试。");
+            // 核心修复：网络不通也回滚，防止产生错误的本地单机账号
+            inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
+            return;
+        }
     }
 
 // 糖家族配置：先只启用已经做好的两颗糖
@@ -11609,11 +11693,20 @@ if (!userOverrideFlash) {
 
       try {
         const payload = getBackupDataObj();
+        // 携带通行证进行同步
         const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Anchor-Auth': currentPassword || ''
+          },
           body: JSON.stringify(payload)
         });
+
+        if (res.status === 403 || res.status === 401) {
+          showToast("🔒 密码错误或无权限覆盖该身份的数据！");
+          return;
+        }
 
         if (res.ok) {
           showToast("☁️ 已成功同步到云端！");
@@ -11622,7 +11715,7 @@ if (!userOverrideFlash) {
         }
       } catch(e) {
         console.error(e);
-        showToast("⚠️ 无法连接到本地服务器，大爷可能下班了");
+        showToast("⚠️ 无法连接到本地服务器，大姐可能下班了");
       } finally {
         if(btn) btn.innerText = "☁️ 推送当前进度至云端";
       }
@@ -11638,7 +11731,18 @@ if (!userOverrideFlash) {
       if(btn) btn.innerText = "☁️ 拉取中...";
 
       try {
-        const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`);
+        // 携带通行证拉取数据
+        const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+          headers: {
+            'X-Anchor-Auth': currentPassword || ''
+          }
+        });
+
+        if (res.status === 403 || res.status === 401) {
+          showToast("🔒 密码错误，无法拉取该身份的数据！");
+          return;
+        }
+
         const json = await res.json();
 
         if (Object.keys(json).length === 0) {
