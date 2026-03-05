@@ -2915,8 +2915,8 @@ body.immersive-locked {
 </div>
 
 <div class="container">
-    <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.7 通用版</span></div>
+        <div class="header">
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.8 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3305,13 +3305,17 @@ body.immersive-locked {
 
         </div>
         <div class="input-options-row2">
-            <div class="switch-container">
-                <div class="switch-btn" id="cycleSwitch" onclick="toggleSwitch('cycle')">
-                    <span>🔄 每日循环</span>
-                </div>
-                <div class="switch-btn" id="flashSwitch" onclick="toggleSwitch('flash')">
-                    <span>⚡️ 速办模式</span>
-                </div>
+            <div class="switch-container" style="gap: 8px;">
+<select id="inpRecurrence" class="time-select-small" style="flex:1; padding:4px 8px; font-size:0.85rem;">
+    <option value="none">⏳ 单次任务</option>
+    <option value="daily">🔄 每日循环</option>
+    <option value="weekly">🔄 每周循环</option>
+    <option value="monthly">🔄 每月循环</option>
+    <option value="long_term">🚀 长期任务</option>
+</select>
+<div class="switch-btn" id="flashSwitch" onclick="toggleSwitch('flash')" style="flex:1; justify-content:center;">
+    <span>⚡️ 速办模式</span>
+</div>
             </div>
             <select id="inpTime" class="time-select-small">
                 <option value="5">5m (速办)</option>
@@ -3788,6 +3792,7 @@ body.immersive-locked {
     <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜🗄️，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
     <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
     <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
+    <li><b>v6.9.8：</b> ♻️ <b>循环进阶：</b>增加🔁每天/每周/每月循环任务，并自动记录打卡次数，新增🚀长期任务种类，持续记录。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -7128,19 +7133,41 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (coldList) coldList.innerHTML = "";
 
         let dCount = 0, mCount = 0, cCount = 0;
-        const todayStr = getAnchorDate().toDateString();
         const sortedDB = [...db].sort((a, b) => b.id - a.id);
 
         sortedDB.forEach(item => {
             const li = document.createElement('li');
             li.className = 'task-item';
-            const isDoneToday = (item.recurrence === 'daily' && item.lastDone === todayStr);
-            if (isDoneToday) li.classList.add('task-status-done');
+
+            const anchorD = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+            const todayStr = anchorD.toDateString();
+            let isDoneInCycle = false;
+            let cycleBadgeText = '🔄';
+
+            if (item.recurrence && item.recurrence !== 'none' && item.lastDone) {
+                const lastD = new Date(item.lastDone);
+                if (item.recurrence === 'daily' && item.lastDone === todayStr) { 
+                    isDoneInCycle = true; cycleBadgeText = '今天✅'; 
+                } else if (item.recurrence === 'weekly') {
+                    const thisMonday = new Date(anchorD);
+                    thisMonday.setHours(0,0,0,0);
+                    thisMonday.setDate(anchorD.getDate() - (anchorD.getDay() || 7) + 1);
+                    if (lastD >= thisMonday) { isDoneInCycle = true; cycleBadgeText = '本周✅'; }
+                } else if (item.recurrence === 'monthly') {
+                    const thisMonthFirst = new Date(anchorD.getFullYear(), anchorD.getMonth(), 1);
+                    if (lastD >= thisMonthFirst) { isDoneInCycle = true; cycleBadgeText = '本月✅'; }
+                }
+            }
+
+            if (isDoneInCycle) li.classList.add('task-status-done');
 
             const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
-            const cycleBadge = item.recurrence === 'daily'
-                ? (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`)
-                : '';
+            let cycleBadge = '';
+            if (item.recurrence === 'long_term') {
+                cycleBadge = `<span class="list-badge">🚀</span>`;
+            } else if (['daily', 'weekly', 'monthly'].includes(item.recurrence)) {
+                cycleBadge = isDoneInCycle ? `<span class="list-badge">${cycleBadgeText}</span>` : `<span class="list-badge">🔄</span>`;
+            }
 
             let extraBadges = "";
             if (item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
@@ -7841,7 +7868,17 @@ function renderResultCard(result) {
                 let badgesHtml = "";
                 if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
                 if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
-                if (result.recurrence === 'daily') badgesHtml += `<span class='card-badge bg-cycle'>🔄 每日</span>`;
+                // 👉 补充：循环生命周期徽章 (What: 视觉提示; Why: 让用户一眼看出这是个长期循环任务)
+                const recurSource = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
+                    ? currentTask
+                    : result;
+                if (recurSource && recurSource.recurrence === 'daily') {
+                    badgesHtml += `<span class="card-badge" style="background:#e0f2f1; color:#2e7d32;">🔄 每日</span>`;
+                } else if (recurSource && recurSource.recurrence === 'weekly') {
+                    badgesHtml += `<span class="card-badge" style="background:#e3f2fd; color:#1565c0;">🔄 每周</span>`;
+                } else if (recurSource && recurSource.recurrence === 'monthly') {
+                    badgesHtml += `<span class="card-badge" style="background:#f3e5f5; color:#4527a0;">🔄 每月</span>`;
+                }
                 badge.innerHTML = badgesHtml;
             }
             let displayDesc = result.desc;
@@ -7877,10 +7914,13 @@ function renderResultCard(result) {
                 const bText = active.bookmarkText || '';
                 const bTotal = active.bookmarkTotal || '';
                 const totalMins = active.totalMinutes || 0;
-                const hasBookmark = bText && bText.trim();
+                const hasBookmark = !!active.bookmarkText;
                 const hasTotal = totalMins && totalMins > 0;
+                // 👉 新增：检测是否有打卡次数
+                const hasCount = active.completeCount && active.completeCount > 0;
 
-                if (hasBookmark || hasTotal) {
+                // 只要有其中一项，就显示记忆情报区
+                if (hasBookmark || hasTotal || hasCount) {
                     // 第一行：书签与马卡龙进度条
                     if (hasBookmark) {
                         progressHtml += `<div style="margin-bottom:6px;">🔖 当前进度: ${bText}${bTotal ? ' / ' + bTotal : ''}`;
@@ -7915,6 +7955,11 @@ function renderResultCard(result) {
                             ? `${totalMins}m`
                             : `${hours}h${mins > 0 ? mins + 'm' : ''}`;
                         progressHtml += `<div>⏱ 总计 ${timeDisplay}</div>`;
+                    }
+
+                    // 👉 新增第三行：累计打卡次数 (强制分行，使用治愈粉色，呼应无限复利游戏)
+                    if (hasCount) {
+                        progressHtml += `<div style="margin-top:6px; color:#FF9AA2; font-weight:bold; font-size: 0.9rem;">💪 累计打卡: ${active.completeCount} 次</div>`;
                     }
                 }
 
@@ -8559,14 +8604,31 @@ function pickTaskByFilters() {
     }
     const limitTime = parseInt(document.getElementById('selTime').value);
     const todayStr = getAnchorDate().toDateString();
-
+    
     // Step 1: 物理铁律过滤（Hard Filters）
     let validPool = db.filter(item => {
         // 冷宫任务必须排除
         if (item.inColdStorage === true) return false;
         
-        // 日常任务：如果今天已完成，跳过
-        if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
+        // 周期任务过滤
+        if (item.recurrence && item.recurrence !== 'none' && item.lastDone) {
+            const anchorD = getAnchorDate();
+            const lastD = new Date(item.lastDone);
+            
+            if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
+            if (item.recurrence === 'weekly') {
+                // 获取当前锚点时间的本周一 00:00:00
+                const thisMonday = new Date(anchorD);
+                thisMonday.setHours(0,0,0,0);
+                thisMonday.setDate(anchorD.getDate() - (anchorD.getDay() || 7) + 1);
+                if (lastD >= thisMonday) return false; // 本周已做过
+            }
+            if (item.recurrence === 'monthly') {
+                // 获取本月 1 号 00:00:00
+                const thisMonthFirst = new Date(anchorD.getFullYear(), anchorD.getMonth(), 1);
+                if (lastD >= thisMonthFirst) return false; // 本月已做过
+            }
+        }
         
         return true;
     });
@@ -9783,11 +9845,13 @@ function openRitual(type) {
             : '';
         const noteSnapshot = finalTask.noteText || '';
         const lastAddMinutes = finalTask.lastAddMinutes || 0;
-
+    
         let marked = false;
         for (let i = 0; i < dailyLog.length; i++) {
             const log = dailyLog[i];
-            if (log.date === anchorTodayStr && log.taskId === task.id) {
+            // 👉 核心修复：只有找到一条 done === false 的进行中占位记录，才执行覆盖更新。
+            // 如果是已经 done === true 的记录，说明是以前完成的，必须跳过，从而在下方 unshift 一条新的。
+            if (log.date === anchorTodayStr && log.taskId === task.id && log.done === false) {
                 log.done = true;
                 log.title = finalTask.title;
                 log.icon = finalTask.icon || getSmartIcon(finalTask);
@@ -9802,10 +9866,24 @@ function openRitual(type) {
                 break;
             }
         }
-        if (!marked) {
+
+        // 👉 动态生成足迹标题与计数
+        let logTitle = task.title;
+        let logIcon = task.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(task) : '✅');
+
+        // 处理循环与长期任务的足迹展示
+        if (['daily', 'weekly', 'monthly'].includes(task.recurrence) && taskInDb) {
+            taskInDb.completeCount = (taskInDb.completeCount || 0) + 1;
+            logTitle = `【+${taskInDb.completeCount}】${task.title}`;
+        } else if (task.recurrence === 'long_term' || task.type === 'long_term') {
+            logTitle = `【推进】${task.title}`;
+        }
+
+        // 写入 dailyLog
+        if (!marked && !silent) {
             dailyLog.unshift({
-                title: task.title,
-                icon: task.icon || getSmartIcon(task),
+                title: logTitle,
+                icon: logIcon,
                 timeStr: timeStr,
                 date: anchorTodayStr,
                 done: true,
@@ -9842,7 +9920,7 @@ function openRitual(type) {
             const isSeries = !!task.isSeries;
             const isMovie = (subtype === 'movie') || icon === '🎬';
             const isEvent = (subtype === 'other') || icon === '🎭' || icon === '🖼️';
-
+    
             // 2.1 🎭/🖼️ 线下文娱活动：一次性结项，直接进荣誉殿堂
             if (isEvent) {
                 db = db.filter(t => t.id !== task.id);
@@ -9891,28 +9969,32 @@ function openRitual(type) {
                 showToast("📚 进度已更新，记录至今日足迹");
             }
         }
-        // 3）普通任务：完成后从任务池删除；如果是重要任务（青蛙），同时放入荣誉殿堂
+        // 3）普通任务 / 长期任务 分流
         else {
-            db = db.filter(i => i.id !== task.id);
-
-            if (task.isFrog) {
-                archive.unshift({
-                    title: task.title,
-                    type: 'important',
-                    isFrog: true,
-                    icon: task.icon || getSmartIcon(task),
-                    finishDate: now.toLocaleDateString()
-                });
-            }
-
-            save();
-            renderList();
-            renderArchive();
-            showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
-
-            // v6.6.3 静音多巴胺：青蛙任务完成 → 极简彩纸嘉奖
-            if (task.isFrog) {
-                spawnQuietConfetti();
+            if (task.recurrence === 'long_term' || task.type === 'long_term') {
+                // 长期任务：绝不删除，留在池中累加时间
+                if (typeof renderList === 'function') renderList();
+                if (typeof showToast === 'function') showToast("🚀 阶段推进成功！");
+            } else if (task.recurrence === 'weekly' || task.recurrence === 'monthly') {
+                // 周/月循环任务：保留在任务池，仅更新进度
+                const taskIndex = db.findIndex(t => t.id === task.id);
+                if (taskIndex > -1) db[taskIndex].lastDone = anchorTodayStr;
+                save();
+                renderList();
+                if (typeof showToast === 'function') showToast("✅ 本次打卡成功！");
+            } else {
+                // 单次任务：阅后即焚，移出任务池
+                db = db.filter(i => i.id !== task.id);
+                if (task.isFrog) {
+                    archive.unshift({
+                        title: task.title, type: 'important', isFrog: true, icon: task.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(task) : ''), finishDate: now.toLocaleDateString(),
+                        totalMinutes: finalTask.totalMinutes, bookmarkText: finalTask.bookmarkText, noteText: finalTask.noteText
+                    });
+                }
+                if (typeof renderList === 'function') renderList();
+                if (typeof renderArchive === 'function') renderArchive();
+                if (typeof showToast === 'function') showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
+                if (task.isFrog && typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
             }
         }
 
@@ -9996,13 +10078,18 @@ function openRitual(type) {
       let statsHtml = '';
       const hasTime = task.totalMinutes && task.totalMinutes > 0;
       const hasBookmark = task.bookmarkText && task.bookmarkText.trim();
-
-      if (hasTime || hasBookmark) {
+      const hasCount = task.completeCount && task.completeCount > 0;
+ 
+      // 👉 核心修复：只要有次数，也必须显示浅色情报框
+      if (hasTime || hasBookmark || hasCount) {
         statsHtml += `<div style="background:#f9fafb; padding:10px 12px; border-radius:8px; font-size:0.85rem; color:#555; margin-top:12px; margin-bottom:4px; text-align:left; border:1px solid #eee;">`;
         if (hasTime) {
           const h = Math.floor(task.totalMinutes / 60);
           const m = task.totalMinutes % 60;
           statsHtml += `<div style="margin-bottom:4px;">⏱ <b>累计投入:</b> ${h > 0 ? h + 'h ' : ''}${m}m</div>`;
+        }
+        if (task.completeCount && task.completeCount > 0) {
+          statsHtml += `<div style="margin-bottom:4px; color:#FF9AA2; font-weight:bold;">💪 累计打卡: ${task.completeCount} 次</div>`;
         }
         if (hasBookmark) {
           statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}${task.bookmarkTotal ? ' / ' + task.bookmarkTotal : ''}</div>`;
@@ -10353,14 +10440,11 @@ function openRitual(type) {
             for (let i = 0; i < dailyLog.length; i++) {
                 const log = dailyLog[i];
                 if (log.date === todayStr && log.taskId === task.id) {
-                    // 更新记忆数据到历史记录
+                    // 更新记忆数据到历史记录（仅同步书签与备注快照，保留原始时间快照）
                     log.bookmarkSnapshot = task.bookmarkText
                         ? (task.bookmarkTotal ? task.bookmarkText + ' / ' + task.bookmarkTotal : task.bookmarkText)
                         : '';
                     log.noteSnapshot = task.noteText || '';
-                    if (task.lastAddMinutes && task.lastAddMinutes > 0) {
-                        log.lastAddMinutes = task.lastAddMinutes;
-                    }
                     save();
                     renderHistory();
                     break;
@@ -10655,6 +10739,15 @@ function openRitual(type) {
     toggleTimeInput(t);
 }
 
+    // 👉 v6.9.8: 实时联动生命周期下拉菜单
+    const recurSelect = document.getElementById('inpRecurrence');
+    if (recurSelect) {
+        if (trimmed.includes('每天') || trimmed.includes('每日')) recurSelect.value = 'daily';
+        else if (trimmed.includes('每周')) recurSelect.value = 'weekly';
+        else if (trimmed.includes('每月')) recurSelect.value = 'monthly';
+        else if (trimmed.includes('长期')) recurSelect.value = 'long_term';
+    }
+
     // === 5. 自动速办逻辑 ===
     // 只对“家务类关键词”触发，并且排除“整理照片”
     if (!isPhotoSort && detectQuick) {
@@ -10898,9 +10991,25 @@ if (!userOverrideFlash) {
                 }
             }
 
-            let recurrence = switchState.cycle ? 'daily' : 'none';
-            if (recurrence === 'none' && (title.includes('每天') || title.includes('每日'))) { recurrence = 'daily'; }
-            if (recurrence === 'daily') title = title.replace(/每天|每日/g, '').trim();
+            // 👉 获取生命周期设定
+            const recurSelect = document.getElementById('inpRecurrence');
+            let recurrence = recurSelect ? recurSelect.value : 'none';
+
+            // 智能识别词典兜底
+            if (recurrence === 'none') {
+                if (title.includes('每天') || title.includes('每日')) recurrence = 'daily';
+                else if (title.includes('每周')) recurrence = 'weekly';
+                else if (title.includes('每月')) recurrence = 'monthly';
+                else if (title.includes('长期')) recurrence = 'long_term';
+            }
+
+            // 洗稿机：清洗掉周期前缀
+            if (recurrence !== 'none') {
+                title = title.replace(/每天|每日|每周|每月|长期[:：\s]*/g, '').trim();
+            }
+
+            // 👉 同步更新 UI 下拉菜单，给予用户视觉确认
+            if (recurSelect) recurSelect.value = recurrence;
 
             // 终极图标锁定：基于原始输入 (line) 判定，不受洗稿机影响，且绝对尊重用户的手动标签
             let finalIcon = null;
@@ -10930,7 +11039,7 @@ if (!userOverrideFlash) {
                 db.push({
                     id: Date.now() + Math.floor(Math.random() * 10000),
                     title: title, type: type, subtype: subtype,
-                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""),
+                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "去行动吧" : ""),
                     isSeries: isSeries, time: timeVal, recurrence: recurrence,
                     isFrog: isFrog, isQuick: isQuick, lastDone: '',
                     icon: finalIcon // 直接写入锁定图标，如果为 null，渲染时会 fallback
@@ -10946,6 +11055,9 @@ if (!userOverrideFlash) {
         document.getElementById('timeFeedback').innerText = ""; 
         if(switchState.cycle) toggleSwitch('cycle', false); 
         if(switchState.flash) toggleSwitch('flash', false); 
+        // 👉 v6.9.8: 提交成功后，强制复位生命周期下拉框，防止污染下一条任务
+        const recurSelect = document.getElementById('inpRecurrence');
+        if (recurSelect) recurSelect.value = 'none';
         editingTaskId = null;
         editingTaskOriginal = null;
         showToast(`🎉 存入 ${addedCount} 个任务！`); 
@@ -10968,21 +11080,10 @@ if (!userOverrideFlash) {
             const titleEl = dlg.querySelector('.cold-dialog-title');
             if (titleEl) titleEl.innerText = "要怎么处理这条任务？";
 
-            // 动态改变第三个按钮：媒体类显示“归档”，普通类显示“取消”
             const cancelBtn = dlg.querySelector('.cold-btn-cancel');
-            const isMedia = (item.type === 'culture' || item.type === 'vinyl');
             if (cancelBtn) {
-                if (isMedia) {
-                    cancelBtn.innerText = '🏆 归档';
-                    cancelBtn.onclick = () => confirmColdAction('archive');
-                    cancelBtn.style.background = '#fff3e0';
-                    cancelBtn.style.color = '#e65100';
-                } else {
-                    cancelBtn.innerText = '🔙 取消';
-                    cancelBtn.onclick = () => confirmColdAction('cancel');
-                    cancelBtn.style.background = '#f5f5f5';
-                    cancelBtn.style.color = '#333';
-                }
+                cancelBtn.innerText = '🏆 归档';
+                cancelBtn.onclick = () => confirmColdAction('archive');
             }
             dlg.style.display = 'flex';
         }
@@ -11039,8 +11140,8 @@ if (!userOverrideFlash) {
 
         if (action === 'archive') {
             // 专属于文化类任务的归档操作
-            const cleanTitle = (item.title || '').replace(/《|》/g, '');
-            if (confirm(`确定已彻底完成/看完《${cleanTitle}》并将其移入荣誉殿堂吗？`)) {
+            const taskName = item.title || '该任务';
+            if (confirm(`确定已彻底完成【${taskName}】并将其移入荣誉殿堂吗？`)) {
                 db = db.filter(t => t.id !== id);
                 archive.unshift({ ...item, finishDate: new Date().toLocaleDateString() });
                 save(); renderList(); renderArchive();
@@ -12588,7 +12689,7 @@ function lobbyEnter(action) {
             <!-- 👉 v6.9.7 新增：顺手更新进度 -->
             <div id="harvestBookmarkZone" style="margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:8px;">
                 <span style="font-size:0.85rem; color:#777; font-weight:500;">🔖 进度:</span>
-                <input type="text" id="harvestBookmark" placeholder="当前(如P135)" style="flex:1; max-width:60%; padding:8px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;" />
+                <input type="text" id="harvestBookmark" placeholder="当前(如P135, 选填)" style="flex:1; max-width:60%; padding:8px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;" />
             </div>
             <div class="cold-dialog-buttons">
                 <button type="button" class="cold-btn-cancel" onclick="window._resolveHarvest(0)">不记录</button>
