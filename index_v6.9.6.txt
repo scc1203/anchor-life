@@ -3106,19 +3106,12 @@ body.immersive-locked {
             <div class="memory-panel-handle" onclick="closeMemoryPanel()"></div>
             <div class="memory-panel-title">记忆面板</div>
             
-            <!-- 第一行：空间坐标 (书签与目标) -->
-            <div class="memory-panel-row1" style="margin-bottom: 12px; gap: 6px; align-items: center;">
-                <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">🔖 进度:</span>
-                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="当前(如P120)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: none;" />
-                <span class="memory-separator" style="color: #ccc; margin: 0 2px;">/</span>
-                <input type="text" id="memoryTotal" class="memory-input-bookmark" placeholder="目标(如300)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: none;" />
-            </div>
-            
-            <!-- 第二行：时间流逝 (本次时长) -->
-            <div class="memory-panel-row1" style="margin-bottom: 16px; gap: 6px; align-items: center;">
-                <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">⏱️ 时长:</span>
-                <div class="memory-time-picker" style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                    <select id="memoryHours" class="memory-time-select" style="flex: 1; max-width: 45%;">
+            <!-- 第一行：书签 + 时间选择器 -->
+            <div class="memory-panel-row1">
+                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="记录坐标（如：P120 / S2E5）" />
+                <span class="memory-separator">/ 本次时长:</span>
+                <div class="memory-time-picker">
+                    <select id="memoryHours" class="memory-time-select">
                         <option value="0">0h</option>
                         <option value="1">1h</option>
                         <option value="2">2h</option>
@@ -3144,8 +3137,8 @@ body.immersive-locked {
                         <option value="22">22h</option>
                         <option value="23">23h</option>
                     </select>
-                    <span style="font-weight: bold; color: #aaa; margin: 0 4px;">:</span>
-                    <select id="memoryMinutes" class="memory-time-select" style="flex: 1; max-width: 45%;">
+                    <span style="margin:0 2px;">:</span>
+                    <select id="memoryMinutes" class="memory-time-select">
                         <option value="0">00</option>
                         <option value="5">05</option>
                         <option value="10">10</option>
@@ -3370,8 +3363,7 @@ body.immersive-locked {
             <details id="cabinetDetails">
                 <summary>
                     <span style="font-size:0.95rem; font-weight:bold; color:#444;">📁 档案柜</span>
-                    <span style="font-size:0.75rem; color:#999; margin-left:auto;">(轻量清单 & 项目)</span>
-                    <span id="cabinetCountDisplay" style="font-size:0.8rem; color:#999; margin-left:4px; margin-right:6px;">(0)</span>
+                    <span style="font-size:0.75rem; color:#999; margin-left:auto; margin-right:6px;">(轻量清单 & 项目)</span>
                 </summary>
                 <div class="manual-content" id="cabinetContent" style="padding-top:10px; padding-bottom: 10px;">
                     <!-- JS 动态渲染清单内容 -->
@@ -6751,9 +6743,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     function renderCabinet() {
         const container = document.getElementById('cabinetContent');
         if (!container) return;
-        // 👉 v6.9.7：更新标题旁边的小数字
-        const countEl = document.getElementById('cabinetCountDisplay');
-        if (countEl) countEl.innerText = `(${customPlaylists ? customPlaylists.length : 0})`;
         // v6.9.5 修复跳动：记录重绘前的滚动高度
         const scrollBox = container.querySelector('.cabinet-scroll-area');
         const savedScrollTop = scrollBox ? scrollBox.scrollTop : 0;
@@ -7867,56 +7856,29 @@ function renderResultCard(result) {
             const progressEl = document.getElementById('rProgress');
             if (progressEl) {
                 let progressHtml = "";
-
-                // 以 currentTask 为主，退回到 result 作为兜底
-                const active = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
-                    ? currentTask
-                    : result;
-
-                const bText = active.bookmarkText || '';
-                const bTotal = active.bookmarkTotal || '';
-                const totalMins = active.totalMinutes || 0;
-                const hasBookmark = bText && bText.trim();
-                const hasTotal = totalMins && totalMins > 0;
-
+                const hasBookmark = result.bookmarkText && result.bookmarkText.trim();
+                const hasTotal = result.totalMinutes && result.totalMinutes > 0;
+                
                 if (hasBookmark || hasTotal) {
-                    // 第一行：书签与马卡龙进度条
                     if (hasBookmark) {
-                        progressHtml += `<div style="margin-bottom:6px;">🔖 当前进度: ${bText}${bTotal ? ' / ' + bTotal : ''}`;
-                        
-                        // 只有存在当前和目标，且【不是电影】时，才渲染进度条
-                        const subtype = active.subtype;
-                        const icon = active.icon || getSmartIcon(active);
-                        if (bText && bTotal && subtype !== 'movie' && icon !== '🎬') {
-                            const currMatch = bText.match(/\d+(\.\d+)?/);
-                            const totalMatch = bTotal.match(/\d+(\.\d+)?/);
-                            if (currMatch && totalMatch) {
-                                const currNum = parseFloat(currMatch[0]);
-                                const totalNum = parseFloat(totalMatch[0]);
-                                if (totalNum > 0 && currNum >= 0) {
-                                    const percent = Math.min(100, Math.max(0, Math.round((currNum / totalNum) * 100)));
-                                    // v6.9.7 优化：缩短进度条长度，使其与文字宽度相得益彰
-                                    progressHtml += `
-                            <div style="max-width:140px; margin: 6px auto 0; background:#f0f1f5; border-radius:99px; height:6px; overflow:hidden;">
-                                <div style="width:${percent}%; background:linear-gradient(90deg, #A0E7E5, #FFB7B2); height:100%; border-radius:99px; transition:width 0.5s ease-out;"></div>
-                            </div>`;
-                                }
-                            }
-                        }
-                        progressHtml += `</div>`;
+                        progressHtml += `🔖 ${result.bookmarkText}`;
                     }
-
-                    // 第二行：总计时长（强制分行，解决拥挤）
+                    if (hasBookmark && hasTotal) {
+                        progressHtml += " · ";
+                    }
                     if (hasTotal) {
-                        const mins = totalMins % 60;
-                        const hours = Math.floor(totalMins / 60);
-                        let timeDisplay = totalMins < 60
-                            ? `${totalMins}m`
-                            : `${hours}h${mins > 0 ? mins + 'm' : ''}`;
-                        progressHtml += `<div>⏱ 总计 ${timeDisplay}</div>`;
+                        const totalMins = result.totalMinutes;
+                        let timeDisplay = "";
+                        if (totalMins < 60) {
+                            timeDisplay = `${totalMins}m`;
+                        } else {
+                            const hours = Math.floor(totalMins / 60);
+                            const mins = totalMins % 60;
+                            timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                        }
+                        progressHtml += `⏱ 总计 ${timeDisplay}`;
                     }
                 }
-
                 progressEl.innerHTML = progressHtml;
             }
 
@@ -8103,114 +8065,73 @@ function renderResultCard(result) {
         }
     }
 
-    // v6.9.7 升级为异步函数，支持中途放弃时的时间收割与足迹记录
-    async function changeTask() {
-      // 1. 退出沉浸模式
-      exitImmersiveMode();
+    function changeTask() {
+        // v6.7.1：换一个 —— 先退出当前沉浸态（draw 会重新进入）
+        exitImmersiveMode();
 
-      // 2. 清单模式的退回逻辑
-      if (activePlaylist) {
-        if (!Array.isArray(activePlaylist.tasks)) activePlaylist.tasks = [];
-        if (activePlaylist.tasks.length > 0) {
-          const discardedText = currentTask ? currentTask.rawTaskText : null;
-          const card = document.getElementById('resultCard');
-          if (card) {
-            card.style.animation = 'none';
-            card.style.opacity = 0;
+        if (activePlaylist) {
+          if (!Array.isArray(activePlaylist.tasks)) {
+            activePlaylist.tasks = [];
           }
-          setTimeout(() => {
-            drawFromPlaylist();
-            if (discardedText) activePlaylist.tasks.push(discardedText);
-          }, 80);
-        } else {
-          showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
-        }
-        return;
-      }
+          if (activePlaylist.tasks.length > 0) {
+            const discardedText = currentTask ? currentTask.rawTaskText : null;
 
-      if (!currentTask) {
+            // 制造一个视觉上的卡片消失感
+            const card = document.getElementById('resultCard');
+            if (card) {
+              card.style.animation = 'none';
+              card.style.opacity = 0;
+            }
+
+            setTimeout(() => {
+              drawFromPlaylist();
+              if (discardedText) activePlaylist.tasks.push(discardedText);
+            }, 80); // 极短延迟，让视觉上有“换走”的感觉
+          } else {
+            showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
+          }
+          return;
+        }
+
+        if (!currentTask) { 
+            draw();
+            return;
+        }
+        
+        // v6.5：如果当前任务有历史记录（未完成状态），更新记忆数据
+        const todayStr = getAnchorDate().toDateString();
+        const taskId = currentTask.id;
+        
+        // 查找任务在 db 中的最新状态
+        const taskInDb = db.find(t => t.id === taskId);
+        if (taskInDb) {
+            // 查找并更新历史记录
+            for (let i = 0; i < dailyLog.length; i++) {
+                const log = dailyLog[i];
+                if (log.date === todayStr && log.taskId === taskId && !log.done) {
+                    // 更新记忆数据到历史记录
+                    log.bookmarkSnapshot = taskInDb.bookmarkText || '';
+                    log.noteSnapshot = taskInDb.noteText || '';
+                    if (taskInDb.lastAddMinutes && taskInDb.lastAddMinutes > 0) {
+                        log.lastAddMinutes = taskInDb.lastAddMinutes;
+                    }
+                    save();
+                    renderHistory();
+                    break;
+                }
+            }
+        }
+        
+        currentTask = null;
+        currentStatus = 'idle';
+        anchorStartTime = null;
+        localStorage.removeItem(KEY_LIVE_STATE);
+        if (liveTimerId) clearInterval(liveTimerId);
+        const statusEl = document.getElementById('rStatus');
+        const ingEl = document.getElementById('rIngPulse');
+        if (statusEl) statusEl.style.display = 'none';
+        if (ingEl) ingEl.style.display = 'none';
         draw();
-        return;
-      }
-
-      // 👉 v6.9.7 核心修复：如果任务已开始进行且超过 10 秒，放弃时触发时长收割
-      if (currentStatus === 'anchor' && anchorStartTime) {
-        const elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
-        if (elapsedSecs >= 10) { 
-          let elapsedMins = Math.floor(elapsedSecs / 60);
-          if (elapsedSecs >= 10 && elapsedSecs < 60) elapsedMins = 1; // 满10秒保底1分钟
-
-          let harvestMins = 0;
-          if (elapsedMins >= 1 && elapsedMins <= 180) {
-            // 复用时间收割滚轮弹窗
-            harvestMins = await new Promise((resolve) => {
-              const dlg = document.getElementById('harvestDialog');
-              if (!dlg) { resolve(elapsedMins); return; }
-              const selH = document.getElementById('harvestH');
-              const selM = document.getElementById('harvestM');
-              selH.value = Math.floor(elapsedMins / 60);
-              selM.value = elapsedMins % 60;
-              const msgEl = document.getElementById('harvestMsg');
-              if (msgEl) msgEl.innerText = `本次尝试了 ${elapsedMins} 分钟，要存入记忆吗？`;
-              
-              dlg.style.display = 'flex';
-              window._resolveHarvest = (val) => {
-                dlg.style.display = 'none';
-                resolve(val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0);
-              };
-            });
-          } else if (elapsedMins > 180) {
-            // 挂机过长兜底
-            const ans = prompt(`似乎挂机了 ${Math.floor(elapsedMins/60)} 小时😅\n如果只是中途放弃，请手动输入实际尝试了多少分钟 (0为不记录)：`, elapsedMins);
-            harvestMins = parseInt(ans) || 0;
-          }
-
-          // 更新任务本体的累计时间
-          const taskInDb = db.find(t => t.id === currentTask.id) || currentTask;
-          if (harvestMins > 0) {
-            taskInDb.totalMinutes = (taskInDb.totalMinutes || 0) + harvestMins;
-            taskInDb.lastAddMinutes = harvestMins;
-            taskInDb.totalUpdatedAt = Date.now();
-          }
-
-          // 生成时间跨度
-          const startDt = new Date(anchorStartTime);
-          const startStr = startDt.getHours().toString().padStart(2, '0') + ":" + startDt.getMinutes().toString().padStart(2, '0');
-          const now = new Date();
-          let timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-          if (startStr !== timeStr) timeStr = `${startStr} - ${timeStr}`;
-
-          // 写入今日足迹 (done: false 表示这是一次未完成的尝试)
-          dailyLog.unshift({
-            id: Date.now(),
-            title: taskInDb.title,
-            icon: taskInDb.icon || getSmartIcon(taskInDb),
-            timeStr: timeStr,
-            date: getAnchorDate().toDateString(),
-            done: false, // 🚨 核心：没有绿色的勾！
-            taskId: taskInDb.id,
-            bookmarkSnapshot: taskInDb.bookmarkText
-              ? (taskInDb.bookmarkTotal ? taskInDb.bookmarkText + ' / ' + taskInDb.bookmarkTotal : taskInDb.bookmarkText)
-              : '',
-            noteSnapshot: taskInDb.noteText || '',
-            lastAddMinutes: harvestMins
-          });
-          
-          if (typeof save === 'function') save();
-          if (typeof renderLog === 'function') renderLog();
-          if (typeof renderHistory === 'function') renderHistory();
-          showToast("🐾 已记录一次勇敢的尝试");
-        }
-      }
-
-      // 3. 彻底清空状态，重新抽卡
-      currentTask = null;
-      currentStatus = 'idle';
-      anchorStartTime = null;
-      localStorage.removeItem(KEY_LIVE_STATE);
-      if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
-      
-      draw();
     }
 
 function playGachaAnimation(result) {
@@ -9765,9 +9686,7 @@ function openRitual(type) {
             }
         }
 
-        const bookmarkSnapshot = finalTask.bookmarkText
-            ? (finalTask.bookmarkTotal ? finalTask.bookmarkText + ' / ' + finalTask.bookmarkTotal : finalTask.bookmarkText)
-            : '';
+        const bookmarkSnapshot = finalTask.bookmarkText || '';
         const noteSnapshot = finalTask.noteText || '';
         const lastAddMinutes = finalTask.lastAddMinutes || 0;
 
@@ -9992,7 +9911,7 @@ function openRitual(type) {
           statsHtml += `<div style="margin-bottom:4px;">⏱ <b>累计投入:</b> ${h > 0 ? h + 'h ' : ''}${m}m</div>`;
         }
         if (hasBookmark) {
-          statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}${task.bookmarkTotal ? ' / ' + task.bookmarkTotal : ''}</div>`;
+          statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}</div>`;
         }
         statsHtml += `</div>`;
       }
@@ -10132,14 +10051,12 @@ function openRitual(type) {
         // 保存原始状态（用于差异化保存）
         memoryOriginalState = {
             bookmarkText: task.bookmarkText || '',
-            bookmarkTotal: task.bookmarkTotal || '', // 新增目标进度
             totalMinutes: task.totalMinutes || 0,
             noteText: task.noteText || ''
         };
 
         const panel = document.getElementById('memoryPanel');
         const bookmarkInput = document.getElementById('memoryBookmark');
-        const totalInput = document.getElementById('memoryTotal');
         const hoursSelect = document.getElementById('memoryHours');
         const minutesSelect = document.getElementById('memoryMinutes');
         const noteTextarea = document.getElementById('memoryNote');
@@ -10148,29 +10065,11 @@ function openRitual(type) {
         if (!panel) return;
 
         // 加载数据
-        if (bookmarkInput) bookmarkInput.value = task.bookmarkText || '';
-        if (totalInput) totalInput.value = task.bookmarkTotal || '';
-
-        // 👉 v6.9.7 智能 UI 适配：根据任务类型调整提示语和目标框显隐
-        const separator = document.querySelector('.memory-separator'); // 找到 "/" 分隔符
-        if (task.subtype === 'movie' || task.icon === '🎬') {
-            if (bookmarkInput) bookmarkInput.placeholder = "坐标(如00:42:17)";
-            if (totalInput) totalInput.style.display = 'none'; // 电影不需要目标进度
-            if (separator) separator.style.display = 'none';
-        } else {
-            if (totalInput) totalInput.style.display = 'inline-block';
-            if (separator) separator.style.display = 'inline-block';
-            
-            if (task.isSeries || task.icon === '📺') {
-                if (bookmarkInput) bookmarkInput.placeholder = "当前(如E5)";
-                if (totalInput) totalInput.placeholder = "目标(如20集)";
-            } else if (task.subtype === 'book' || task.icon === '📖') {
-                if (bookmarkInput) bookmarkInput.placeholder = "当前(如P120)";
-                if (totalInput) totalInput.placeholder = "目标(如300)";
-            } else {
-                if (bookmarkInput) bookmarkInput.placeholder = "当前坐标";
-                if (totalInput) totalInput.placeholder = "目标终点";
-            }
+        if (bookmarkInput) {
+            bookmarkInput.value = task.bookmarkText || '';
+            // 设置占位符
+            const placeholder = getBookmarkPlaceholder(task);
+            bookmarkInput.placeholder = placeholder;
         }
         if (hoursSelect) hoursSelect.value = '0';
         if (minutesSelect) minutesSelect.value = '0';
@@ -10239,7 +10138,6 @@ function openRitual(type) {
         if (!currentMemoryTask) return;
 
         const bookmarkInput = document.getElementById('memoryBookmark');
-        const totalInput = document.getElementById('memoryTotal');
         const hoursSelect = document.getElementById('memoryHours');
         const minutesSelect = document.getElementById('memoryMinutes');
         const noteTextarea = document.getElementById('memoryNote');
@@ -10255,13 +10153,13 @@ function openRitual(type) {
 
         // 1. 保存书签（覆盖式）
         const newBookmark = bookmarkInput.value.trim();
-        const newTotal = totalInput ? totalInput.value.trim() : '';
-        
-        if (newBookmark !== memoryOriginalState.bookmarkText || newTotal !== memoryOriginalState.bookmarkTotal) {
-            task.bookmarkText = newBookmark;
-            task.bookmarkTotal = newTotal;
-            task.bookmarkUpdatedAt = Date.now();
-            hasChanges = true;
+        if (newBookmark !== memoryOriginalState.bookmarkText) {
+            if (newBookmark) {
+                task.bookmarkText = newBookmark;
+                task.bookmarkUpdatedAt = Date.now();
+                hasChanges = true;
+            }
+            // 如果为空且用户未明确清空，不覆盖（已在 clearMemoryPanel 中处理）
         }
 
         // 2. 保存累计时长（累加式）
@@ -10293,33 +10191,45 @@ function openRitual(type) {
 
         if (hasChanges) {
             save();
-            // 更新 currentTask 如果它是同一个任务（同步到防丢装甲，并强制重绘卡片）
+            // 更新 currentTask 如果它是同一个任务（只更新记忆数据，不刷新整个卡片）
             if (currentTask && currentTask.id === task.id) {
                 // 同步记忆数据到 currentTask
                 currentTask.bookmarkText = task.bookmarkText;
-                currentTask.bookmarkTotal = task.bookmarkTotal; // 补充同步目标
                 currentTask.bookmarkUpdatedAt = task.bookmarkUpdatedAt;
                 currentTask.totalMinutes = task.totalMinutes;
                 currentTask.lastAddMinutes = task.lastAddMinutes;
                 currentTask.totalUpdatedAt = task.totalUpdatedAt;
                 currentTask.noteText = task.noteText;
                 currentTask.noteUpdatedAt = task.noteUpdatedAt;
-
-                // 👉 v6.9.7 修复状态丢失：将新数据同步到“防丢装甲”中
-                if (currentStatus === 'anchor' && typeof KEY_LIVE_STATE !== 'undefined' && typeof anchorStartTime !== 'undefined') {
-                    localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
-                        task: currentTask,
-                        startTime: anchorStartTime,
-                        activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
-                    }));
-                }
                 
-                // 强制重绘卡片以保证进度条和 UI 绝对同步
-                if (typeof renderResultCard === 'function') {
-                    renderResultCard(currentTask);
-                    // 剥离进场动画，防止保存时卡片闪烁
-                    const cardEl = document.getElementById('resultCard');
-                    if (cardEl) cardEl.style.animation = 'none'; 
+                // 只更新进度提示行，不刷新整个卡片
+                const progressEl = document.getElementById('rProgress');
+                if (progressEl) {
+                    let progressHtml = "";
+                    const hasBookmark = currentTask.bookmarkText && currentTask.bookmarkText.trim();
+                    const hasTotal = currentTask.totalMinutes && currentTask.totalMinutes > 0;
+                    
+                    if (hasBookmark || hasTotal) {
+                        if (hasBookmark) {
+                            progressHtml += `🔖 ${currentTask.bookmarkText}`;
+                        }
+                        if (hasBookmark && hasTotal) {
+                            progressHtml += " · ";
+                        }
+                        if (hasTotal) {
+                            const totalMins = currentTask.totalMinutes;
+                            let timeDisplay = "";
+                            if (totalMins < 60) {
+                                timeDisplay = `${totalMins}m`;
+                            } else {
+                                const hours = Math.floor(totalMins / 60);
+                                const mins = totalMins % 60;
+                                timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                            }
+                            progressHtml += `⏱ 总计 ${timeDisplay}`;
+                        }
+                    }
+                    progressEl.innerHTML = progressHtml;
                 }
             }
             
@@ -10329,9 +10239,7 @@ function openRitual(type) {
                 const log = dailyLog[i];
                 if (log.date === todayStr && log.taskId === task.id) {
                     // 更新记忆数据到历史记录
-                    log.bookmarkSnapshot = task.bookmarkText
-                        ? (task.bookmarkTotal ? task.bookmarkText + ' / ' + task.bookmarkTotal : task.bookmarkText)
-                        : '';
+                    log.bookmarkSnapshot = task.bookmarkText || '';
                     log.noteSnapshot = task.noteText || '';
                     if (task.lastAddMinutes && task.lastAddMinutes > 0) {
                         log.lastAddMinutes = task.lastAddMinutes;
