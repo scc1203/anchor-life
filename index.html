@@ -9436,16 +9436,22 @@ function openRitual(type) {
     const overlay = document.getElementById('ritualOverlay');
     if (overlay) overlay.style.display = 'none';
 
-    // 仪式结束后，恢复默认占位 & 扭蛋机
+    // What & Why: 仪式结束后，保持留白，显示暂无任务的空卡片，而不是突兀的扭蛋机
     const placeholder = document.getElementById('placeholder');
     const gachaLayer = document.getElementById('gachaLayer');
     const resultCard = document.getElementById('resultCard');
 
-    if (placeholder) placeholder.style.display = 'block';
-    if (gachaLayer) gachaLayer.style.display = 'block';
-    if (resultCard) resultCard.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'none';
+    if (gachaLayer) gachaLayer.style.display = 'none';
+    if (resultCard) {
+        // 渲染一张干干净净的“暂无任务”空卡片
+        if (typeof renderResultCard === 'function') renderResultCard(null);
+        resultCard.style.display = 'block';
+    }
 
     currentRitualType = null;
+    currentTask = null;
+    if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
 }
 
 
@@ -9473,23 +9479,28 @@ function openRitual(type) {
         renderLog();
         if (typeof renderHistory === 'function') renderHistory();
 
-               const overlay = document.getElementById('ritualOverlay');
-    if (overlay) overlay.style.display = 'none';
+        const overlay = document.getElementById('ritualOverlay');
+        if (overlay) overlay.style.display = 'none';
 
-    // 完成后恢复默认占位 & 扭蛋机
-    const placeholder = document.getElementById('placeholder');
-    const gachaLayer = document.getElementById('gachaLayer');
-    const resultCard = document.getElementById('resultCard');
+        // What & Why: 完成后保持留白，显示暂无任务的空卡片，体验与清单收尾对齐
+        const placeholder = document.getElementById('placeholder');
+        const gachaLayer = document.getElementById('gachaLayer');
+        const resultCard = document.getElementById('resultCard');
 
-    if (placeholder) placeholder.style.display = 'block';
-    if (gachaLayer) gachaLayer.style.display = 'block';
-    if (resultCard) resultCard.style.display = 'none';
+        if (placeholder) placeholder.style.display = 'none';
+        if (gachaLayer) gachaLayer.style.display = 'none';
+        if (resultCard) {
+            if (typeof renderResultCard === 'function') renderResultCard(null);
+            resultCard.style.display = 'block';
+        }
 
-    // 本次会话内，让对应的小图标淡一些
-    dimRitualButton(currentRitualType);
+        // 本次会话内，让对应的小图标淡一些
+        dimRitualButton(currentRitualType);
 
-    showToast(icon === '🌅' ? '🌅 起飞啦！' : '🌙 着陆完成');
-    currentRitualType = null;
+        showToast(icon === '🌅' ? '🌅 起飞啦！' : '🌙 着陆完成');
+        currentTask = null;
+        if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+        currentRitualType = null;
 }
    
 
