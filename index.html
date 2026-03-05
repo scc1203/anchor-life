@@ -3109,9 +3109,9 @@ body.immersive-locked {
             <!-- 第一行：空间坐标 (书签与目标) -->
             <div class="memory-panel-row1" style="margin-bottom: 12px; gap: 6px; align-items: center;">
                 <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">🔖 进度:</span>
-                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="当前(如P120)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: none;" />
+                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="当前(如P120)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 45%;" />
                 <span class="memory-separator" style="color: #ccc; margin: 0 2px;">/</span>
-                <input type="text" id="memoryTotal" class="memory-input-bookmark" placeholder="目标(如300)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: none;" />
+                <input type="text" id="memoryTotal" class="memory-input-bookmark" placeholder="目标(如300)" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 45%;" />
             </div>
             
             <!-- 第二行：时间流逝 (本次时长) -->
@@ -8142,23 +8142,17 @@ function renderResultCard(result) {
 
           let harvestMins = 0;
           if (elapsedMins >= 1 && elapsedMins <= 180) {
-            // 复用时间收割滚轮弹窗
-            harvestMins = await new Promise((resolve) => {
-              const dlg = document.getElementById('harvestDialog');
-              if (!dlg) { resolve(elapsedMins); return; }
-              const selH = document.getElementById('harvestH');
-              const selM = document.getElementById('harvestM');
-              selH.value = Math.floor(elapsedMins / 60);
-              selM.value = elapsedMins % 60;
-              const msgEl = document.getElementById('harvestMsg');
-              if (msgEl) msgEl.innerText = `本次尝试了 ${elapsedMins} 分钟，要存入记忆吗？`;
-              
-              dlg.style.display = 'flex';
-              window._resolveHarvest = (val) => {
-                dlg.style.display = 'none';
-                resolve(val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0);
-              };
-            });
+            // 复用时间收割滚轮弹窗 + 顺手更新进度
+            const harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
+            harvestMins = harvestResult.mins;
+            const newBookmark = harvestResult.bookmark;
+            const taskInDb = db.find(t => t.id === currentTask.id) || currentTask;
+
+            // v6.9.7：更新进度书签
+            if (newBookmark !== null && newBookmark !== taskInDb.bookmarkText) {
+              taskInDb.bookmarkText = newBookmark;
+              taskInDb.bookmarkUpdatedAt = Date.now();
+            }
           } else if (elapsedMins > 180) {
             // 挂机过长兜底
             const ans = prompt(`似乎挂机了 ${Math.floor(elapsedMins/60)} 小时😅\n如果只是中途放弃，请手动输入实际尝试了多少分钟 (0为不记录)：`, elapsedMins);
@@ -8166,7 +8160,6 @@ function renderResultCard(result) {
           }
 
           // 更新任务本体的累计时间
-          const taskInDb = db.find(t => t.id === currentTask.id) || currentTask;
           if (harvestMins > 0) {
             taskInDb.totalMinutes = (taskInDb.totalMinutes || 0) + harvestMins;
             taskInDb.lastAddMinutes = harvestMins;
@@ -9749,7 +9742,17 @@ function openRitual(type) {
                 elapsedMins = 1;
             }
             if (elapsedMins >= 1) {
-                harvestMins = await openHarvestDialogAsync(elapsedMins);
+                const harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
+                harvestMins = harvestResult.mins;
+                const newBookmark = harvestResult.bookmark;
+
+                // v6.9.7：同步更新书签
+                if (newBookmark !== null && newBookmark !== finalTask.bookmarkText) {
+                    finalTask.bookmarkText = newBookmark;
+                    finalTask.bookmarkUpdatedAt = Date.now();
+                    const idxB = db.find(t => t.id === finalTask.id);
+                    if (idxB > -1) db[idxB].bookmarkText = newBookmark;
+                }
             }
         }
 
@@ -10314,12 +10317,24 @@ function openRitual(type) {
                     }));
                 }
                 
+                // 🚨 核心时序修复：在强制重绘之前，先“缓存”当前是否处于进行中状态
+                // 因为 renderResultCard 内部会无条件将 currentStatus 重置为 'suggest'
+                const wasAnchor = (currentStatus === 'anchor');
+
                 // 强制重绘卡片以保证进度条和 UI 绝对同步
                 if (typeof renderResultCard === 'function') {
                     renderResultCard(currentTask);
                     // 剥离进场动画，防止保存时卡片闪烁
                     const cardEl = document.getElementById('resultCard');
                     if (cardEl) cardEl.style.animation = 'none'; 
+
+                    // 🚨 核心时序修复：如果重绘前是进行中状态，强行调用 setCardAsAnchor 恢复
+                    if (wasAnchor) {
+                        if (typeof setCardAsAnchor === 'function') {
+                            // 传入 true，代表 keepTime = true，完美继承原有时间戳，不会从0开始
+                            setCardAsAnchor(true); 
+                        }
+                    }
                 }
             }
             
@@ -12275,38 +12290,44 @@ document.addEventListener("DOMContentLoaded", function() {
     handleUrlRouting();
 });
 
-// v6.9.X：异步唤起时间收割弹窗
-function openHarvestDialogAsync(defaultMins) {
+// v6.9.7 升级：异步唤起时间收割弹窗，并支持顺手修改当前进度
+function openHarvestDialogAsync(defaultMins, task = null) {
     return new Promise(resolve => {
         const dlg = document.getElementById('harvestDialog');
+        if (!dlg) { resolve({ mins: defaultMins, bookmark: null }); return; }
+        
         const selH = document.getElementById('harvestH');
         const selM = document.getElementById('harvestM');
-
-        if (!dlg || !selH || !selM) {
-            resolve(0);
-            return;
-        }
-
+        const bookmarkInput = document.getElementById('harvestBookmark');
+        
         selH.innerHTML = '';
         selM.innerHTML = '';
-        for (let i = 0; i <= 23; i++) selH.innerHTML += `<option value="${i}">${i}h</option>`;
-        for (let i = 0; i <= 59; i++) selM.innerHTML += `<option value="${i}">${i.toString().padStart(2, '0')}m</option>`;
-
+        for(let i=0; i<24; i++) selH.add(new Option(i+'h', i));
+        // 👉 v6.9.7：分钟选项强制补全两位数，如 01m, 02m
+        for(let i=0; i<60; i++) selM.add(new Option(i.toString().padStart(2,'0') + 'm', i));
+        
         selH.value = Math.floor(defaultMins / 60);
         selM.value = defaultMins % 60;
+        
+        // 自动填入当前书签进度
+        if (bookmarkInput) {
+            bookmarkInput.value = (task && task.bookmarkText) ? task.bookmarkText : '';
+        }
 
         const msgEl = document.getElementById('harvestMsg');
         if (msgEl) {
-            msgEl.innerText = defaultMins > 180
+            msgEl.innerText = defaultMins > 180 
                 ? `似乎挂机了 ${Math.floor(defaultMins/60)} 小时😅 请手动修正：`
                 : `本次专注了 ${defaultMins} 分钟，要存入记忆吗？`;
         }
-
+        
         dlg.style.display = 'flex';
-
+        
         window._resolveHarvest = (val) => {
             dlg.style.display = 'none';
-            resolve(val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0);
+            const finalMins = val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0;
+            const finalBookmark = (val === -1 && bookmarkInput) ? bookmarkInput.value.trim() : null;
+            resolve({ mins: finalMins, bookmark: finalBookmark });
         };
     });
 }
@@ -12553,6 +12574,11 @@ function lobbyEnter(action) {
             <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:20px;">
                 <select id="harvestH" class="memory-time-select" style="font-size:1.1rem; padding:8px 12px;"></select> <span style="font-weight:bold;">:</span>
                 <select id="harvestM" class="memory-time-select" style="font-size:1.1rem; padding:8px 12px;"></select>
+            </div>
+            <!-- 👉 v6.9.7 新增：顺手更新进度 -->
+            <div id="harvestBookmarkZone" style="margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:8px;">
+                <span style="font-size:0.85rem; color:#777; font-weight:500;">🔖 进度:</span>
+                <input type="text" id="harvestBookmark" placeholder="当前(如P135)" style="flex:1; max-width:60%; padding:8px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;" />
             </div>
             <div class="cold-dialog-buttons">
                 <button type="button" class="cold-btn-cancel" onclick="window._resolveHarvest(0)">不记录</button>
