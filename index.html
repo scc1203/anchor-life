@@ -12479,7 +12479,7 @@ document.addEventListener("DOMContentLoaded", function() {
     //      必须等所有初始化完成后才能安全调用。
     handleUrlRouting();
 
-    // v8.1：页面加载完毕后，静默检查并消化收件箱
+    // v6.9.9：页面加载完毕后，静默检查并消化收件箱
     if (APP_VARIANT === 'personal' || APP_VARIANT === 'common') {
         setTimeout(() => {
             processCloudInbox();
