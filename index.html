@@ -10957,7 +10957,7 @@ if (!userOverrideFlash) {
 }
 
             // 升级清洗机：剥离动作前缀及多余的类别词，保持最终标题干净
-            const rawForSeries = title.replace(/^(去|看展|看|读|听|做|逛展|逛|赏|展览|欣赏|演出|文娱|观看|音乐剧|话剧|舞剧|歌剧)[:：\s]*/, '').trim();
+            const rawForSeries = title.replace(/^(去|看展|看|读|听|做|逛展|逛|赏|展览|欣赏|演出|文娱|观看|音乐剧|话剧|舞剧|歌剧|追)[:：\s]*/, '').trim();
 
             let isSeries = false;
             if (type === 'culture' && subtype === 'series') {
@@ -11227,7 +11227,7 @@ if (!userOverrideFlash) {
 
     // 导入/导出逻辑保持原样
     // 【备份导出/导入升级 v6.8-backup】executeImport: 支持新版格式并兼容旧版，显示选择对话框
-    function executeImport() {
+    function executeImport(isCloud = false) {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) { alert("⚠️ 请先粘贴代码！"); return; }
         try {
@@ -11311,17 +11311,19 @@ if (!userOverrideFlash) {
                 hasUsername
             };
             
-            // 显示选择对话框
-            let dialogTitle = `📡 找到 ${taskCount} 个任务`;
-            if (archiveCount > 0) dialogTitle += `、${archiveCount} 个归档`;
-            if (logCount > 0) dialogTitle += `、${logCount} 条足迹`;
-            if (hasLocalData) dialogTitle += `\n以及仪式、打卡与专属清单数据`;
-            dialogTitle += `\n\n请选择导入方式：`;
-            
-            const titleElement = document.getElementById('backupDialogTitle');
-            if (titleElement) {
-                titleElement.textContent = dialogTitle;
+            // 显示选择对话框（根据是否来自云端，给出不同的心理预期文案）
+            const titleEl = document.getElementById('backupDialogTitle');
+            if (titleEl) {
+                if (isCloud) {
+                    titleEl.innerHTML = `☁️ 云端数据已就绪<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">检测到云端有 ${taskCount} 个任务。<br>建议点击下方【🔀 增量合并】，系统将自动去重并保留您的最新进度，绝不丢失心血！</span>`;
+                } else {
+                    titleEl.innerHTML = `选择导入方式<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">解析到 ${taskCount} 个任务、${archiveCount} 个归档、${logCount} 条足迹</span>`;
+                }
             }
+
+            // 顺手优化一下合并按钮的文案
+            const mergeBtn = document.querySelector('.backup-btn-merge');
+            if (mergeBtn) mergeBtn.innerText = isCloud ? '🔀 增量合并 (推荐)' : '🔀 合并 (推荐)';
             
             const dialog = document.getElementById('backupDialog');
             if (dialog) {
@@ -11991,20 +11993,11 @@ if (!userOverrideFlash) {
           return;
         }
 
-        // 👉 v6.9.9：如果在手动拉取时发现有收件箱内容，顺手触发静默消化
-        if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
-          if (typeof processCloudInbox === 'function') {
-            showToast("📥 发现云端收件箱有新灵感，正在自动消化...");
-            // 异步消化，不阻塞后续界面的渲染
-            setTimeout(() => processCloudInbox(), 500); 
-          }
-        }
-
         // 魔法：把拉到的云端数据塞进原有的文件导入框，复用现成的防冲突弹窗逻辑！
         const dataArea = document.getElementById('dataArea');
         if(dataArea) {
           dataArea.value = JSON.stringify(json, null, 2);
-          executeImport(); // 这会弹出现有的“覆盖 / 合并”极度安全的对话框
+          executeImport(true); // 这会弹出现有的“覆盖 / 合并”极度安全的对话框
         }
       } catch(e) {
         console.error(e);
@@ -12040,7 +12033,8 @@ if (!userOverrideFlash) {
                 json.inbox.forEach(taskText => {
                     if (inp) {
                         inp.value = taskText;
-                        // 调用现有的新增逻辑（它会自动走 autoTag 洗稿并推入 db）
+                        // 👉 核心修复：在入库前，强制触发智能大脑识别标签
+                        if (typeof autoTag === 'function') autoTag(); 
                         if (typeof addNew === 'function') addNew(); 
                     }
                 });
@@ -12714,6 +12708,15 @@ function lobbyEnter(action) {
         }
     }, 300);
 }
+
+// 👉 v6.9.9：PWA 后台切回前台时，自动触发云端收件箱检查
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && APP_VARIANT === 'personal') {
+        if (typeof processCloudInbox === 'function') {
+            processCloudInbox();
+        }
+    }
+});
 
 </script>
     <!-- 每日打卡图弹窗（默认隐藏）；点击遮罩/图片外任意处关闭 -->
