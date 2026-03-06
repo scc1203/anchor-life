@@ -3094,35 +3094,9 @@ body.immersive-locked {
         <div class="task-dialog-message" id="htMessage" style="margin-bottom:16px;"></div>
         <div class="task-dialog-buttons" style="display:flex; flex-direction:column; gap:8px;">
           <button class="task-dialog-btn" onclick="resurrectHistoryTask()" style="background:#e8f5e9; color:#2e7d32; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;">♻️ 无损恢复至任务库</button>
-          <!-- 👉 新增：修改时间按钮 -->
-          <button class="task-dialog-btn" id="btnEditHistoryTime" onclick="editHistoryTime()" style="background:#fff9c4; color:#f57f17; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer; display:none;">⏱️ 修改记录时间</button>
           <button class="task-dialog-btn" onclick="document.getElementById('historyTaskDialog').style.display='none'" style="background:#f5f5f5; color:#666; border:none; padding:10px; border-radius:8px; font-size:0.95rem; cursor:pointer;">🔙 关闭</button>
         </div>
       </div>
-    </div>
-
-    <!-- v6.9.X：修改历史时间专属弹窗 (调用原生 Time Picker) -->
-    <div id="editTimeDialog" class="cold-dialog-backdrop" style="z-index:10005; display:none;">
-        <div class="cold-dialog" style="text-align:center; width: 80%; max-width: 300px;">
-            <div class="cold-dialog-title" style="font-size:1rem; margin-bottom:15px;">⏱️ 修正时间轴</div>
-
-            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:20px;">
-                <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                    <span style="font-size:0.75rem; color:#888;">开始(可选)</span>
-                    <input type="time" id="editTimeStart" style="padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; outline:none; background:#f9fafb; color:#555;">
-                </div>
-                <div style="font-weight:bold; color:#ccc;">-</div>
-                <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
-                    <span style="font-size:0.75rem; color:#888;">结束</span>
-                    <input type="time" id="editTimeEnd" style="padding:8px 10px; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; outline:none; background:#f9fafb; color:#555;">
-                </div>
-            </div>
-
-            <div class="cold-dialog-buttons">
-                <button type="button" class="cold-btn-cancel" onclick="document.getElementById('editTimeDialog').style.display='none'">取消</button>
-                <button type="button" class="backup-btn-merge" onclick="confirmEditHistoryTime()" style="background:#fff9c4; color:#f57f17; font-weight:bold;">✅ 确认修正</button>
-            </div>
-        </div>
     </div>
 
     <!-- v6.5：记忆面板（底部滑出） -->
@@ -3820,7 +3794,7 @@ body.immersive-locked {
     <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
     <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
     <li><b>v6.9.8：</b> ♻️ <b>循环进阶：</b>增加🔁每天/每周/每月循环任务，并自动记录打卡次数，新增🚀长期任务种类，持续记录。</li>
-    <li><b>v6.9.9：</b> 📥 <b>快捷收件箱：</b>上线云端 Inbox 接口，联动快捷指令一键”进货“入库；历史记录可修正时间轴。</li>
+    <li><b>v6.9.9：</b> 📥 <b>快捷收件箱：</b>上线云端 Inbox 接口，支持跨端无感抛掷与开屏静默洗稿入库；优化云端合并的数据透明度。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -3958,8 +3932,6 @@ body.immersive-locked {
             <button id="btnSyncCloud" class="btn-file" onclick="syncToCloud()" style="background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;">☁️ 推送进度至云端</button>
             <button id="btnPullCloud" class="btn-file" onclick="fetchFromCloud()" style="background:#fff3e0; border-color:#ffcc80; color:#e65100;">☁️ 从云端拉取存档</button>
           </div>
-          <!-- 👉 v6.9.9：手动查收快捷指令信件的兜底雷达 -->
-          <button class="btn-outline" onclick="processCloudInbox(true)" style="margin-top: 8px; width: 100%;">📥 手动查收快捷指令灵感</button>
         </div>
 
         <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
@@ -10027,7 +9999,6 @@ function openRitual(type) {
                         totalMinutes: finalTask.totalMinutes, bookmarkText: finalTask.bookmarkText, noteText: finalTask.noteText
                     });
                 }
-                if (typeof save === 'function') save();
                 if (typeof renderList === 'function') renderList();
                 if (typeof renderArchive === 'function') renderArchive();
                 if (typeof showToast === 'function') showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
@@ -10595,11 +10566,6 @@ function openRitual(type) {
 
       htTitleEl.innerText = `${item.icon || ''} ${item.title}`;
       htMsgEl.innerHTML = `<div style="text-align:left; background:#f9fafb; padding:12px 14px; border-radius:10px; font-size:0.9rem; color:#444;">${memoryText}</div>`;
-      // 👉 控制“修改时间”按钮仅对 log 生效
-      const btnEditTime = document.getElementById('btnEditHistoryTime');
-      if (btnEditTime) {
-        btnEditTime.style.display = (type === 'log') ? 'block' : 'none';
-      }
       dlg.style.display = 'flex';
     }
 
@@ -10651,93 +10617,6 @@ function openRitual(type) {
       const sec03 = document.querySelector('.section-list');
       if (sec03) sec03.scrollIntoView({ behavior: 'smooth', block: 'start' });
       showToast("✨ 已携记忆无损回库！");
-    }
-
-    // 👉 呼出原生时间修正弹窗
-    function editHistoryTime() {
-      if (currentResurrectType !== 'log' || currentResurrectIndex < 0) return;
-      const log = dailyLog[currentResurrectIndex];
-      if (!log) return;
-
-      // 智能解析旧的时间字符串 (支持 "HH:MM" 或 "HH:MM - HH:MM")
-      let startVal = '';
-      let endVal = '';
-      const oldTime = (log.timeStr || '').trim();
-
-      if (oldTime.includes('-')) {
-        const parts = oldTime.split('-').map(s => s.trim());
-        startVal = parts[0] || '';
-        endVal = parts[1] || '';
-      } else {
-        endVal = oldTime;
-      }
-
-      const startInp = document.getElementById('editTimeStart');
-      const endInp = document.getElementById('editTimeEnd');
-
-      if (startInp) startInp.value = startVal;
-      if (endInp) endInp.value = endVal;
-
-      document.getElementById('historyTaskDialog').style.display = 'none';
-      document.getElementById('editTimeDialog').style.display = 'flex';
-    }
-
-    // 👉 确认修正并写入数据库
-    function confirmEditHistoryTime() {
-      if (currentResurrectType !== 'log' || currentResurrectIndex < 0) return;
-      const log = dailyLog[currentResurrectIndex];
-      if (!log) return;
-
-      const startInp = document.getElementById('editTimeStart');
-      const endInp = document.getElementById('editTimeEnd');
-      const startVal = startInp ? startInp.value : '';
-      const endVal = endInp ? endInp.value : '';
-
-      if (!endVal && !startVal) {
-        showToast("⚠️ 时间不能为空");
-        return;
-      }
-
-      // 智能拼接新时间字符串
-      let newTimeStr = '';
-      if (startVal && endVal && startVal !== endVal) {
-        newTimeStr = `${startVal} - ${endVal}`;
-      } else {
-        newTimeStr = endVal || startVal;
-      }
-
-      log.timeStr = newTimeStr;
-
-      // 👉 核心修复：修改时间后，对整个 dailyLog 进行绝对的时间轴重排
-      // 排序规则：1. 按日期(date)倒序； 2. 同一天内，按时间(timeStr)倒序
-      dailyLog.sort((a, b) => {
-        const dateA = new Date(a.date || 0).getTime();
-        const dateB = new Date(b.date || 0).getTime();
-        if (dateA !== dateB) return dateB - dateA;
-
-        // 提取 timeStr 中的最晚时间进行换算比较 (兼容 "14:00" 或 "14:00 - 15:30")
-        const getMins = (t) => {
-          if (!t) return -1;
-          const matches = (t || '').match(/(\d{1,2}):(\d{2})/g);
-          if (!matches) return -1;
-          const lastTime = matches[matches.length - 1]; // 取最后一个时间
-          const parts = lastTime.split(':');
-          const h = parseInt(parts[0], 10);
-          const m = parseInt(parts[1], 10);
-          if (isNaN(h) || isNaN(m)) return -1;
-          return h * 60 + m;
-        };
-
-        return getMins(b.timeStr) - getMins(a.timeStr);
-      });
-
-      if (typeof save === 'function') save();
-      if (typeof renderLog === 'function') renderLog();
-      if (typeof renderHistory === 'function') renderHistory();
-      if (typeof renderHeatmap === 'function') renderHeatmap();
-
-      showToast("⏱️ 时间轴已精准修正");
-      document.getElementById('editTimeDialog').style.display = 'none';
     }
 
     function recordLog() { renderLog(); }
@@ -10815,7 +10694,7 @@ function openRitual(type) {
             t = 'culture';
         }
         // 运动相关
-        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操') || v.includes('帕梅拉') || v.includes('瑜伽') || v.includes('健身') || v.includes('练')) {
+        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操')) {
             t = 'sport';
         }
         // 买东西 / 出去办事
@@ -11186,19 +11065,9 @@ if (!userOverrideFlash) {
         const input = document.getElementById('inpTitle'); 
         input.value = ''; 
         input.placeholder = "✅ 存入成功！"; 
-        document.getElementById('timeFeedback').innerText = "";
-        if(switchState.cycle) toggleSwitch('cycle', false);
-        if(switchState.flash) toggleSwitch('flash', false);
-        // 👉 核心修复：每次存入后，强行将 UI 标签、时间和禁用状态恢复“出厂设置”，防止污染下一个任务
-        document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-        const defaultTag = document.querySelector('.tag[data-v="indoor"]');
-        if (defaultTag) defaultTag.classList.add('active'); // 强制兜底归位到“室内”
-        
-        const timeSel = document.getElementById('inpTime');
-        if (timeSel) {
-            timeSel.value = "30"; // 强制归位到默认 30m
-            timeSel.classList.remove('disabled'); // 砸碎枷锁：解除电影/书留下的灰显锁定
-        }
+        document.getElementById('timeFeedback').innerText = ""; 
+        if(switchState.cycle) toggleSwitch('cycle', false); 
+        if(switchState.flash) toggleSwitch('flash', false); 
         // 👉 v6.9.8: 提交成功后，强制复位生命周期下拉框，防止污染下一条任务
         const recurSelect = document.getElementById('inpRecurrence');
         if (recurSelect) recurSelect.value = 'none';
@@ -12143,83 +12012,63 @@ if (!userOverrideFlash) {
       }
     }
 
-    // 👉 v6.9.9：静默/手动 处理云端收件箱 (工业级透明防漏版)
-    async function processCloudInbox(isManual = false) {
-        if (!currentUsername || currentUsername === 'Anchor') {
-            if (isManual) showToast("⚠️ 请先在上方设置你的专属身份标识");
-            return;
-        }
+    // 👉 v6.9.9：静默处理云端收件箱 (Inbox Auto-Digestion)
+    async function processCloudInbox() {
+        if (!currentUsername || currentUsername === 'Anchor') return;
         if (typeof CLOUD_API_BASE === 'undefined') return;
 
         try {
-            if (isManual) showToast("📡 雷达扫描中...正在去传达室看信");
-            
+            // 1. 静默拉取云端数据看是否有信件
             const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
                 headers: { 'X-Anchor-Auth': currentPassword || '' }
             });
-            
-            if (!res.ok) {
-                if (isManual) showToast(`🔒 收信失败！密码错误或大姐拦截 (状态码: ${res.status})`);
-                console.warn("📥 云端收件箱拉取被拦截，状态码:", res.status);
-                return;
-            }
-            
+            if (!res.ok) return;
             const json = await res.json();
-            
+
+            // 2. 检查是否存在 inbox 且有内容
             if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
-                console.log(`📥 发现 ${json.inbox.length} 条收件箱任务，准备消化...`);
                 const inp = document.getElementById('inpTitle');
                 const originalVal = inp ? inp.value : '';
-                let successCount = 0;
 
-                try {
-                    json.inbox.forEach(taskText => {
-                        if (inp) {
-                            // 强制洗手：清空残影
-                            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-                            const defaultTag = document.querySelector('.tag[data-v="indoor"]');
-                            if (defaultTag) defaultTag.classList.add('active');
-                            if (typeof switchState !== 'undefined') {
-                                switchState.cycle = false;
-                                switchState.flash = false;
-                            }
-                            
-                            inp.value = taskText;
-                            if (typeof autoTag === 'function') autoTag(); 
-                            if (typeof addNew === 'function') addNew(); 
-                            successCount++;
-                        }
-                    });
-                } catch (err) {
-                    console.error(`❌ 处理信件时出错:`, err);
-                } finally {
-                    // 必须保证输入框恢复
-                    if (inp) inp.value = originalVal;
-                }
+                // 临时捂住喇叭：替换原有的 showToast，防止 addNew 循环时疯狂弹窗
+                const originalShowToast = window.showToast;
+                window.showToast = function() {}; 
 
-                if (successCount > 0) {
-                    showToast(`📥 成功消化 ${successCount} 条云端灵感入库！`);
-                    // 阅后即焚：推送覆盖后端以清空 inbox
-                    if (typeof getBackupDataObj === 'function') {
-                        const payload = getBackupDataObj();
-                        await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Anchor-Auth': currentPassword || ''
-                            },
-                            body: JSON.stringify(payload)
-                        });
+                // 3. 借用现有的洗稿机和分类器处理每一条信件
+                json.inbox.forEach(taskText => {
+                    if (inp) {
+                        inp.value = taskText;
+                        // 👉 核心修复：在入库前，强制触发智能大脑识别标签
+                        if (typeof autoTag === 'function') autoTag(); 
+                        if (typeof addNew === 'function') addNew(); 
                     }
+                });
+
+                // 恢复喇叭和输入框
+                window.showToast = originalShowToast;
+                if (inp) inp.value = originalVal;
+
+                // 4. 弹出一个优雅的总提示
+                if (typeof showToast === 'function') {
+                    showToast(`📥 收到 ${json.inbox.length} 条云端灵感，已自动整理入库！`);
                 }
-            } else {
-                // 抽屉是空的
-                if (isManual) showToast(`📭 [${currentUsername}] 的云端传达室目前没有新信件。`);
-                console.log("📥 收件箱为空。");
+
+                // 5. 阅后即焚：将包含最新 db 的数据静默推送给后端
+                // 因为 getBackupDataObj() 产生的 payload 不包含 inbox，推送覆盖后自然清空了后端的 inbox
+                if (typeof getBackupDataObj === 'function') {
+                    const payload = getBackupDataObj();
+                    await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Anchor-Auth': currentPassword || ''
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                }
             }
         } catch (e) {
-            console.error("📥 底层网络错误:", e);
-            if (isManual) showToast("⚠️ 网络连接失败，无法收信。");
+            console.warn("📥 检查云端收件箱时未响应，静默跳过", e);
         }
     }
 
