@@ -2916,7 +2916,7 @@ body.immersive-locked {
 
 <div class="container">
         <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.8 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.9 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3794,6 +3794,7 @@ body.immersive-locked {
     <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
     <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
     <li><b>v6.9.8：</b> ♻️ <b>循环进阶：</b>增加🔁每天/每周/每月循环任务，并自动记录打卡次数，新增🚀长期任务种类，持续记录。</li>
+    <li><b>v6.9.9：</b> 📥 <b>快捷收件箱：</b>上线云端 Inbox 接口，支持跨端无感抛掷与开屏静默洗稿入库；优化云端合并的数据透明度与交互文案。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -11311,11 +11312,15 @@ if (!userOverrideFlash) {
                 hasUsername
             };
             
-            // 显示选择对话框（根据是否来自云端，给出不同的心理预期文案）
+            // 显示选择对话框（云端场景改为更客观的数据统计陈述）
             const titleEl = document.getElementById('backupDialogTitle');
             if (titleEl) {
                 if (isCloud) {
-                    titleEl.innerHTML = `☁️ 云端数据已就绪<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">检测到云端有 ${taskCount} 个任务。<br>建议点击下方【🔀 增量合并】，系统将自动去重并保留您的最新进度，绝不丢失心血！</span>`;
+                    let dialogTitle = `☁️ 云端数据已就绪<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">检测到云端有 ${taskCount} 个任务`;
+                    if (archiveCount > 0) dialogTitle += `、${archiveCount} 个归档`;
+                    if (logCount > 0) dialogTitle += `、${logCount} 条足迹`;
+                    dialogTitle += `。</span>`;
+                    titleEl.innerHTML = dialogTitle;
                 } else {
                     titleEl.innerHTML = `选择导入方式<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">解析到 ${taskCount} 个任务、${archiveCount} 个归档、${logCount} 条足迹</span>`;
                 }
@@ -12475,7 +12480,7 @@ document.addEventListener("DOMContentLoaded", function() {
     handleUrlRouting();
 
     // v8.1：页面加载完毕后，静默检查并消化收件箱
-    if (APP_VARIANT === 'personal') {
+    if (APP_VARIANT === 'personal' || APP_VARIANT === 'common') {
         setTimeout(() => {
             processCloudInbox();
         }, 1500); // 延迟 1.5 秒执行，让出页面的首屏渲染性能
@@ -12711,7 +12716,7 @@ function lobbyEnter(action) {
 
 // 👉 v6.9.9：PWA 后台切回前台时，自动触发云端收件箱检查
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && APP_VARIANT === 'personal') {
+    if (document.visibilityState === 'visible' && (APP_VARIANT === 'personal' || APP_VARIANT === 'common')) {
         if (typeof processCloudInbox === 'function') {
             processCloudInbox();
         }
