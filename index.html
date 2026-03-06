@@ -11066,9 +11066,19 @@ if (!userOverrideFlash) {
         const input = document.getElementById('inpTitle'); 
         input.value = ''; 
         input.placeholder = "✅ 存入成功！"; 
-        document.getElementById('timeFeedback').innerText = ""; 
-        if(switchState.cycle) toggleSwitch('cycle', false); 
-        if(switchState.flash) toggleSwitch('flash', false); 
+        document.getElementById('timeFeedback').innerText = "";
+        if(switchState.cycle) toggleSwitch('cycle', false);
+        if(switchState.flash) toggleSwitch('flash', false);
+        // 👉 核心修复：每次存入后，强行将 UI 标签、时间和禁用状态恢复“出厂设置”，防止污染下一个任务
+        document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+        const defaultTag = document.querySelector('.tag[data-v="indoor"]');
+        if (defaultTag) defaultTag.classList.add('active'); // 强制兜底归位到“室内”
+        
+        const timeSel = document.getElementById('inpTime');
+        if (timeSel) {
+            timeSel.value = "30"; // 强制归位到默认 30m
+            timeSel.classList.remove('disabled'); // 砸碎枷锁：解除电影/书留下的灰显锁定
+        }
         // 👉 v6.9.8: 提交成功后，强制复位生命周期下拉框，防止污染下一条任务
         const recurSelect = document.getElementById('inpRecurrence');
         if (recurSelect) recurSelect.value = 'none';
