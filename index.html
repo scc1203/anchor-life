@@ -3932,6 +3932,8 @@ body.immersive-locked {
             <button id="btnSyncCloud" class="btn-file" onclick="syncToCloud()" style="background:#e8f5e9; border-color:#a5d6a7; color:#2e7d32;">☁️ 推送进度至云端</button>
             <button id="btnPullCloud" class="btn-file" onclick="fetchFromCloud()" style="background:#fff3e0; border-color:#ffcc80; color:#e65100;">☁️ 从云端拉取存档</button>
           </div>
+          <!-- 👉 v6.9.9：手动查收快捷指令信件的兜底雷达 -->
+          <button class="btn-outline" onclick="processCloudInbox(true)" style="margin-top: 8px; width: 100%;">📥 手动查收快捷指令灵感</button>
         </div>
 
         <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
@@ -12023,63 +12025,83 @@ if (!userOverrideFlash) {
       }
     }
 
-    // 👉 v6.9.9：静默处理云端收件箱 (Inbox Auto-Digestion)
-    async function processCloudInbox() {
-        if (!currentUsername || currentUsername === 'Anchor') return;
+    // 👉 v6.9.9：静默/手动 处理云端收件箱 (工业级透明防漏版)
+    async function processCloudInbox(isManual = false) {
+        if (!currentUsername || currentUsername === 'Anchor') {
+            if (isManual) showToast("⚠️ 请先在上方设置你的专属身份标识");
+            return;
+        }
         if (typeof CLOUD_API_BASE === 'undefined') return;
 
         try {
-            // 1. 静默拉取云端数据看是否有信件
+            if (isManual) showToast("📡 雷达扫描中...正在去传达室看信");
+            
             const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
                 headers: { 'X-Anchor-Auth': currentPassword || '' }
             });
-            if (!res.ok) return;
+            
+            if (!res.ok) {
+                if (isManual) showToast(`🔒 收信失败！密码错误或大姐拦截 (状态码: ${res.status})`);
+                console.warn("📥 云端收件箱拉取被拦截，状态码:", res.status);
+                return;
+            }
+            
             const json = await res.json();
-
-            // 2. 检查是否存在 inbox 且有内容
+            
             if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
+                console.log(`📥 发现 ${json.inbox.length} 条收件箱任务，准备消化...`);
                 const inp = document.getElementById('inpTitle');
                 const originalVal = inp ? inp.value : '';
+                let successCount = 0;
 
-                // 临时捂住喇叭：替换原有的 showToast，防止 addNew 循环时疯狂弹窗
-                const originalShowToast = window.showToast;
-                window.showToast = function() {}; 
-
-                // 3. 借用现有的洗稿机和分类器处理每一条信件
-                json.inbox.forEach(taskText => {
-                    if (inp) {
-                        inp.value = taskText;
-                        // 👉 核心修复：在入库前，强制触发智能大脑识别标签
-                        if (typeof autoTag === 'function') autoTag(); 
-                        if (typeof addNew === 'function') addNew(); 
-                    }
-                });
-
-                // 恢复喇叭和输入框
-                window.showToast = originalShowToast;
-                if (inp) inp.value = originalVal;
-
-                // 4. 弹出一个优雅的总提示
-                if (typeof showToast === 'function') {
-                    showToast(`📥 收到 ${json.inbox.length} 条云端灵感，已自动整理入库！`);
-                }
-
-                // 5. 阅后即焚：将包含最新 db 的数据静默推送给后端
-                // 因为 getBackupDataObj() 产生的 payload 不包含 inbox，推送覆盖后自然清空了后端的 inbox
-                if (typeof getBackupDataObj === 'function') {
-                    const payload = getBackupDataObj();
-                    await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Anchor-Auth': currentPassword || ''
-                        },
-                        body: JSON.stringify(payload)
+                try {
+                    json.inbox.forEach(taskText => {
+                        if (inp) {
+                            // 强制洗手：清空残影
+                            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                            const defaultTag = document.querySelector('.tag[data-v="indoor"]');
+                            if (defaultTag) defaultTag.classList.add('active');
+                            if (typeof switchState !== 'undefined') {
+                                switchState.cycle = false;
+                                switchState.flash = false;
+                            }
+                            
+                            inp.value = taskText;
+                            if (typeof autoTag === 'function') autoTag(); 
+                            if (typeof addNew === 'function') addNew(); 
+                            successCount++;
+                        }
                     });
+                } catch (err) {
+                    console.error(`❌ 处理信件时出错:`, err);
+                } finally {
+                    // 必须保证输入框恢复
+                    if (inp) inp.value = originalVal;
                 }
+
+                if (successCount > 0) {
+                    showToast(`📥 成功消化 ${successCount} 条云端灵感入库！`);
+                    // 阅后即焚：推送覆盖后端以清空 inbox
+                    if (typeof getBackupDataObj === 'function') {
+                        const payload = getBackupDataObj();
+                        await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Anchor-Auth': currentPassword || ''
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                    }
+                }
+            } else {
+                // 抽屉是空的
+                if (isManual) showToast(`📭 [${currentUsername}] 的云端传达室目前没有新信件。`);
+                console.log("📥 收件箱为空。");
             }
         } catch (e) {
-            console.warn("📥 检查云端收件箱时未响应，静默跳过", e);
+            console.error("📥 底层网络错误:", e);
+            if (isManual) showToast("⚠️ 网络连接失败，无法收信。");
         }
     }
 
