@@ -9999,6 +9999,7 @@ function openRitual(type) {
                         totalMinutes: finalTask.totalMinutes, bookmarkText: finalTask.bookmarkText, noteText: finalTask.noteText
                     });
                 }
+                if (typeof save === 'function') save();
                 if (typeof renderList === 'function') renderList();
                 if (typeof renderArchive === 'function') renderArchive();
                 if (typeof showToast === 'function') showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
