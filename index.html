@@ -11991,6 +11991,15 @@ if (!userOverrideFlash) {
           return;
         }
 
+        // 👉 v6.9.9：如果在手动拉取时发现有收件箱内容，顺手触发静默消化
+        if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
+          if (typeof processCloudInbox === 'function') {
+            showToast("📥 发现云端收件箱有新灵感，正在自动消化...");
+            // 异步消化，不阻塞后续界面的渲染
+            setTimeout(() => processCloudInbox(), 500); 
+          }
+        }
+
         // 魔法：把拉到的云端数据塞进原有的文件导入框，复用现成的防冲突弹窗逻辑！
         const dataArea = document.getElementById('dataArea');
         if(dataArea) {
@@ -12003,6 +12012,65 @@ if (!userOverrideFlash) {
       } finally {
         if(btn) btn.innerText = "☁️ 从云端拉取存档";
       }
+    }
+
+    // 👉 v6.9.9：静默处理云端收件箱 (Inbox Auto-Digestion)
+    async function processCloudInbox() {
+        if (!currentUsername || currentUsername === 'Anchor') return;
+        if (typeof CLOUD_API_BASE === 'undefined') return;
+
+        try {
+            // 1. 静默拉取云端数据看是否有信件
+            const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+                headers: { 'X-Anchor-Auth': currentPassword || '' }
+            });
+            if (!res.ok) return;
+            const json = await res.json();
+
+            // 2. 检查是否存在 inbox 且有内容
+            if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
+                const inp = document.getElementById('inpTitle');
+                const originalVal = inp ? inp.value : '';
+
+                // 临时捂住喇叭：替换原有的 showToast，防止 addNew 循环时疯狂弹窗
+                const originalShowToast = window.showToast;
+                window.showToast = function() {}; 
+
+                // 3. 借用现有的洗稿机和分类器处理每一条信件
+                json.inbox.forEach(taskText => {
+                    if (inp) {
+                        inp.value = taskText;
+                        // 调用现有的新增逻辑（它会自动走 autoTag 洗稿并推入 db）
+                        if (typeof addNew === 'function') addNew(); 
+                    }
+                });
+
+                // 恢复喇叭和输入框
+                window.showToast = originalShowToast;
+                if (inp) inp.value = originalVal;
+
+                // 4. 弹出一个优雅的总提示
+                if (typeof showToast === 'function') {
+                    showToast(`📥 收到 ${json.inbox.length} 条云端灵感，已自动整理入库！`);
+                }
+
+                // 5. 阅后即焚：将包含最新 db 的数据静默推送给后端
+                // 因为 getBackupDataObj() 产生的 payload 不包含 inbox，推送覆盖后自然清空了后端的 inbox
+                if (typeof getBackupDataObj === 'function') {
+                    const payload = getBackupDataObj();
+                    await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Anchor-Auth': currentPassword || ''
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn("📥 检查云端收件箱时未响应，静默跳过", e);
+        }
     }
 
     // 根据 APP_VARIANT 调整 UI（personal / common）
@@ -12411,6 +12479,13 @@ document.addEventListener("DOMContentLoaded", function() {
     // Why: addNew() 依赖 db 和 DOM 输入框；setEnergyMode() 依赖能量药丸 UI；
     //      必须等所有初始化完成后才能安全调用。
     handleUrlRouting();
+
+    // v8.1：页面加载完毕后，静默检查并消化收件箱
+    if (APP_VARIANT === 'personal') {
+        setTimeout(() => {
+            processCloudInbox();
+        }, 1500); // 延迟 1.5 秒执行，让出页面的首屏渲染性能
+    }
 });
 
 // v6.9.7 升级：异步唤起时间收割弹窗，并支持顺手修改当前进度
