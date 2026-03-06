@@ -2915,8 +2915,8 @@ body.immersive-locked {
 </div>
 
 <div class="container">
-        <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.9 通用版</span></div>
+    <div class="header">
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.4 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3015,7 +3015,7 @@ body.immersive-locked {
             <div id="controls-playlist" class="control-group" style="display:flex; margin-top:6px;">
               <div class="select-wrapper" style="flex:1;">
                 <select id="selPlaylist" onchange="handlePlaylistChange()" style="text-align: center; text-align-last: center; font-weight: bold; appearance: none; padding-right: 16px;">
-                  <option value="">🔮 --- 默认 (不限定清单) ---</option>
+                  <option value="">🔮 不限定清单 (全域抽卡)</option>
                   <!-- 选项由 JS 动态生成 -->
                 </select>
               </div>
@@ -3106,19 +3106,12 @@ body.immersive-locked {
             <div class="memory-panel-handle" onclick="closeMemoryPanel()"></div>
             <div class="memory-panel-title">记忆面板</div>
             
-            <!-- 第一行：空间坐标 (书签与目标) -->
-            <div class="memory-panel-row1" style="margin-bottom: 12px; gap: 6px; align-items: center;">
-                <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">🔖 进度:</span>
-                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="当前" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 140px; text-align: center;" />
-                <span class="memory-separator" style="color: #ccc; margin: 0 6px;">/</span>
-                <input type="text" id="memoryTotal" class="memory-input-bookmark" placeholder="目标" style="flex: 1; padding: 8px 4px; font-size: 0.85rem; max-width: 140px; text-align: center;" />
-            </div>
-            
-            <!-- 第二行：时间流逝 (本次时长) -->
-            <div class="memory-panel-row1" style="margin-bottom: 16px; gap: 6px; align-items: center;">
-                <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">⏱️ 时长:</span>
-                <div class="memory-time-picker" style="flex: 1; display: flex; justify-content: space-between; align-items: center;">
-                    <select id="memoryHours" class="memory-time-select" style="flex: 1; max-width: 45%;">
+            <!-- 第一行：书签 + 时间选择器 -->
+            <div class="memory-panel-row1">
+                <input type="text" id="memoryBookmark" class="memory-input-bookmark" placeholder="记录坐标（如：P120 / S2E5）" />
+                <span class="memory-separator">/ 本次时长:</span>
+                <div class="memory-time-picker">
+                    <select id="memoryHours" class="memory-time-select">
                         <option value="0">0h</option>
                         <option value="1">1h</option>
                         <option value="2">2h</option>
@@ -3144,8 +3137,8 @@ body.immersive-locked {
                         <option value="22">22h</option>
                         <option value="23">23h</option>
                     </select>
-                    <span style="font-weight: bold; color: #aaa; margin: 0 4px;">:</span>
-                    <select id="memoryMinutes" class="memory-time-select" style="flex: 1; max-width: 45%;">
+                    <span style="margin:0 2px;">:</span>
+                    <select id="memoryMinutes" class="memory-time-select">
                         <option value="0">00</option>
                         <option value="5">05</option>
                         <option value="10">10</option>
@@ -3259,24 +3252,11 @@ body.immersive-locked {
 
     <!-- 输入区 -->
     <div class="section-input">
-        <div class="section-title" style="margin-bottom: 16px;">02 · 新任务入库</div>
-
-        <!-- 模块 A：单次任务 -->
-        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; padding-left: 4px;">
-            <div style="font-size: 0.85rem; color: #555; font-weight: bold;">✍🏻 散装单次任务</div>
-            <!-- 悬浮智能小抄 (Tooltip) -->
-            <div style="position:relative;">
-                <span onclick="const b=document.getElementById('cheatSheetBox'); b.style.display=b.style.display==='none'?'block':'none'" style="font-size:0.7rem; color:#90A4AE; cursor:pointer; text-decoration:underline; text-underline-offset:2px;">💡 智能小抄</span>
-                <div id="cheatSheetBox" style="display:none; position:absolute; right:0; top:24px; width:230px; padding:12px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.12); z-index:100; font-size:0.75rem; line-height:1.6; color:#666; border:1px solid #eee; text-align:left;">
-                    • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
-                    • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
-                    • <b>户外行动：</b>首字写「去」，如「去散步/去拿快递」。<br>
-                    • <b>文娱展览：</b>首词写「演出/观看」为 🎭，写「逛/展览」为 🖼️。<br>
-                    • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
-                    • <b>多种循环：</b>包含「每天/每日/每周/每月」字眼。<br>
-                    • <b>长期任务：</b>持续推进，完成后不消失持续记录🚀。
-                </div>
-            </div>
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:flex-end;">
+          <span>02 · 新任务入库</span>
+          <span onclick="shortcutToNewPlaylist()" style="font-size:0.75rem; color:#75B79E; font-weight:normal; cursor:pointer; text-decoration:underline;">
+            ✂️ 任务太庞大？拆分为子步骤/清单
+          </span>
         </div>
         <div class="input-box">
     <textarea id="inpTitle"
@@ -3306,17 +3286,13 @@ body.immersive-locked {
 
         </div>
         <div class="input-options-row2">
-            <div class="switch-container" style="gap: 8px;">
-<select id="inpRecurrence" class="time-select-small" style="flex:1; padding:4px 8px; font-size:0.85rem;">
-    <option value="none">⏳ 单次任务</option>
-    <option value="daily">🔄 每日循环</option>
-    <option value="weekly">🔄 每周循环</option>
-    <option value="monthly">🔄 每月循环</option>
-    <option value="long_term">🚀 长期任务</option>
-</select>
-<div class="switch-btn" id="flashSwitch" onclick="toggleSwitch('flash')" style="flex:1; justify-content:center;">
-    <span>⚡️ 速办模式</span>
-</div>
+            <div class="switch-container">
+                <div class="switch-btn" id="cycleSwitch" onclick="toggleSwitch('cycle')">
+                    <span>🔄 每日循环</span>
+                </div>
+                <div class="switch-btn" id="flashSwitch" onclick="toggleSwitch('flash')">
+                    <span>⚡️ 速办模式</span>
+                </div>
             </div>
             <select id="inpTime" class="time-select-small">
                 <option value="5">5m (速办)</option>
@@ -3329,41 +3305,17 @@ body.immersive-locked {
         <div id="timeFeedback" style="font-size:0.7rem; color:#75B79E; margin-top:5px; margin-left:5px; height:1rem;"></div>
 
         <!-- 新增：智能输入指令词典 (弱化版) -->
-        <!-- v6.9.5：分离输入区设计，建立任务组 (工厂区) -->
-        <div style="margin-top: 24px; border-top: 1px dashed #cfd8dc; padding-top: 18px; padding-bottom: 12px;">
-
-            <!-- 模块 B 对称标题与气泡 -->
-            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; padding-left: 4px;">
-                <div style="font-size: 0.85rem; color: #555; font-weight: bold;">📦 建立任务组 (清单 / SOP)</div>
-                <!-- 悬浮清单玩法说明 (Tooltip) -->
-                <div style="position:relative;">
-                    <span onclick="const b=document.getElementById('playlistCheatSheet'); b.style.display=b.style.display==='none'?'block':'none'" style="font-size:0.7rem; color:#90A4AE; cursor:pointer; text-decoration:underline; text-underline-offset:2px;">❓ 清单怎么玩</span>
-                    <div id="playlistCheatSheet" style="display:none; position:absolute; right:0; top:24px; width:240px; padding:12px; background:#fff; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.12); z-index:100; font-size:0.75rem; line-height:1.6; color:#666; border:1px solid #eee; text-align:left;">
-                        • <b>0. 概念：</b>「SOP清单」为循环清单可多次打卡；「每日待办」为一次性清单。<br>
-                        • <b>1. 建造：</b>点击下方按钮创建并存入档案柜。<br>
-                        • <b>2. 召唤：</b>前往顶部「01区」，展开「🔽高级筛选」，在清单列表中选中它。<br>
-                        • <b>3. 心流：</b>点击抽取，开启沉浸式的隧道连抽体验！
-                    </div>
-                </div>
+        <details style="margin-top: 8px; font-size: 0.75rem; color: #999;">
+            <summary style="cursor: pointer; opacity: 0.8; outline: none; padding-left: 5px;">💡 智能识别小抄（点击展开）</summary>
+            <div style="padding: 8px 10px; background: rgba(0,0,0,0.02); border-radius: 8px; margin-top: 6px; line-height: 1.6; border: 1px dashed rgba(0,0,0,0.06);">
+                • <b>归类书影：</b>首字写「读/书、看/影、追/剧」。<br>
+                • <b>家务速办：</b>包含「洗/刷/理/扔/拆/擦」等。<br>
+                • <b>户外行动：</b>首字写「去」，如「去散步/去拿快递」。<br>
+                • <b>文娱展览：</b>首词写「演出/观看」为 🎭，写「逛/展览」为 🖼️。<br>
+                • <b>重要青蛙：</b>句首加「!、*」或「重要」。<br>
+                • <b>每日循环：</b>包含「每天、每日」字眼。
             </div>
-
-            <!-- 按钮区增加了底部留白 -->
-            <div style="display:flex; gap:8px; margin-bottom: 16px;">
-                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px; border-radius:10px;" onclick="openNewSopCreator()">➕ 新建 SOP</button>
-                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px; background:#f0f7ff; border-color:#d0e3ff; color:#3b82f6; border-radius:10px;" onclick="createDailyTodo()">📅 今日待办</button>
-            </div>
-            <div id="playlistCreator" style="display:none; margin-top: 12px; background:#f9fafb; padding:12px; border-radius:12px; border:1px solid #eee;">
-                <div style="display:flex; gap:8px; margin-bottom:8px;">
-                    <input type="text" id="newPlIcon" class="emoji-input-hint" title="点击可自定义图标" placeholder="📑" style="width:48px; text-align:center; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; box-sizing:border-box;">
-                    <input type="text" id="newPlTitle" placeholder="清单名称 (如: 周末大扫除)" style="flex:1; border:1px solid #ddd; padding:8px; border-radius:8px; font-size:0.9rem; box-sizing:border-box;">
-                </div>
-                <textarea id="newPlTasks" placeholder="⬆自选清单专属emoji。输入子任务，每行一个..." style="width:100%; border:1px solid #ddd; padding:8px; border-radius:8px; min-height:80px; margin-bottom:8px; font-size:0.85rem; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn-file" style="flex:1; padding:6px; border-radius:8px;" onclick="submitNewPlaylist()">💾 存入档案柜</button>
-                    <button class="btn-outline" style="flex:1; padding:6px; border-radius:8px;" onclick="hidePlaylistCreator()">取消</button>
-                </div>
-            </div>
-        </div>
+        </details>
     </div>
 
     <!-- 四大块列表 -->
@@ -3371,14 +3323,12 @@ body.immersive-locked {
         <div class="section-list-title">03 · 任务库 & 记录</div>
 
         <!-- 📁 档案柜 (项目 & 临时清单) -->
-        <div class="section-cold" style="margin-bottom: 12px;">
+        <div class="section-archive-cabinet" style="margin-bottom: 12px; background: #fff; border-radius: 16px; padding: 4px 12px;">
             <details id="cabinetDetails">
-                <summary>
-                    <span style="font-size:0.95rem; font-weight:bold; color:#444;">📁 档案柜</span>
-                    <span style="font-size:0.75rem; color:#999; margin-left:auto;">(轻量清单 & 项目)</span>
-                    <span id="cabinetCountDisplay" style="font-size:0.8rem; color:#999; margin-left:4px; margin-right:6px;">(0)</span>
+                <summary style="font-size:0.95rem; font-weight:bold; color:#455A64; padding: 6px 0; border-bottom: none;">
+                    📁 档案柜 <span style="font-size:0.75rem; color:#999; font-weight:normal;">(轻量清单 & 项目)</span>
                 </summary>
-                <div class="manual-content" id="cabinetContent" style="padding-top:10px; padding-bottom: 10px;">
+                <div class="manual-content" style="padding-top:10px; padding-bottom: 10px;" id="cabinetContent">
                     <!-- JS 动态渲染清单内容 -->
                 </div>
             </details>
@@ -3454,7 +3404,7 @@ body.immersive-locked {
     </details>
 </div>
     <!-- 冷库操作小弹窗：选择 删除 / 冷库 / 取消 -->
-    <div id="coldDialog" class="cold-dialog-backdrop" onclick="if(event.target===this) this.style.display='none';">
+    <div id="coldDialog" class="cold-dialog-backdrop">
         <div class="cold-dialog">
             <div class="cold-dialog-title">
                 要怎么处理这条任务？
@@ -3787,14 +3737,9 @@ body.immersive-locked {
   <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">☁️ v6.9：云端纪元与时空生命力</div>
   <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
     <li><b>v6.9.1：</b> ☁️ <b>多端同步：</b>建立云端专属账号 🆔，打通多设备数据拉取与推送，数据不再局限于单机。</li>
-    <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式♻️新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
-    <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」🖼️/🎭智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
-    <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器⏱️，自动记录任务时长。</li>
-    <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜🗄️，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
-    <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
-    <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
-    <li><b>v6.9.8：</b> ♻️ <b>循环进阶：</b>增加🔁每天/每周/每月循环任务，并自动记录打卡次数，新增🚀长期任务种类，持续记录。</li>
-    <li><b>v6.9.9：</b> 📥 <b>快捷收件箱：</b>上线云端 Inbox 接口，支持跨端无感抛掷与开屏静默洗稿入库；优化云端合并的数据透明度与交互文案。</li>
+    <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
+    <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
+    <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器，自动记录任务时长。</li>
   </ul>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
@@ -4055,9 +4000,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentUsername = localStorage.getItem(KEY_USERNAME) || 'Anchor';
 
-    const KEY_PASSWORD = 'anchor_live_password';
-    let currentPassword = localStorage.getItem(KEY_PASSWORD) || '';
-
 
     const defaultDB = [
         { id: 1, title: "听一张喜欢的黑胶", type: "vinyl", desc: "音乐时间", time: 0 },
@@ -4212,97 +4154,17 @@ coloringBgImg.onload = function () {
       }
     }
 
-    // 升级为 async 异步函数，加入状态机与 UI 回滚机制
-    async function saveUsername() {
-        const inp = document.getElementById('settingUsernameInp');
-        const btn = document.querySelector('button[onclick="saveUsername()"]');
-        if (!inp) return;
+    // 保存并应用新用户名
+    function saveUsername() {
+      const inp = document.getElementById('settingUsernameInp');
+      if (!inp) return;
+      let newName = inp.value.trim();
+      if (!newName) newName = 'Anchor'; // 兜底
 
-        let newName = inp.value.trim();
-        if (!newName) newName = 'Anchor'; // 兜底
-
-        // 👉 逻辑 1：打破死锁。如果名字没变，给用户重新输入密码的机会
-        if (newName === currentUsername && currentPassword && currentUsername !== 'Anchor') {
-            const wantChange = confirm(`当前身份已经是 [${currentUsername}]。\n是否需要修改/重新验证本地通行证密码？`);
-            if (!wantChange) {
-                inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
-                return;
-            }
-        }
-
-        // 👉 逻辑 2：呼出原生弹窗索要密码 (加入忘记密码提示)
-        const inputPwd = prompt(`👋 欢迎来到云端，${newName}！\n\n请输入你的专属通行密码：\n(新身份将自动绑定此密码，已有身份请输入原密码。本机会自动记住，无需重复输入)\n\n💡 提示：如果忘记密码，请联系管理员重置。`);
-
-        // 如果用户点了取消
-        if (inputPwd === null) {
-            // 核心修复：UI 回滚，绝不让未验证的名字占位
-            inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
-            return;
-        }
-
-        const pwdTrimmed = inputPwd.trim();
-        if (!pwdTrimmed) {
-            alert("⚠️ 密码不能为空！");
-            inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
-            return;
-        }
-
-        // 👉 逻辑 3：敲门问路（拿着账号密码去后台大姐那验证）
-        try {
-            if (typeof CLOUD_API_BASE !== 'undefined') {
-                // UI 交互：按钮变为 Loading 状态
-                const oldBtnText = btn ? btn.innerText : '更新身份';
-                if(btn) btn.innerText = '验证中...';
-
-                // 发起轻量校验请求
-                const res = await fetch(`${CLOUD_API_BASE}/${newName}`, {
-                    headers: { 'X-Anchor-Auth': pwdTrimmed }
-                });
-
-                if(btn) btn.innerText = oldBtnText; // 恢复按钮
-
-                // 🚨 验证失败：密码错误或被拦截
-                if (res.status === 403 || res.status === 401) {
-                    alert("🔒 档案室大姐拦截：密码错误！\n该身份已被注册，请重新输入正确的密码，或更换一个新的身份标识。");
-                    // 核心修复：UI 回滚，将输入框强行退回原合法账号，绝不占位！
-                    inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
-                    return; // 拒绝落盘，直接终止！
-                }
-
-                // ✅ 验证成功
-                if (res.ok) {
-                    const json = await res.json();
-                    // 核心修复：通过大姐给的档案袋是否为空，判断是“初次建档”还是“老客回归”
-                    const isNewUser = Object.keys(json).length === 0;
-
-                    // 只有大姐放行了，才真正在本地持久化落盘
-                    currentUsername = newName;
-                    currentPassword = pwdTrimmed;
-                    localStorage.setItem(KEY_USERNAME, currentUsername);
-                    localStorage.setItem(KEY_PASSWORD, currentPassword);
-
-                    if (typeof updateUsernameUI === 'function') updateUsernameUI();
-
-                    // 👉 逻辑 4：动态情绪价值提示与万能钥匙识别
-                    if (currentPassword === 'SccAdmin2026') {
-                        // What: 如果用户使用了万能钥匙，提醒其立刻修改密码
-                        // Why: 防止用户一直停留在超级管理员状态，引导其形成闭环
-                        showToast(`🔑 万能钥匙验证成功！请再次点击【更新身份】设定新密码`);
-                    } else if (isNewUser) {
-                        showToast(`✨ 欢迎！身份 [${currentUsername}] 绑定成功`);
-                    } else {
-                        showToast(`✨ 欢迎回来！身份 [${currentUsername}] 登录成功`);
-                    }
-                    return;
-                }
-            }
-        } catch (e) {
-            console.warn("网络校验受阻", e);
-            alert("⚠️ 无法连接到云端机房，请检查网络或稍后再试。");
-            // 核心修复：网络不通也回滚，防止产生错误的本地单机账号
-            inp.value = currentUsername === 'Anchor' ? '' : currentUsername;
-            return;
-        }
+      currentUsername = newName;
+      localStorage.setItem(KEY_USERNAME, currentUsername);
+      updateUsernameUI();
+      showToast(`✨ 身份已变更为：${currentUsername}`);
     }
 
 // 糖家族配置：先只启用已经做好的两颗糖
@@ -6676,18 +6538,14 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 if (parsed.task && parsed.startTime) {
                     currentTask = parsed.task;
                     anchorStartTime = parsed.startTime;
-                    // v6.9.5 修复：找回丢失的清单上下文
-                    if (parsed.activePl) {
-                        activePlaylist = parsed.activePl;
-                    }
                     // 隐藏占位符，先渲染卡片
                     const ph = document.getElementById('placeholder');
                     if (ph) ph.style.display = 'none';
                     renderResultCard(currentTask);
                     // ⚠️ 必须在 renderResultCard 之后强行锁定为 anchor，防止被内部覆写为 suggest
                     currentStatus = 'anchor';
-                    // v6.9.5 修复：只有在恢复的是“清单主卡片”时才唤起 Overlay，如果是“正在执行的子任务(isPlaylist:true)”则不唤起
-                    if (currentTask.type === 'playlist' && !currentTask.isPlaylist) {
+                    // 如果是清单，恢复后自动唤起 Overlay 浮层
+                    if (currentTask.type === 'playlist') {
                         setTimeout(() => {
                             if (typeof openPlaylistOverlay === 'function') openPlaylistOverlay(currentTask);
                         }, 300);
@@ -6702,24 +6560,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                     document.getElementById('resultCard').style.display = 'block';
                     document.getElementById('btnChange').style.display = 'inline-block';
                     startLiveTimer();
-                    return; // 已恢复进行中任务，后续不再尝试恢复 Overlay
                 }
             } catch(e) {}
         }
-
-        // v6.9.5：如果没有进行中任务，但上次停留在清单主卡片 Overlay，刷新后自动恢复该 Overlay
-        try {
-            const lastPlId = localStorage.getItem('anchor_last_playlist_overlay');
-            if (lastPlId) {
-                const selPl = document.getElementById('selPlaylist');
-                if (selPl) {
-                    selPl.value = lastPlId;
-                    if (typeof handlePlaylistChange === 'function') handlePlaylistChange();
-                    // 复用 draw() 的 Overlay 打开逻辑，保持单一入口
-                    draw();
-                }
-            }
-        } catch(e) {}
 });
 
         // 🌅🌙 仪式步骤：勾选时给文字加上划线
@@ -6759,14 +6602,30 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     function renderCabinet() {
         const container = document.getElementById('cabinetContent');
         if (!container) return;
-        // 👉 v6.9.7：更新标题旁边的小数字
-        const countEl = document.getElementById('cabinetCountDisplay');
-        if (countEl) countEl.innerText = `(${customPlaylists ? customPlaylists.length : 0})`;
         // v6.9.5 修复跳动：记录重绘前的滚动高度
         const scrollBox = container.querySelector('.cabinet-scroll-area');
         const savedScrollTop = scrollBox ? scrollBox.scrollTop : 0;
 
+        // v6.9.5：置顶兵工厂（分离 Emoji 与 标题，移除长条删除按钮）
         let html = '';
+        html += `
+            <div style="margin-bottom: 12px; display:flex; gap:8px;">
+                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px;" onclick="openNewSopCreator()">➕ 新建 SOP</button>
+                <button class="btn-outline" style="flex:1; font-size: 0.8rem; padding: 8px; background:#f0f7ff; border-color:#d0e3ff; color:#3b82f6;" onclick="createDailyTodo()">📅 今日待办</button>
+            </div>
+            <div id="playlistCreator" style="display:none; margin-bottom: 16px; background:#fff; padding:12px; border-radius:12px; border:1px solid #eee;">
+                <div style="display:flex; gap:8px; margin-bottom:8px;">
+                    <input type="text" id="newPlIcon" class="emoji-input-hint" title="点击可自定义图标" placeholder="📑" style="width:48px; text-align:center; border:1px solid #ddd; border-radius:8px; font-size:1.1rem; box-sizing:border-box;">
+                    <input type="text" id="newPlTitle" placeholder="清单名称 (如: 周末大扫除)" style="flex:1; border:1px solid #ddd; padding:8px; border-radius:8px; font-size:0.9rem; box-sizing:border-box;">
+                </div>
+                <textarea id="newPlTasks" placeholder="输入子任务，每行一个..." style="width:100%; border:1px solid #ddd; padding:8px; border-radius:8px; min-height:80px; margin-bottom:8px; font-size:0.85rem; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-file" style="flex:1; padding:6px; border-radius:8px;" onclick="submitNewPlaylist()">💾 存入</button>
+                    <button class="btn-outline" style="flex:1; padding:6px; border-radius:8px;" onclick="hidePlaylistCreator()">取消</button>
+                </div>
+            </div>
+        `;
+
         if (!customPlaylists || customPlaylists.length === 0) {
             container.innerHTML = html + '<div style="font-size:0.8rem; color:#999; text-align:center; padding:10px 0;">当前档案柜空空如也。<br>未来可在此处导入你的轻量待办或 SOP。</div>';
             return;
@@ -6783,14 +6642,13 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 return; // v6.9.5: 彻底移出档案柜显示，交由底部的真实冷库去渲染
             }
 
-            // 极简树状排版：无底色，仅底部虚线分割
-            html += `<div style="padding: 10px 4px; border-bottom: 1px dashed #f0f1f5;">`;
+            html += `<div style="margin-bottom: 12px; background: #F9FAFB; border-radius: 12px; padding: 10px;">`;
 
             const countBadge = (pl.playlistType === 'sop' || !pl.playlistType) && pl.completeCount
                 ? `<span class="manual-tag" style="color:#75B79E; background:#e8f5e9; font-weight:bold;">🏆 ${pl.completeCount}次</span>`
                 : '';
 
-            html += `<div style="font-size: 0.85rem; font-weight: bold; color: #555; display:flex; justify-content:space-between; align-items:center;">
+            html += `<div style="font-size: 0.85rem; font-weight: bold; color: #333; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
                         <span>${plIcon} ${pl.title || '未命名清单'} ${countBadge}</span>
                         <div style="display:flex; gap:8px; align-items:center;">
                             <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="editPlaylist(${pIdx})" title="编辑">✏️</span>
@@ -6800,11 +6658,10 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                      </div>`;
 
             if (pl.items && pl.items.length > 0) {
-                // 增加左侧 padding，形成视觉上的树状缩进从属关系
-                html += `<div style="display:flex; flex-direction:column; gap:8px; padding-left: 22px; margin-top: 10px;">`;
+                html += `<div style="display:flex; flex-direction:column; gap:6px;">`;
                 pl.items.forEach((item, iIdx) => {
                     const isDone = !!item.done;
-                    const textStyle = isDone ? 'text-decoration: line-through; color: #bbb;' : 'color: #666;';
+                    const textStyle = isDone ? 'text-decoration: line-through; color: #999;' : 'color: #555;';
                     html += `
                         <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; cursor:pointer;">
                             <input type="checkbox" class="ritual-step-checkbox" style="margin-top:3px;"
@@ -6846,7 +6703,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         // 2. 足迹发射与撤销引擎
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const anchorDateStr = getAnchorDate().toDateString();
         const taskName = item.text || item.title || '未知子任务';
         const plIcon = customPlaylists[pIdx].icon || '📑';
         const logTitle = `【${customPlaylists[pIdx].title || '清单'}】${taskName}`; // 恢复【】格式
@@ -6854,10 +6710,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (isChecked) {
             dailyLog.unshift({
                 id: Date.now(), title: logTitle, icon: plIcon, timeStr: timeStr,
-                date: anchorDateStr, done: true, type: 'checklist_item'
+                date: now.toDateString(), done: true, type: 'checklist_item'
             });
             save(); renderLog();
-            if (typeof renderHistory === 'function') renderHistory();
 
             const allDone = customPlaylists[pIdx].items.every(i => i && i.done);
             if (allDone) {
@@ -6866,10 +6721,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 if (customPlaylists[pIdx].playlistType === 'once') {
                     dailyLog.unshift({
                         id: Date.now(), title: `【整体完成】${customPlaylists[pIdx].title}`,
-                        icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done'
+                        icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done'
                     });
                     save(); renderLog();
-                    if (typeof renderHistory === 'function') renderHistory();
 
                     if (fromCard) {
                         setTimeout(() => {
@@ -6886,7 +6740,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
                         dailyLog.unshift({
                             id: Date.now(), title: `【+${customPlaylists[pIdx].completeCount}】${customPlaylists[pIdx].title}`,
-                            icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done'
+                            icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done'
                         });
 
                         if (customPlaylists[pIdx].items) {
@@ -6895,7 +6749,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
                         savePlaylists(); renderCabinet();
                         save(); renderLog();
-                        if (typeof renderHistory === 'function') renderHistory();
 
                         showToast(`🔄 SOP 已重置，累计完成 ${customPlaylists[pIdx].completeCount} 次`);
                         if (fromCard && typeof closePlaylistOverlay === 'function') closePlaylistOverlay(true);
@@ -6906,20 +6759,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             }
         } else {
             // 撤销打卡：在今日足迹中寻找并抹除这一条
-            const targetIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === logTitle && l.type === 'checklist_item');
+            const targetIdx = dailyLog.findIndex(l => l.date === now.toDateString() && l.title === logTitle && l.type === 'checklist_item');
             if (targetIdx > -1) {
                 dailyLog.splice(targetIdx, 1);
                 save(); renderLog();
                 showToast('↩️ 已撤销打卡记录');
-            }
-
-            // 额外防御：如果之前因为一次性清单全部完成而写入了整体完成记录，这里一旦有子任务被撤销，就一并撤销整体完成足迹
-            const plTitleFull = `【整体完成】${customPlaylists[pIdx].title}`;
-            const doneIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === plTitleFull && l.type === 'playlist_done');
-            if (doneIdx > -1) {
-                dailyLog.splice(doneIdx, 1);
-                save(); renderLog();
-                if (typeof renderHistory === 'function') renderHistory();
             }
         }
         // 3. 刷新档案柜 UI（更新进度比例和删除线）
@@ -7030,14 +6874,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         hidePlaylistCreator();
         savePlaylists();
         renderCabinet();
-        // v6.9.5：保存后自动展开档案柜并平滑滚动，建立空间感
-        const cabinet = document.getElementById('cabinetDetails');
-        if (cabinet) {
-            cabinet.open = true;
-            setTimeout(() => {
-                cabinet.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 150);
-        }
     }
 
     function editPlaylist(pIdx) {
@@ -7057,69 +6893,15 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     }
 
     // 神经桥接：强制挂载全局，解决 Overlay 动态拼接找不到作用域的 Bug
-    // v6.9.5 冗余防御：Overlay 打钩除了调用底层 toggleCabinetItem，还兜底一次足迹写入，避免任何路径差异导致子任务丢失
     window.toggleCardPlaylistItem = function(playlistId, taskIndex, isChecked) {
         const pIdx = customPlaylists.findIndex(p => String(p.id) === String(playlistId));
         if (pIdx > -1) {
-            // 传入 fromCard = true 的信号（底层会做持久化 + 足迹写入 + 进度重算）
+            // 传入 fromCard = true 的信号
             toggleCabinetItem(pIdx, taskIndex, isChecked, true);
 
             // 内存级同步 currentTask，防止卡片被再次刷新时丢失状态
             if (typeof currentTask !== 'undefined' && currentTask && String(currentTask.id) === String(playlistId) && currentTask.items) {
                 if (currentTask.items[taskIndex]) currentTask.items[taskIndex].done = isChecked;
-            }
-
-            // 再做一层兜底：确保“✅ 【清单名】子任务名” 一定写入 dailyLog（即使底层链路因为历史原因被短路）
-            try {
-                if (typeof dailyLog !== 'undefined' && Array.isArray(dailyLog)) {
-                    const pl = customPlaylists[pIdx];
-                    if (pl) {
-                        const items = Array.isArray(pl.items) ? pl.items : null;
-                        const item = (items && items[taskIndex]) ? items[taskIndex] : null;
-                        const taskName = item && (item.text || item.title) ? (item.text || item.title) : null;
-                        if (taskName) {
-                            const anchorDateStr = getAnchorDate().toDateString();
-                            const logTitle = `【${pl.title || '清单'}】${taskName}`;
-
-                            if (isChecked) {
-                                const existed = dailyLog.some(l => l.date === anchorDateStr && l.title === logTitle && l.type === 'checklist_item');
-                                if (!existed) {
-                                    const now = new Date();
-                                    const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-                                    dailyLog.unshift({
-                                        id: Date.now(),
-                                        title: logTitle,
-                                        icon: (pl && pl.icon) ? pl.icon : '📑',
-                                        timeStr,
-                                        date: anchorDateStr,
-                                        done: true,
-                                        type: 'checklist_item'
-                                    });
-                                    if (typeof save === 'function') save();
-                                    if (typeof renderLog === 'function') renderLog();
-                                    if (typeof renderHistory === 'function') renderHistory();
-                                }
-                            } else {
-                                const idx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === logTitle && l.type === 'checklist_item');
-                                if (idx > -1) {
-                                    dailyLog.splice(idx, 1);
-                                    if (typeof save === 'function') save();
-                                    if (typeof renderLog === 'function') renderLog();
-                                    if (typeof renderHistory === 'function') renderHistory();
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-
-            // v6.9.5 修复：打钩时更新装甲，同样需要带上清单上下文
-            if (typeof KEY_LIVE_STATE !== 'undefined' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
-                localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
-                    task: currentTask,
-                    startTime: anchorStartTime,
-                    activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
-                }));
             }
         }
     };
@@ -7135,41 +6917,19 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (coldList) coldList.innerHTML = "";
 
         let dCount = 0, mCount = 0, cCount = 0;
+        const todayStr = getAnchorDate().toDateString();
         const sortedDB = [...db].sort((a, b) => b.id - a.id);
 
         sortedDB.forEach(item => {
             const li = document.createElement('li');
             li.className = 'task-item';
-
-            const anchorD = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
-            const todayStr = anchorD.toDateString();
-            let isDoneInCycle = false;
-            let cycleBadgeText = '🔄';
-
-            if (item.recurrence && item.recurrence !== 'none' && item.lastDone) {
-                const lastD = new Date(item.lastDone);
-                if (item.recurrence === 'daily' && item.lastDone === todayStr) { 
-                    isDoneInCycle = true; cycleBadgeText = '今天✅'; 
-                } else if (item.recurrence === 'weekly') {
-                    const thisMonday = new Date(anchorD);
-                    thisMonday.setHours(0,0,0,0);
-                    thisMonday.setDate(anchorD.getDate() - (anchorD.getDay() || 7) + 1);
-                    if (lastD >= thisMonday) { isDoneInCycle = true; cycleBadgeText = '本周✅'; }
-                } else if (item.recurrence === 'monthly') {
-                    const thisMonthFirst = new Date(anchorD.getFullYear(), anchorD.getMonth(), 1);
-                    if (lastD >= thisMonthFirst) { isDoneInCycle = true; cycleBadgeText = '本月✅'; }
-                }
-            }
-
-            if (isDoneInCycle) li.classList.add('task-status-done');
+            const isDoneToday = (item.recurrence === 'daily' && item.lastDone === todayStr);
+            if (isDoneToday) li.classList.add('task-status-done');
 
             const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
-            let cycleBadge = '';
-            if (item.recurrence === 'long_term') {
-                cycleBadge = `<span class="list-badge">🚀</span>`;
-            } else if (['daily', 'weekly', 'monthly'].includes(item.recurrence)) {
-                cycleBadge = isDoneInCycle ? `<span class="list-badge">${cycleBadgeText}</span>` : `<span class="list-badge">🔄</span>`;
-            }
+            const cycleBadge = item.recurrence === 'daily'
+                ? (isDoneToday ? `<span class="list-badge">今天✅</span>` : `<span class="list-badge">🔄</span>`)
+                : '';
 
             let extraBadges = "";
             if (item.isFrog) extraBadges += `<span class="list-badge lb-frog">🐸</span>`;
@@ -7334,36 +7094,14 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
     
 
-    // v6.9.5：历史/足迹视图去重工具 —— 隐藏“主任务 + 清单子任务”的视觉重复
-    function dedupeChecklistTwins(logs) {
-        if (!Array.isArray(logs)) return [];
-        const result = [];
-        logs.forEach(log => {
-            if (log && log.type === 'checklist_item') {
-                const normTitle = (log.title || '').replace(/\s+/g, '');
-                const hasMainTwin = logs.some(other => {
-                    if (other === log) return false;
-                    const otherTitleNorm = (other.title || '').replace(/\s+/g, '');
-                    return otherTitleNorm === normTitle && (other.icon || '') !== '✅';
-                });
-                if (hasMainTwin) return; // 跳过这条 checklist_item
-            }
-            result.push(log);
-        });
-        return result;
-    }
-
     function renderLog() {
         const list = document.getElementById('logList');
         if(!list) return;
         list.innerHTML = "";
         const today = getAnchorDate().toDateString();
         let count = 0;
-        // 先筛出“今天”的所有足迹，并做一次清单子任务去重
-        const todayLogsRaw = Array.isArray(dailyLog) ? dailyLog.filter(log => log.date === today) : [];
-        const todayLogs = dedupeChecklistTwins(todayLogsRaw);
-
-        todayLogs.forEach((log, idx) => {
+        dailyLog.forEach((log, idx) => {
+            if (log.date !== today) return;
             count++;
             const li = document.createElement('li');
             li.className = 'task-item';
@@ -7423,35 +7161,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         let htmlStr = "";
         dateKeys.slice(0, maxDays).forEach(dateStr => {
             const dayLogs = byDate[dateStr];
-            // v6.9.5：历史记录中也做一次“主任务 + 清单子任务”去重
-            const dedupedLogs = dedupeChecklistTwins(dayLogs);
             const dateLabel = new Date(dateStr).toLocaleDateString();
             htmlStr += `<div style="margin-bottom:8px;">`;
             htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:2px;">${dateLabel}</div>`;
-            let foundNextDayLog = false;
-            let insertedDivider = false;
-            dedupedLogs.forEach(log => {
+            dayLogs.forEach(log => {
                 const suffix = log.isTrailer ? ' 🐾' : (log.done ? ' ✅' : '');
-                // 提取时间小时数，判断是否属于客观上的次日凌晨（夜猫子时段）
-                let isNext = false;
-                if (log.timeStr) {
-                    const h = parseInt(log.timeStr.split(':')[0], 10);
-                    const offset = typeof getDayStartOffset === 'function' ? getDayStartOffset() : 0;
-                    if (h >= 0 && h < offset) isNext = true;
-                }
-
-                if (isNext) {
-                    // 遇到凌晨任务，做好标记
-                    foundNextDayLog = true;
-                } else if (foundNextDayLog && !insertedDivider) {
-                    // 遇到当日任务，且之前有凌晨任务，说明到达了交界处！插入“跨日线”
-                    htmlStr += `<div style="display:flex; align-items:center; gap:6px; margin: 6px 0 8px;">
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-    <span style="flex:none; font-size:0.7rem; color:#b0b0b0; white-space:nowrap; letter-spacing:1px;">🌙 跨日线</span>
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-</div>`;
-                    insertedDivider = true;
-                }
                 
                 // v6.7.2-fix: 历史记录必须使用"当时的快照"，而非 db 中的最新状态
                 // Why: 历史记录的意义在于"回看那一刻的切片"——
@@ -7550,8 +7264,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
           // 未来日期：固定浅色，但仍可点击查看“还没到来”的提示
           html += `<div class="heatmap-cell level-0" onclick="showHeatmapDay('${dateKey}', '${displayDate}', this)" title="${displayDate} (未到来)"></div>`;
         } else {
-          const rawItems = logMap[dateKey] || [];
-          const items = dedupeChecklistTwins(rawItems);
+          const items = logMap[dateKey] || [];
           const count = items.length;
 
           let level = 0;
@@ -7603,12 +7316,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         return;
       }
 
-      const itemsRaw = Array.isArray(dailyLog) ? dailyLog.filter(log => {
+      const items = Array.isArray(dailyLog) ? dailyLog.filter(log => {
         const d = new Date(log.date);
         if (isNaN(d.getTime())) return false;
         return (d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate()) === dateKey;
       }) : [];
-      const items = dedupeChecklistTwins(itemsRaw);
 
       // 标题恢复“完成多少项”的统计信息
       projDate.innerText = `📅 ${displayDate} · 完成 ${items.length} 项`;
@@ -7620,17 +7332,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
       // 列表渲染：标题 + 时间 + 快照
       let listHtml = '<ul style="margin:0; padding-left:20px;">';
-      let foundNextDayLog = false;
-      let insertedDivider = false;
       items.forEach(log => {
         const title = log.title || '未知记录';
         const icon = log.icon || '';
-        let isNext = false;
-        if (log.timeStr) {
-          const h = parseInt(log.timeStr.split(':')[0], 10);
-          const offset = typeof getDayStartOffset === 'function' ? getDayStartOffset() : 0;
-          if (h >= 0 && h < offset) isNext = true;
-        }
         const timeNote = log.timeStr ? `<span style="color:#aaa; font-size:0.75rem; margin-left:4px;">${log.timeStr}</span>` : '';
         let snapshot = '';
         if (log.bookmarkSnapshot || log.lastAddMinutes) {
@@ -7646,21 +7350,6 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
           }
           snapshot = `<span style="color:#81C784; font-size:0.75rem; margin-left:6px;">[${inner}]</span>`;
         }
-
-        // 首次遇到“次日时段→当日”的交界处时，插入一条几乎贯通的“跨日线”
-        if (isNext) {
-          foundNextDayLog = true;
-        } else if (foundNextDayLog && !insertedDivider) {
-          listHtml += `<li style="margin:6px 0 8px; list-style:none;">
-  <div style="display:flex; align-items:center; gap:6px;">
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-    <span style="flex:none; font-size:0.7rem; color:#b0b0b0; white-space:nowrap; letter-spacing:1px;">🌙 跨日线</span>
-    <div style="flex:1; border-top:1px dashed #d0d0d0;"></div>
-  </div>
-</li>`;
-          insertedDivider = true;
-        }
-
         listHtml += `<li style="margin-bottom:4px;">${icon} ${title} ${timeNote} ${snapshot}</li>`;
       });
       listHtml += '</ul>';
@@ -7868,35 +7557,19 @@ function renderResultCard(result) {
             if (title) title.innerText = result.title || "";
             if (badge) {
                 let badgesHtml = "";
-                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 重要</span>`;
+                if (result.isFrog) badgesHtml += `<span class='card-badge bg-frog'>🐸 青蛙</span>`;
                 if (result.isQuick) badgesHtml += `<span class='card-badge bg-flash'>⚡️ 速办</span>`;
-                // 👉 补充：循环生命周期徽章 (What: 视觉提示; Why: 让用户一眼看出这是个长期循环任务)
-                const recurSource = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
-                    ? currentTask
-                    : result;
-                if (recurSource && recurSource.recurrence === 'daily') {
-                    badgesHtml += `<span class="card-badge" style="background:#e0f2f1; color:#2e7d32;">🔄 每日</span>`;
-                } else if (recurSource && recurSource.recurrence === 'weekly') {
-                    badgesHtml += `<span class="card-badge" style="background:#e3f2fd; color:#1565c0;">🔄 每周</span>`;
-                } else if (recurSource && recurSource.recurrence === 'monthly') {
-                    badgesHtml += `<span class="card-badge" style="background:#f3e5f5; color:#4527a0;">🔄 每月</span>`;
-                } else if (recurSource && (recurSource.recurrence === 'long_term' || recurSource.type === 'long_term')) {
-                    badgesHtml += `<span class="card-badge" style="background:#fff3e0; color:#e65100;">🚀 长期</span>`;
-                }
+                if (result.recurrence === 'daily') badgesHtml += `<span class='card-badge bg-cycle'>🔄 每日</span>`;
                 badge.innerHTML = badgesHtml;
             }
             let displayDesc = result.desc;
             if (!displayDesc || displayDesc === "自定义") displayDesc = getDescByType(result.type);
 
-            const recurSourceDesc = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
-                ? currentTask : result;
-            const isLongTerm = recurSourceDesc && (recurSourceDesc.recurrence === 'long_term' || recurSourceDesc.type === 'long_term');
-            if (isLongTerm) {
-                displayDesc = '持续推进，每一步都算数。';
-            }
-            // v6.6.3 静音多巴胺：对 culture / vinyl 给予心理许可文案（长期任务优先显示持续推进）
+            // v6.6.3 静音多巴胺：对 culture / vinyl 给予心理许可文案 + 呼吸光晕
+            // Why: 用户抽到休闲任务时常有"我是不是在摸鱼"的罪恶感，
+            //      用温柔文案 + 视觉暗示告诉他们：这是你应得的。
             const isRelaxType = (result.type === 'culture' || result.type === 'vinyl');
-            if (isRelaxType && !isLongTerm) {
+            if (isRelaxType) {
                 displayDesc = '✨ 放下顾虑去享受吧，这是你应得的。';
             }
 
@@ -7913,64 +7586,29 @@ function renderResultCard(result) {
             const progressEl = document.getElementById('rProgress');
             if (progressEl) {
                 let progressHtml = "";
-
-                // 以 currentTask 为主，退回到 result 作为兜底
-                const active = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === result.id)
-                    ? currentTask
-                    : result;
-
-                const bText = active.bookmarkText || '';
-                const bTotal = active.bookmarkTotal || '';
-                const totalMins = active.totalMinutes || 0;
-                const hasBookmark = !!active.bookmarkText;
-                const hasTotal = totalMins && totalMins > 0;
-                // 👉 新增：检测是否有打卡次数
-                const hasCount = active.completeCount && active.completeCount > 0;
-
-                // 只要有其中一项，就显示记忆情报区
-                if (hasBookmark || hasTotal || hasCount) {
-                    // 第一行：书签与马卡龙进度条
+                const hasBookmark = result.bookmarkText && result.bookmarkText.trim();
+                const hasTotal = result.totalMinutes && result.totalMinutes > 0;
+                
+                if (hasBookmark || hasTotal) {
                     if (hasBookmark) {
-                        progressHtml += `<div style="margin-bottom:6px;">🔖 当前进度: ${bText}${bTotal ? ' / ' + bTotal : ''}`;
-                        
-                        // 只有存在当前和目标，且【不是电影】时，才渲染进度条
-                        const subtype = active.subtype;
-                        const icon = active.icon || getSmartIcon(active);
-                        if (bText && bTotal && subtype !== 'movie' && icon !== '🎬') {
-                            const currMatch = bText.match(/\d+(\.\d+)?/);
-                            const totalMatch = bTotal.match(/\d+(\.\d+)?/);
-                            if (currMatch && totalMatch) {
-                                const currNum = parseFloat(currMatch[0]);
-                                const totalNum = parseFloat(totalMatch[0]);
-                                if (totalNum > 0 && currNum >= 0) {
-                                    const percent = Math.min(100, Math.max(0, Math.round((currNum / totalNum) * 100)));
-                                    // v6.9.7 优化：缩短进度条长度，使其与文字宽度相得益彰
-                                    progressHtml += `
-                            <div style="max-width:140px; margin: 6px auto 0; background:#f0f1f5; border-radius:99px; height:6px; overflow:hidden;">
-                                <div style="width:${percent}%; background:linear-gradient(90deg, #A0E7E5, #FFB7B2); height:100%; border-radius:99px; transition:width 0.5s ease-out;"></div>
-                            </div>`;
-                                }
-                            }
-                        }
-                        progressHtml += `</div>`;
+                        progressHtml += `🔖 ${result.bookmarkText}`;
                     }
-
-                    // 第二行：总计时长（强制分行，解决拥挤）
+                    if (hasBookmark && hasTotal) {
+                        progressHtml += " · ";
+                    }
                     if (hasTotal) {
-                        const mins = totalMins % 60;
-                        const hours = Math.floor(totalMins / 60);
-                        let timeDisplay = totalMins < 60
-                            ? `${totalMins}m`
-                            : `${hours}h${mins > 0 ? mins + 'm' : ''}`;
-                        progressHtml += `<div>⏱ 总计 ${timeDisplay}</div>`;
-                    }
-
-                    // 👉 新增第三行：累计打卡次数 (强制分行，使用治愈粉色，呼应无限复利游戏)
-                    if (hasCount) {
-                        progressHtml += `<div style="margin-top:6px; color:#FF9AA2; font-weight:bold; font-size: 0.9rem;">💪 累计打卡: ${active.completeCount} 次</div>`;
+                        const totalMins = result.totalMinutes;
+                        let timeDisplay = "";
+                        if (totalMins < 60) {
+                            timeDisplay = `${totalMins}m`;
+                        } else {
+                            const hours = Math.floor(totalMins / 60);
+                            const mins = totalMins % 60;
+                            timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                        }
+                        progressHtml += `⏱ 总计 ${timeDisplay}`;
                     }
                 }
-
                 progressEl.innerHTML = progressHtml;
             }
 
@@ -8044,12 +7682,8 @@ function renderResultCard(result) {
         if (!keepTime || !anchorStartTime) {
             anchorStartTime = Date.now();
         }
-        // v6.9.5 修复：把 activePlaylist 一并刻入墙壁，防止刷新后失去连抽上下文
-        localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
-            task: currentTask,
-            startTime: anchorStartTime,
-            activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
-        }));
+        // v6.9.4：刻入墙壁，防刷新丢失（继承或新建）
+        localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({ task: currentTask, startTime: anchorStartTime }));
         startLiveTimer();
     }
 
@@ -8157,116 +7791,73 @@ function renderResultCard(result) {
         }
     }
 
-    // v6.9.7 升级为异步函数，支持中途放弃时的时间收割与足迹记录（修复作用域崩溃 Bug）
-    async function changeTask() {
-      // 1. 退出沉浸模式
-      exitImmersiveMode();
+    function changeTask() {
+        // v6.7.1：换一个 —— 先退出当前沉浸态（draw 会重新进入）
+        exitImmersiveMode();
 
-      // 2. 清单模式的退回逻辑
-      if (typeof activePlaylist !== 'undefined' && activePlaylist) {
-        if (!Array.isArray(activePlaylist.tasks)) activePlaylist.tasks = [];
-        if (activePlaylist.tasks.length > 0) {
-          const discardedText = currentTask ? currentTask.rawTaskText : null;
-          const card = document.getElementById('resultCard');
-          if (card) {
-            card.style.animation = 'none';
-            card.style.opacity = 0;
+        if (activePlaylist) {
+          if (!Array.isArray(activePlaylist.tasks)) {
+            activePlaylist.tasks = [];
           }
-          setTimeout(() => {
-            if (typeof drawFromPlaylist === 'function') drawFromPlaylist();
-            if (discardedText) activePlaylist.tasks.push(discardedText);
-          }, 80);
-        } else {
-          if (typeof showToast === 'function') showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
-        }
-        return;
-      }
+          if (activePlaylist.tasks.length > 0) {
+            const discardedText = currentTask ? currentTask.rawTaskText : null;
 
-      if (!currentTask) {
-        if (typeof draw === 'function') draw();
-        return;
-      }
-
-      // 👉 v6.9.7 核心修复：如果任务已开始进行且超过 10 秒，放弃时触发时长收割
-      if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
-        const elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
-        if (elapsedSecs >= 10) { 
-          let elapsedMins = Math.floor(elapsedSecs / 60);
-          if (elapsedSecs >= 10 && elapsedSecs < 60) elapsedMins = 1; // 满10秒保底1分钟
-
-          let harvestMins = 0;
-          let newBookmark = null; // 🚨 提权：将变量声明移至安全作用域
-
-          if (elapsedMins >= 1 && elapsedMins <= 180) {
-            // 弹出时间收割滚轮
-            if (typeof openHarvestDialogAsync === 'function') {
-              const harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
-              harvestMins = harvestResult.mins;
-              newBookmark = harvestResult.bookmark;
+            // 制造一个视觉上的卡片消失感
+            const card = document.getElementById('resultCard');
+            if (card) {
+              card.style.animation = 'none';
+              card.style.opacity = 0;
             }
-          } else if (elapsedMins > 180) {
-            // 挂机过长兜底
-            const ans = prompt(`似乎挂机了 ${Math.floor(elapsedMins/60)} 小时😅\n如果只是中途放弃，请手动输入实际尝试了多少分钟 (0为不记录)：`, elapsedMins);
-            harvestMins = parseInt(ans) || 0;
+
+            setTimeout(() => {
+              drawFromPlaylist();
+              if (discardedText) activePlaylist.tasks.push(discardedText);
+            }, 80); // 极短延迟，让视觉上有“换走”的感觉
+          } else {
+            showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
           }
-
-          // 🚨 提权：在最外层确立原任务对象，防止 ReferenceError 导致程序猝死
-          const taskInDb = db.find(t => t.id === currentTask.id) || currentTask;
-
-          // 更新进度书签
-          if (newBookmark !== null && newBookmark !== taskInDb.bookmarkText) {
-            taskInDb.bookmarkText = newBookmark;
-            taskInDb.bookmarkUpdatedAt = Date.now();
-          }
-
-          // 更新累计时间
-          if (harvestMins > 0) {
-            taskInDb.totalMinutes = (taskInDb.totalMinutes || 0) + harvestMins;
-            taskInDb.lastAddMinutes = harvestMins;
-            taskInDb.totalUpdatedAt = Date.now();
-          }
-
-          // 生成时间跨度
-          const startDt = new Date(anchorStartTime);
-          const startStr = startDt.getHours().toString().padStart(2, '0') + ":" + startDt.getMinutes().toString().padStart(2, '0');
-          const now = new Date();
-          let timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-          if (startStr !== timeStr) timeStr = `${startStr} - ${timeStr}`;
-
-          // 写入今日足迹 (done: false 表示这是一次未完成的尝试)
-          dailyLog.unshift({
-            id: Date.now(),
-            title: taskInDb.title,
-            icon: taskInDb.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(taskInDb) : ''),
-            timeStr: timeStr,
-            date: typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString(),
-            done: false, // 🚨 核心：没有绿色的勾！
-            taskId: taskInDb.id,
-            bookmarkSnapshot: taskInDb.bookmarkText || '',
-            noteSnapshot: taskInDb.noteText || '',
-            lastAddMinutes: harvestMins
-          });
-          
-          if (typeof save === 'function') save();
-          if (typeof renderLog === 'function') renderLog();
-          if (typeof renderHistory === 'function') renderHistory();
-          if (typeof showToast === 'function') showToast("🐾 已记录一次勇敢的尝试");
+          return;
         }
-      }
 
-      // 3. 彻底清空状态，恢复 UI，重新抽卡
-      currentTask = null;
-      if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
-      if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
-      localStorage.removeItem(KEY_LIVE_STATE);
-      if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
-      
-      const statusEl = document.getElementById('rStatus');
-      const ingEl = document.getElementById('rIngPulse');
-      if (statusEl) statusEl.style.display = 'none';
-      if (ingEl) ingEl.style.display = 'none';
-      
-      if (typeof draw === 'function') draw();
+        if (!currentTask) { 
+            draw();
+            return;
+        }
+        
+        // v6.5：如果当前任务有历史记录（未完成状态），更新记忆数据
+        const todayStr = getAnchorDate().toDateString();
+        const taskId = currentTask.id;
+        
+        // 查找任务在 db 中的最新状态
+        const taskInDb = db.find(t => t.id === taskId);
+        if (taskInDb) {
+            // 查找并更新历史记录
+            for (let i = 0; i < dailyLog.length; i++) {
+                const log = dailyLog[i];
+                if (log.date === todayStr && log.taskId === taskId && !log.done) {
+                    // 更新记忆数据到历史记录
+                    log.bookmarkSnapshot = taskInDb.bookmarkText || '';
+                    log.noteSnapshot = taskInDb.noteText || '';
+                    if (taskInDb.lastAddMinutes && taskInDb.lastAddMinutes > 0) {
+                        log.lastAddMinutes = taskInDb.lastAddMinutes;
+                    }
+                    save();
+                    renderHistory();
+                    break;
+                }
+            }
+        }
+        
+        currentTask = null;
+        currentStatus = 'idle';
+        anchorStartTime = null;
+        localStorage.removeItem(KEY_LIVE_STATE);
+        if (liveTimerId) clearInterval(liveTimerId);
+        const statusEl = document.getElementById('rStatus');
+        const ingEl = document.getElementById('rIngPulse');
+        if (statusEl) statusEl.style.display = 'none';
+        if (ingEl) ingEl.style.display = 'none';
+        draw();
     }
 
 function playGachaAnimation(result) {
@@ -8612,31 +8203,14 @@ function pickTaskByFilters() {
     }
     const limitTime = parseInt(document.getElementById('selTime').value);
     const todayStr = getAnchorDate().toDateString();
-    
+
     // Step 1: 物理铁律过滤（Hard Filters）
     let validPool = db.filter(item => {
         // 冷宫任务必须排除
         if (item.inColdStorage === true) return false;
         
-        // 周期任务过滤
-        if (item.recurrence && item.recurrence !== 'none' && item.lastDone) {
-            const anchorD = getAnchorDate();
-            const lastD = new Date(item.lastDone);
-            
-            if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
-            if (item.recurrence === 'weekly') {
-                // 获取当前锚点时间的本周一 00:00:00
-                const thisMonday = new Date(anchorD);
-                thisMonday.setHours(0,0,0,0);
-                thisMonday.setDate(anchorD.getDate() - (anchorD.getDay() || 7) + 1);
-                if (lastD >= thisMonday) return false; // 本周已做过
-            }
-            if (item.recurrence === 'monthly') {
-                // 获取本月 1 号 00:00:00
-                const thisMonthFirst = new Date(anchorD.getFullYear(), anchorD.getMonth(), 1);
-                if (lastD >= thisMonthFirst) return false; // 本月已做过
-            }
-        }
+        // 日常任务：如果今天已完成，跳过
+        if (item.recurrence === 'daily' && item.lastDone === todayStr) return false;
         
         return true;
     });
@@ -9210,10 +8784,6 @@ function closePlaylistOverlay(isCompleted = false) {
         currentTask = null;
         if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
     }
-    // 不论是否完成，只要关闭了 Overlay，就清除上次记录的清单 ID
-    try {
-        localStorage.removeItem('anchor_last_playlist_overlay');
-    } catch(e) {}
 }
 
  function draw() {
@@ -9268,10 +8838,6 @@ function closePlaylistOverlay(isCompleted = false) {
               stepsUl.appendChild(li);
             });
             overlay.style.display = 'block';
-                // 记录当前展开的清单 Overlay，防止刷新后丢失
-                try {
-                  localStorage.setItem('anchor_last_playlist_overlay', String(targetPl.id));
-                } catch(e) {}
           }
           // 清理旧的活跃清单状态
           activePlaylist = null;
@@ -9364,66 +8930,19 @@ function drawFromPlaylist() {
   }
 
   if (activePlaylist.tasks.length === 0) {
-    // v6.9.5：清单心流隧道终点 —— 挂钩 Once / SOP 生命周期与足迹
-    if (typeof customPlaylists !== 'undefined' && Array.isArray(customPlaylists)) {
-      const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
-      if (pIdx > -1) {
-        const pl = customPlaylists[pIdx];
-        const now = new Date();
-        const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const anchorDateStr = getAnchorDate().toDateString();
-        const plTitle = pl.title || pl.name || activePlaylist.name || '清单';
-
-        if (pl.playlistType === 'once') {
-          // 一次性清单：整体完成 + 出库
-          dailyLog.unshift({
-            id: Date.now(),
-            title: `【整体完成】${plTitle}`,
-            icon: '🏆',
-            timeStr,
-          date: anchorDateStr,
-            done: true,
-            type: 'playlist_done'
-          });
-          customPlaylists.splice(pIdx, 1);
-        } else {
-          // SOP 清单：本次 +1，并重置所有子任务打钩
-          pl.completeCount = (pl.completeCount || 0) + 1;
-          dailyLog.unshift({
-            id: Date.now(),
-            title: `【本次+1】${plTitle}`,
-            icon: '🏆',
-            timeStr,
-          date: anchorDateStr,
-            done: true,
-            type: 'playlist_done'
-          });
-          if (Array.isArray(pl.items)) {
-            pl.items.forEach(item => { if (item) item.done = false; });
-          }
-        }
-
-        if (typeof savePlaylists === 'function') savePlaylists();
-        if (typeof renderCabinet === 'function') renderCabinet();
-        if (typeof save === 'function') {
-          save();
-          if (typeof renderLog === 'function') renderLog();
-          if (typeof renderHistory === 'function') renderHistory();
-        }
-      }
-    }
-
-    // 🎉 结算终点：视觉反馈 + 真实完成次数读取
+    // 🎉 结算终点
     if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
 
-    // v6.9.5：直接从底层档案柜读取真实的完成次数
-    let finishCount = 1;
-    if (typeof customPlaylists !== 'undefined') {
-        const realPl = customPlaylists.find(p => String(p.id) === String(activePlaylist.id));
-        if (realPl && realPl.completeCount) {
-            finishCount = realPl.completeCount;
-        }
+    // 使用 ID 进行统计
+    let stats = {};
+    try {
+      stats = JSON.parse(localStorage.getItem('anchor_playlist_stats') || '{}') || {};
+    } catch (e) {
+      stats = {};
     }
+    stats[activePlaylist.id] = (stats[activePlaylist.id] || 0) + 1;
+    localStorage.setItem('anchor_playlist_stats', JSON.stringify(stats));
+    const finishCount = stats[activePlaylist.id];
 
     const plName = activePlaylist.name;
     activePlaylist = null;
@@ -9588,22 +9107,16 @@ function openRitual(type) {
     const overlay = document.getElementById('ritualOverlay');
     if (overlay) overlay.style.display = 'none';
 
-    // What & Why: 仪式结束后，保持留白，显示暂无任务的空卡片，而不是突兀的扭蛋机
+    // 仪式结束后，恢复默认占位 & 扭蛋机
     const placeholder = document.getElementById('placeholder');
     const gachaLayer = document.getElementById('gachaLayer');
     const resultCard = document.getElementById('resultCard');
 
-    if (placeholder) placeholder.style.display = 'none';
-    if (gachaLayer) gachaLayer.style.display = 'none';
-    if (resultCard) {
-        // 渲染一张干干净净的“暂无任务”空卡片
-        if (typeof renderResultCard === 'function') renderResultCard(null);
-        resultCard.style.display = 'block';
-    }
+    if (placeholder) placeholder.style.display = 'block';
+    if (gachaLayer) gachaLayer.style.display = 'block';
+    if (resultCard) resultCard.style.display = 'none';
 
     currentRitualType = null;
-    currentTask = null;
-    if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
 }
 
 
@@ -9631,28 +9144,23 @@ function openRitual(type) {
         renderLog();
         if (typeof renderHistory === 'function') renderHistory();
 
-        const overlay = document.getElementById('ritualOverlay');
-        if (overlay) overlay.style.display = 'none';
+               const overlay = document.getElementById('ritualOverlay');
+    if (overlay) overlay.style.display = 'none';
 
-        // What & Why: 完成后保持留白，显示暂无任务的空卡片，体验与清单收尾对齐
-        const placeholder = document.getElementById('placeholder');
-        const gachaLayer = document.getElementById('gachaLayer');
-        const resultCard = document.getElementById('resultCard');
+    // 完成后恢复默认占位 & 扭蛋机
+    const placeholder = document.getElementById('placeholder');
+    const gachaLayer = document.getElementById('gachaLayer');
+    const resultCard = document.getElementById('resultCard');
 
-        if (placeholder) placeholder.style.display = 'none';
-        if (gachaLayer) gachaLayer.style.display = 'none';
-        if (resultCard) {
-            if (typeof renderResultCard === 'function') renderResultCard(null);
-            resultCard.style.display = 'block';
-        }
+    if (placeholder) placeholder.style.display = 'block';
+    if (gachaLayer) gachaLayer.style.display = 'block';
+    if (resultCard) resultCard.style.display = 'none';
 
-        // 本次会话内，让对应的小图标淡一些
-        dimRitualButton(currentRitualType);
+    // 本次会话内，让对应的小图标淡一些
+    dimRitualButton(currentRitualType);
 
-        showToast(icon === '🌅' ? '🌅 起飞啦！' : '🌙 着陆完成');
-        currentTask = null;
-        if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
-        currentRitualType = null;
+    showToast(icon === '🌅' ? '🌅 起飞啦！' : '🌙 着陆完成');
+    currentRitualType = null;
 }
    
 
@@ -9721,60 +9229,51 @@ function openRitual(type) {
         const statusEl = silent ? null : document.getElementById('rStatus');
         const ingEl    = silent ? null : document.getElementById('rIngPulse');
 
-        // v6.9.5：清单子任务完成时的底层同步与足迹补写（不会阻断后续通用完成逻辑）
-        if (task && task.isPlaylist && typeof activePlaylist !== 'undefined' && activePlaylist && activePlaylist.id) {
-            try {
-                if (typeof customPlaylists !== 'undefined' && Array.isArray(customPlaylists)) {
-                    const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
-                    if (pIdx > -1) {
-                        const pl = customPlaylists[pIdx];
-                        const nowSub = new Date();
-                        const subTimeStr = nowSub.getHours().toString().padStart(2, '0') + ":" + nowSub.getMinutes().toString().padStart(2, '0');
-                        const anchorDateStr = getAnchorDate().toDateString();
-                        const rawText = (task.rawTaskText || '').toString();
-                        const plTitle = pl.title || pl.name || '清单';
+        // ==========================================
+        // 🚨 v6.9.5：清单与仪式专属拦截器 (VIP 通道)
+        // ==========================================
+        if (task.type === 'playlist' || task.type === 'ritual') {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
 
-                        // 1）为该子任务写入一条轻量足迹：清单图标 【清单名】子任务名
-                        if (rawText) {
-                            const subIcon = pl.icon || '📑';
-                            dailyLog.unshift({
-                                id: Date.now(),
-                                title: `【${plTitle}】${rawText}`,
-                                icon: subIcon,
-                                timeStr: subTimeStr,
-                                date: anchorDateStr,
-                                done: true,
-                                type: 'checklist_item'
-                            });
-                        }
-
-                        // 2）同步到底层 customPlaylists.items 的 done 状态
-                        let items = Array.isArray(pl.items) ? pl.items : null;
-                        if ((!items || items.length === 0) && Array.isArray(pl.tasks) && pl.tasks.length > 0) {
-                            items = pl.tasks.map(text => ({ text, done: false }));
-                            pl.items = items;
-                        }
-                        if (items && items.length > 0 && rawText) {
-                            const matchIdx = items.findIndex(it => it && (it.text === rawText || it.title === rawText));
-                            if (matchIdx > -1 && items[matchIdx]) {
-                                items[matchIdx].done = true;
-                            }
-                        }
-
-                        if (typeof savePlaylists === 'function') savePlaylists();
-                        if (typeof renderCabinet === 'function') renderCabinet();
-
-                        // 3）补一次 save / renderLog，以防止与主线写入存在竞态
-                        if (rawText && typeof save === 'function') {
-                            save();
-                            if (typeof renderLog === 'function') renderLog();
-                            if (typeof renderHistory === 'function') renderHistory();
-                        }
+            if (typeof customPlaylists !== 'undefined' && Array.isArray(customPlaylists)) {
+                const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(task.id));
+                if (pIdx > -1) {
+                    const pl = customPlaylists[pIdx];
+                    if (pl.playlistType === 'once') {
+                        // 1. 一次性清单：记录整体完成并彻底销毁
+                        dailyLog.unshift({ id: Date.now(), title: `【整体完成】${pl.title || pl.name}`, icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done' });
+                        customPlaylists.splice(pIdx, 1);
+                        showToast('⚡️ 一次性清单已完成并自动清理');
+                    } else {
+                        // 2. SOP清单：计次并重置子任务
+                        pl.completeCount = (pl.completeCount || 0) + 1;
+                        if (Array.isArray(pl.items)) pl.items.forEach(item => { if(item) item.done = false; });
+                        dailyLog.unshift({ id: Date.now(), title: `【+${pl.completeCount}】${pl.title || pl.name}`, icon: '🏆', timeStr: timeStr, date: now.toDateString(), done: true, type: 'playlist_done' });
+                        showToast(`🔄 SOP 已完成，累计执行 ${pl.completeCount} 次`);
                     }
+                    if (typeof savePlaylists === 'function') savePlaylists();
+                    if (typeof renderCabinet === 'function') renderCabinet();
+
+                    // 确保日志落盘
+                    save();
+                    renderLog();
+                    if (typeof renderHistory === 'function') renderHistory();
                 }
-            } catch (e) {
-                console.warn('completeTaskCore playlist-subtask sync error', e);
             }
+
+            // 彻底清理卡片 UI 状态，并阻断后续逻辑
+            if (!silent) {
+                if (card) { card.style.display = 'none'; card.style.animation = ''; }
+                if (statusEl) statusEl.style.display = 'none';
+                if (ingEl) ingEl.style.display = 'none';
+                currentTask = null;
+                if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+                if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+                if (typeof closePlaylistOverlay === 'function') closePlaylistOverlay(true);
+            }
+            // 🚨 绝对铁律：拦截完毕后必须 return，不能让清单流入普通任务的记账流程！
+            return;
         }
 
         // SOS 模式：只重置状态，不记入足迹/荣誉殿堂（理论上不会从列表触发）
@@ -9822,17 +9321,7 @@ function openRitual(type) {
                 elapsedMins = 1;
             }
             if (elapsedMins >= 1) {
-                const harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
-                harvestMins = harvestResult.mins;
-                const newBookmark = harvestResult.bookmark;
-
-                // v6.9.7：同步更新书签
-                if (newBookmark !== null && newBookmark !== finalTask.bookmarkText) {
-                    finalTask.bookmarkText = newBookmark;
-                    finalTask.bookmarkUpdatedAt = Date.now();
-                    const idxB = db.find(t => t.id === finalTask.id);
-                    if (idxB > -1) db[idxB].bookmarkText = newBookmark;
-                }
+                harvestMins = await openHarvestDialogAsync(elapsedMins);
             }
         }
 
@@ -9848,18 +9337,14 @@ function openRitual(type) {
             }
         }
 
-        const bookmarkSnapshot = finalTask.bookmarkText
-            ? (finalTask.bookmarkTotal ? finalTask.bookmarkText + ' / ' + finalTask.bookmarkTotal : finalTask.bookmarkText)
-            : '';
+        const bookmarkSnapshot = finalTask.bookmarkText || '';
         const noteSnapshot = finalTask.noteText || '';
         const lastAddMinutes = finalTask.lastAddMinutes || 0;
-    
+
         let marked = false;
         for (let i = 0; i < dailyLog.length; i++) {
             const log = dailyLog[i];
-            // 👉 核心修复：只有找到一条 done === false 的进行中占位记录，才执行覆盖更新。
-            // 如果是已经 done === true 的记录，说明是以前完成的，必须跳过，从而在下方 unshift 一条新的。
-            if (log.date === anchorTodayStr && log.taskId === task.id && log.done === false) {
+            if (log.date === anchorTodayStr && log.taskId === task.id) {
                 log.done = true;
                 log.title = finalTask.title;
                 log.icon = finalTask.icon || getSmartIcon(finalTask);
@@ -9874,24 +9359,10 @@ function openRitual(type) {
                 break;
             }
         }
-
-        // 👉 动态生成足迹标题与计数
-        let logTitle = task.title;
-        let logIcon = task.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(task) : '✅');
-
-        // 处理循环与长期任务的足迹展示
-        if (['daily', 'weekly', 'monthly'].includes(task.recurrence) && taskInDb) {
-            taskInDb.completeCount = (taskInDb.completeCount || 0) + 1;
-            logTitle = `【+${taskInDb.completeCount}】${task.title}`;
-        } else if (task.recurrence === 'long_term' || task.type === 'long_term') {
-            logTitle = `【推进】${task.title}`;
-        }
-
-        // 写入 dailyLog
-        if (!marked && !silent) {
+        if (!marked) {
             dailyLog.unshift({
-                title: logTitle,
-                icon: logIcon,
+                title: task.title,
+                icon: task.icon || getSmartIcon(task),
                 timeStr: timeStr,
                 date: anchorTodayStr,
                 done: true,
@@ -9928,7 +9399,7 @@ function openRitual(type) {
             const isSeries = !!task.isSeries;
             const isMovie = (subtype === 'movie') || icon === '🎬';
             const isEvent = (subtype === 'other') || icon === '🎭' || icon === '🖼️';
-    
+
             // 2.1 🎭/🖼️ 线下文娱活动：一次性结项，直接进荣誉殿堂
             if (isEvent) {
                 db = db.filter(t => t.id !== task.id);
@@ -9958,51 +9429,36 @@ function openRitual(type) {
             }
             // 2.3 📚 书 / 剧集 / 其他：长期推进，不移除，记进度
             else {
-                // 保底：若今日足迹中尚无这条任务的记录，为其写入一条极简足迹
-                const hasTodayLog = Array.isArray(dailyLog) && dailyLog.some(l => l.date === anchorTodayStr && l.taskId === task.id);
-                if (!hasTodayLog) {
-                    dailyLog.unshift({
-                        title: task.title,
-                        icon: task.icon || getSmartIcon(task),
-                        timeStr: timeStr,
-                        date: anchorTodayStr,
-                        done: true,
-                        taskId: task.id
-                    });
-                }
-                save();
-                renderLog();
-                if (typeof renderHistory === 'function') renderHistory();
-                renderList(); // 触发小圆点刷新
-                showToast("📚 进度已更新，记录至今日足迹");
+                archive.unshift({
+                    ...task,
+                    finishDate: now.toLocaleDateString()
+                });
+                save(); renderArchive(); renderList(); // 关键修复：补充 renderList 触发小圆点刷新
+                showToast("📚 已记录到荣誉殿堂");
             }
         }
-        // 3）普通任务 / 长期任务 分流
+        // 3）普通任务：完成后从任务池删除；如果是重要任务（青蛙），同时放入荣誉殿堂
         else {
-            if (task.recurrence === 'long_term' || task.type === 'long_term') {
-                // 长期任务：绝不删除，留在池中累加时间
-                if (typeof renderList === 'function') renderList();
-                if (typeof showToast === 'function') showToast("🚀 阶段推进成功！");
-            } else if (task.recurrence === 'weekly' || task.recurrence === 'monthly') {
-                // 周/月循环任务：保留在任务池，仅更新进度
-                const taskIndex = db.findIndex(t => t.id === task.id);
-                if (taskIndex > -1) db[taskIndex].lastDone = anchorTodayStr;
-                save();
-                renderList();
-                if (typeof showToast === 'function') showToast("✅ 本次打卡成功！");
-            } else {
-                // 单次任务：阅后即焚，移出任务池
-                db = db.filter(i => i.id !== task.id);
-                if (task.isFrog) {
-                    archive.unshift({
-                        title: task.title, type: 'important', isFrog: true, icon: task.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(task) : ''), finishDate: now.toLocaleDateString(),
-                        totalMinutes: finalTask.totalMinutes, bookmarkText: finalTask.bookmarkText, noteText: finalTask.noteText
-                    });
-                }
-                if (typeof renderList === 'function') renderList();
-                if (typeof renderArchive === 'function') renderArchive();
-                if (typeof showToast === 'function') showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
-                if (task.isFrog && typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
+            db = db.filter(i => i.id !== task.id);
+
+            if (task.isFrog) {
+                archive.unshift({
+                    title: task.title,
+                    type: 'important',
+                    isFrog: true,
+                    icon: task.icon || getSmartIcon(task),
+                    finishDate: now.toLocaleDateString()
+                });
+            }
+
+            save();
+            renderList();
+            renderArchive();
+            showToast(task.isFrog ? "🏅 重要任务已加入荣誉殿堂！" : "✨ 完成！");
+
+            // v6.6.3 静音多巴胺：青蛙任务完成 → 极简彩纸嘉奖
+            if (task.isFrog) {
+                spawnQuietConfetti();
             }
         }
 
@@ -10086,36 +9542,46 @@ function openRitual(type) {
       let statsHtml = '';
       const hasTime = task.totalMinutes && task.totalMinutes > 0;
       const hasBookmark = task.bookmarkText && task.bookmarkText.trim();
-      const hasCount = task.completeCount && task.completeCount > 0;
- 
-      // 👉 核心修复：只要有次数，也必须显示浅色情报框
-      if (hasTime || hasBookmark || hasCount) {
+
+      if (hasTime || hasBookmark) {
         statsHtml += `<div style="background:#f9fafb; padding:10px 12px; border-radius:8px; font-size:0.85rem; color:#555; margin-top:12px; margin-bottom:4px; text-align:left; border:1px solid #eee;">`;
         if (hasTime) {
           const h = Math.floor(task.totalMinutes / 60);
           const m = task.totalMinutes % 60;
           statsHtml += `<div style="margin-bottom:4px;">⏱ <b>累计投入:</b> ${h > 0 ? h + 'h ' : ''}${m}m</div>`;
         }
-        if (task.completeCount && task.completeCount > 0) {
-          statsHtml += `<div style="margin-bottom:4px; color:#FF9AA2; font-weight:bold;">💪 累计打卡: ${task.completeCount} 次</div>`;
-        }
         if (hasBookmark) {
-          statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}${task.bookmarkTotal ? ' / ' + task.bookmarkTotal : ''}</div>`;
+          statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}</div>`;
         }
         statsHtml += `</div>`;
       }
 
       msgEl.innerHTML = `<div style="font-weight:500;">${message}</div>${statsHtml}`;
 
-      // 2. 统一的 3 按钮布局（修改、记忆、去做）
+      // 2. 动态构造按钮区（区分媒体类与普通任务）
+      const isMedia = (task.type === 'culture' || task.type === 'vinyl');
+
+      // 重置样式确保使用 Grid 布局
       btnContainer.style.display = 'grid';
       btnContainer.style.gridTemplateColumns = '1fr 1fr';
       btnContainer.style.gap = '8px';
-      btnContainer.innerHTML = `
-        <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
-        <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
-        <button class="task-dialog-btn task-dialog-btn-complete" style="grid-column: span 2;" onclick="handleTaskComplete()">👉 去做</button>
-      `;
+
+      if (isMedia) {
+        // 媒体类：2x2 网格，包含归档按钮
+        btnContainer.innerHTML = `
+          <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+          <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+          <button class="task-dialog-btn" style="background:#fff3e0; color:#e65100; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;" onclick="handleTaskArchive()">🏆 归档</button>
+          <button class="task-dialog-btn task-dialog-btn-complete" onclick="handleTaskComplete()">👉 去做</button>
+        `;
+      } else {
+        // 普通类：无归档按钮，"去做" 按钮横跨两列，极度稳重
+        btnContainer.innerHTML = `
+          <button class="task-dialog-btn task-dialog-btn-edit" onclick="handleTaskEdit()">✏️ 修改</button>
+          <button class="task-dialog-btn task-dialog-btn-memory" onclick="handleTaskMemory()">📝 记忆</button>
+          <button class="task-dialog-btn task-dialog-btn-complete" style="grid-column: span 2;" onclick="handleTaskComplete()">👉 去做</button>
+        `;
+      }
 
       dialog.style.display = 'flex';
     }
@@ -10240,14 +9706,12 @@ function openRitual(type) {
         // 保存原始状态（用于差异化保存）
         memoryOriginalState = {
             bookmarkText: task.bookmarkText || '',
-            bookmarkTotal: task.bookmarkTotal || '', // 新增目标进度
             totalMinutes: task.totalMinutes || 0,
             noteText: task.noteText || ''
         };
 
         const panel = document.getElementById('memoryPanel');
         const bookmarkInput = document.getElementById('memoryBookmark');
-        const totalInput = document.getElementById('memoryTotal');
         const hoursSelect = document.getElementById('memoryHours');
         const minutesSelect = document.getElementById('memoryMinutes');
         const noteTextarea = document.getElementById('memoryNote');
@@ -10256,29 +9720,11 @@ function openRitual(type) {
         if (!panel) return;
 
         // 加载数据
-        if (bookmarkInput) bookmarkInput.value = task.bookmarkText || '';
-        if (totalInput) totalInput.value = task.bookmarkTotal || '';
-
-        // 👉 v6.9.7 智能 UI 适配：根据任务类型调整提示语和目标框显隐
-        const separator = document.querySelector('.memory-separator'); // 找到 "/" 分隔符
-        if (task.subtype === 'movie' || task.icon === '🎬') {
-            if (bookmarkInput) bookmarkInput.placeholder = "坐标(如00:42:17)";
-            if (totalInput) totalInput.style.display = 'none'; // 电影不需要目标进度
-            if (separator) separator.style.display = 'none';
-        } else {
-            if (totalInput) totalInput.style.display = 'inline-block';
-            if (separator) separator.style.display = 'inline-block';
-            
-            if (task.isSeries || task.icon === '📺') {
-                if (bookmarkInput) bookmarkInput.placeholder = "当前(如E5)";
-                if (totalInput) totalInput.placeholder = "目标(如20集)";
-            } else if (task.subtype === 'book' || task.icon === '📖') {
-                if (bookmarkInput) bookmarkInput.placeholder = "当前(如P120)";
-                if (totalInput) totalInput.placeholder = "目标(如300)";
-            } else {
-                if (bookmarkInput) bookmarkInput.placeholder = "当前坐标";
-                if (totalInput) totalInput.placeholder = "目标终点";
-            }
+        if (bookmarkInput) {
+            bookmarkInput.value = task.bookmarkText || '';
+            // 设置占位符
+            const placeholder = getBookmarkPlaceholder(task);
+            bookmarkInput.placeholder = placeholder;
         }
         if (hoursSelect) hoursSelect.value = '0';
         if (minutesSelect) minutesSelect.value = '0';
@@ -10347,7 +9793,6 @@ function openRitual(type) {
         if (!currentMemoryTask) return;
 
         const bookmarkInput = document.getElementById('memoryBookmark');
-        const totalInput = document.getElementById('memoryTotal');
         const hoursSelect = document.getElementById('memoryHours');
         const minutesSelect = document.getElementById('memoryMinutes');
         const noteTextarea = document.getElementById('memoryNote');
@@ -10363,13 +9808,13 @@ function openRitual(type) {
 
         // 1. 保存书签（覆盖式）
         const newBookmark = bookmarkInput.value.trim();
-        const newTotal = totalInput ? totalInput.value.trim() : '';
-        
-        if (newBookmark !== memoryOriginalState.bookmarkText || newTotal !== memoryOriginalState.bookmarkTotal) {
-            task.bookmarkText = newBookmark;
-            task.bookmarkTotal = newTotal;
-            task.bookmarkUpdatedAt = Date.now();
-            hasChanges = true;
+        if (newBookmark !== memoryOriginalState.bookmarkText) {
+            if (newBookmark) {
+                task.bookmarkText = newBookmark;
+                task.bookmarkUpdatedAt = Date.now();
+                hasChanges = true;
+            }
+            // 如果为空且用户未明确清空，不覆盖（已在 clearMemoryPanel 中处理）
         }
 
         // 2. 保存累计时长（累加式）
@@ -10401,45 +9846,45 @@ function openRitual(type) {
 
         if (hasChanges) {
             save();
-            // 更新 currentTask 如果它是同一个任务（同步到防丢装甲，并强制重绘卡片）
+            // 更新 currentTask 如果它是同一个任务（只更新记忆数据，不刷新整个卡片）
             if (currentTask && currentTask.id === task.id) {
                 // 同步记忆数据到 currentTask
                 currentTask.bookmarkText = task.bookmarkText;
-                currentTask.bookmarkTotal = task.bookmarkTotal; // 补充同步目标
                 currentTask.bookmarkUpdatedAt = task.bookmarkUpdatedAt;
                 currentTask.totalMinutes = task.totalMinutes;
                 currentTask.lastAddMinutes = task.lastAddMinutes;
                 currentTask.totalUpdatedAt = task.totalUpdatedAt;
                 currentTask.noteText = task.noteText;
                 currentTask.noteUpdatedAt = task.noteUpdatedAt;
-
-                // 👉 v6.9.7 修复状态丢失：将新数据同步到“防丢装甲”中
-                if (currentStatus === 'anchor' && typeof KEY_LIVE_STATE !== 'undefined' && typeof anchorStartTime !== 'undefined') {
-                    localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
-                        task: currentTask,
-                        startTime: anchorStartTime,
-                        activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
-                    }));
-                }
                 
-                // 🚨 核心时序修复：在强制重绘之前，先“缓存”当前是否处于进行中状态
-                // 因为 renderResultCard 内部会无条件将 currentStatus 重置为 'suggest'
-                const wasAnchor = (currentStatus === 'anchor');
-
-                // 强制重绘卡片以保证进度条和 UI 绝对同步
-                if (typeof renderResultCard === 'function') {
-                    renderResultCard(currentTask);
-                    // 剥离进场动画，防止保存时卡片闪烁
-                    const cardEl = document.getElementById('resultCard');
-                    if (cardEl) cardEl.style.animation = 'none'; 
-
-                    // 🚨 核心时序修复：如果重绘前是进行中状态，强行调用 setCardAsAnchor 恢复
-                    if (wasAnchor) {
-                        if (typeof setCardAsAnchor === 'function') {
-                            // 传入 true，代表 keepTime = true，完美继承原有时间戳，不会从0开始
-                            setCardAsAnchor(true); 
+                // 只更新进度提示行，不刷新整个卡片
+                const progressEl = document.getElementById('rProgress');
+                if (progressEl) {
+                    let progressHtml = "";
+                    const hasBookmark = currentTask.bookmarkText && currentTask.bookmarkText.trim();
+                    const hasTotal = currentTask.totalMinutes && currentTask.totalMinutes > 0;
+                    
+                    if (hasBookmark || hasTotal) {
+                        if (hasBookmark) {
+                            progressHtml += `🔖 ${currentTask.bookmarkText}`;
+                        }
+                        if (hasBookmark && hasTotal) {
+                            progressHtml += " · ";
+                        }
+                        if (hasTotal) {
+                            const totalMins = currentTask.totalMinutes;
+                            let timeDisplay = "";
+                            if (totalMins < 60) {
+                                timeDisplay = `${totalMins}m`;
+                            } else {
+                                const hours = Math.floor(totalMins / 60);
+                                const mins = totalMins % 60;
+                                timeDisplay = mins > 0 ? `${hours}h${mins}m` : `${hours}h`;
+                            }
+                            progressHtml += `⏱ 总计 ${timeDisplay}`;
                         }
                     }
+                    progressEl.innerHTML = progressHtml;
                 }
             }
             
@@ -10448,11 +9893,12 @@ function openRitual(type) {
             for (let i = 0; i < dailyLog.length; i++) {
                 const log = dailyLog[i];
                 if (log.date === todayStr && log.taskId === task.id) {
-                    // 更新记忆数据到历史记录（仅同步书签与备注快照，保留原始时间快照）
-                    log.bookmarkSnapshot = task.bookmarkText
-                        ? (task.bookmarkTotal ? task.bookmarkText + ' / ' + task.bookmarkTotal : task.bookmarkText)
-                        : '';
+                    // 更新记忆数据到历史记录
+                    log.bookmarkSnapshot = task.bookmarkText || '';
                     log.noteSnapshot = task.noteText || '';
+                    if (task.lastAddMinutes && task.lastAddMinutes > 0) {
+                        log.lastAddMinutes = task.lastAddMinutes;
+                    }
                     save();
                     renderHistory();
                     break;
@@ -10694,7 +10140,7 @@ function openRitual(type) {
             t = 'culture';
         }
         // 运动相关
-        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操') || v.includes('帕梅拉') || v.includes('瑜伽') || v.includes('健身') || v.includes('练')) {
+        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操')) {
             t = 'sport';
         }
         // 买东西 / 出去办事
@@ -10746,15 +10192,6 @@ function openRitual(type) {
 
     toggleTimeInput(t);
 }
-
-    // 👉 v6.9.8: 实时联动生命周期下拉菜单
-    const recurSelect = document.getElementById('inpRecurrence');
-    if (recurSelect) {
-        if (trimmed.includes('每天') || trimmed.includes('每日')) recurSelect.value = 'daily';
-        else if (trimmed.includes('每周')) recurSelect.value = 'weekly';
-        else if (trimmed.includes('每月')) recurSelect.value = 'monthly';
-        else if (trimmed.includes('长期')) recurSelect.value = 'long_term';
-    }
 
     // === 5. 自动速办逻辑 ===
     // 只对“家务类关键词”触发，并且排除“整理照片”
@@ -10958,7 +10395,7 @@ if (!userOverrideFlash) {
 }
 
             // 升级清洗机：剥离动作前缀及多余的类别词，保持最终标题干净
-            const rawForSeries = title.replace(/^(去|看展|看|读|听|做|逛展|逛|赏|展览|欣赏|演出|文娱|观看|音乐剧|话剧|舞剧|歌剧|追)[:：\s]*/, '').trim();
+            const rawForSeries = title.replace(/^(去|看展|看|读|听|做|逛展|逛|赏|展览|欣赏|演出|文娱|观看|音乐剧|话剧|舞剧|歌剧)[:：\s]*/, '').trim();
 
             let isSeries = false;
             if (type === 'culture' && subtype === 'series') {
@@ -10999,25 +10436,9 @@ if (!userOverrideFlash) {
                 }
             }
 
-            // 👉 获取生命周期设定
-            const recurSelect = document.getElementById('inpRecurrence');
-            let recurrence = recurSelect ? recurSelect.value : 'none';
-
-            // 智能识别词典兜底
-            if (recurrence === 'none') {
-                if (title.includes('每天') || title.includes('每日')) recurrence = 'daily';
-                else if (title.includes('每周')) recurrence = 'weekly';
-                else if (title.includes('每月')) recurrence = 'monthly';
-                else if (title.includes('长期')) recurrence = 'long_term';
-            }
-
-            // 洗稿机：清洗掉周期前缀
-            if (recurrence !== 'none') {
-                title = title.replace(/每天|每日|每周|每月|长期[:：\s]*/g, '').trim();
-            }
-
-            // 👉 同步更新 UI 下拉菜单，给予用户视觉确认
-            if (recurSelect) recurSelect.value = recurrence;
+            let recurrence = switchState.cycle ? 'daily' : 'none';
+            if (recurrence === 'none' && (title.includes('每天') || title.includes('每日'))) { recurrence = 'daily'; }
+            if (recurrence === 'daily') title = title.replace(/每天|每日/g, '').trim();
 
             // 终极图标锁定：基于原始输入 (line) 判定，不受洗稿机影响，且绝对尊重用户的手动标签
             let finalIcon = null;
@@ -11041,18 +10462,13 @@ if (!userOverrideFlash) {
                     db[idx].time = timeVal;
                     db[idx].isFrog = isFrog;
                     db[idx].isQuick = isQuick;
-                    // 👉 核心修复：同步修改后的生命周期属性
-                    db[idx].recurrence = recurrence; 
-                    // 同步更新描述文案
-                    db[idx].desc = (recurrence === 'long_term') ? "长期任务" : 
-                                   (isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""));
                     if (finalIcon) db[idx].icon = finalIcon;
                 }
             } else {
                 db.push({
                     id: Date.now() + Math.floor(Math.random() * 10000),
                     title: title, type: type, subtype: subtype,
-                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "去行动吧" : ""),
+                    desc: isSeries ? "系列" : (recurrence === 'daily' ? "每日任务" : ""),
                     isSeries: isSeries, time: timeVal, recurrence: recurrence,
                     isFrog: isFrog, isQuick: isQuick, lastDone: '',
                     icon: finalIcon // 直接写入锁定图标，如果为 null，渲染时会 fallback
@@ -11068,9 +10484,6 @@ if (!userOverrideFlash) {
         document.getElementById('timeFeedback').innerText = ""; 
         if(switchState.cycle) toggleSwitch('cycle', false); 
         if(switchState.flash) toggleSwitch('flash', false); 
-        // 👉 v6.9.8: 提交成功后，强制复位生命周期下拉框，防止污染下一条任务
-        const recurSelect = document.getElementById('inpRecurrence');
-        if (recurSelect) recurSelect.value = 'none';
         editingTaskId = null;
         editingTaskOriginal = null;
         showToast(`🎉 存入 ${addedCount} 个任务！`); 
@@ -11084,20 +10497,13 @@ if (!userOverrideFlash) {
         } 
     }
        // 点击任务列表里的冰块：打开弹窗，后续具体操作在 confirmColdAction 里执行
-   function handleColdOrDelete(id) {
+    function handleColdOrDelete(id) {
         const item = db.find(t => t.id === id);
         if (!item) return;
         pendingColdId = id;
+
         const dlg = document.getElementById('coldDialog');
         if (dlg) {
-            const titleEl = dlg.querySelector('.cold-dialog-title');
-            if (titleEl) titleEl.innerText = "要怎么处理这条任务？";
-
-            const cancelBtn = dlg.querySelector('.cold-btn-cancel');
-            if (cancelBtn) {
-                cancelBtn.innerText = '🏆 归档';
-                cancelBtn.onclick = () => confirmColdAction('archive');
-            }
             dlg.style.display = 'flex';
         }
     }
@@ -11148,45 +10554,18 @@ if (!userOverrideFlash) {
             return;
         }
 
-        const item = db.find(t => t.id === id);
-        if (!item) return;
-
-        if (action === 'archive') {
-            // 专属于文化类任务的归档操作
-            const taskName = item.title || '该任务';
-            if (confirm(`确定已彻底完成【${taskName}】并将其移入荣誉殿堂吗？`)) {
-                db = db.filter(t => t.id !== id);
-                archive.unshift({ ...item, finishDate: new Date().toLocaleDateString() });
-                save(); renderList(); renderArchive();
-                if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
-                showToast("🏆 伟大里程碑！已收入荣誉殿堂");
-            }
-        } else if (action === 'cold') {
+        if (action === 'cold') {
             moveToColdStorage(id);
         } else if (action === 'delete') {
-            // 防呆设计：如果有记忆心血，强烈建议归档而不是删除
-            const hasMemory = (item.bookmarkText && item.bookmarkText.trim()) ||
-                              (item.totalMinutes && item.totalMinutes > 0) ||
-                              (item.noteText && item.noteText.trim());
-            if (hasMemory) {
-                const wantArchive = confirm("⚠️ 这条任务包含你记录的进度/时长/备注等心血。\n强烈建议将其【归档】至荣誉殿堂以保留记录。\n\n[确定] = 🏆 安全归档\n[取消] = 🗑️ 执意删除");
-                if (wantArchive) {
-                    db = db.filter(t => t.id !== id);
-                    archive.unshift({ ...item, finishDate: new Date().toLocaleDateString() });
-                    save(); renderList(); renderArchive();
-                    showToast("🏆 已为你安全归档至荣誉殿堂");
-                    return;
-                }
-            }
-            // 最终无情删除
             const ok = confirm("确定要彻底删除这条任务吗？\n此操作不可恢复。");
             if (ok) {
-                db = db.filter(t => t.id !== id);
-                save(); renderList();
+                db = db.filter(item => item.id !== id);
+                save();
+                renderList();
                 showToast("🗑️ 已删除");
             }
         } else {
-            return; // cancel
+            return;
         }
     }
 
@@ -11228,7 +10607,7 @@ if (!userOverrideFlash) {
 
     // 导入/导出逻辑保持原样
     // 【备份导出/导入升级 v6.8-backup】executeImport: 支持新版格式并兼容旧版，显示选择对话框
-    function executeImport(isCloud = false) {
+    function executeImport() {
         const str = document.getElementById('dataArea').value;
         if (!str || str.trim().length === 0) { alert("⚠️ 请先粘贴代码！"); return; }
         try {
@@ -11312,23 +10691,17 @@ if (!userOverrideFlash) {
                 hasUsername
             };
             
-            // 显示选择对话框（云端场景改为更客观的数据统计陈述）
-            const titleEl = document.getElementById('backupDialogTitle');
-            if (titleEl) {
-                if (isCloud) {
-                    let dialogTitle = `☁️ 云端数据已就绪<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">检测到云端有 ${taskCount} 个任务`;
-                    if (archiveCount > 0) dialogTitle += `、${archiveCount} 个归档`;
-                    if (logCount > 0) dialogTitle += `、${logCount} 条足迹`;
-                    dialogTitle += `。</span>`;
-                    titleEl.innerHTML = dialogTitle;
-                } else {
-                    titleEl.innerHTML = `选择导入方式<br><span style="font-size:0.8rem; font-weight:normal; color:#666;">解析到 ${taskCount} 个任务、${archiveCount} 个归档、${logCount} 条足迹</span>`;
-                }
+            // 显示选择对话框
+            let dialogTitle = `📡 找到 ${taskCount} 个任务`;
+            if (archiveCount > 0) dialogTitle += `、${archiveCount} 个归档`;
+            if (logCount > 0) dialogTitle += `、${logCount} 条足迹`;
+            if (hasLocalData) dialogTitle += `\n以及仪式、打卡与专属清单数据`;
+            dialogTitle += `\n\n请选择导入方式：`;
+            
+            const titleElement = document.getElementById('backupDialogTitle');
+            if (titleElement) {
+                titleElement.textContent = dialogTitle;
             }
-
-            // 顺手优化一下合并按钮的文案
-            const mergeBtn = document.querySelector('.backup-btn-merge');
-            if (mergeBtn) mergeBtn.innerText = isCloud ? '🔀 增量合并 (推荐)' : '🔀 合并 (推荐)';
             
             const dialog = document.getElementById('backupDialog');
             if (dialog) {
@@ -11741,6 +11114,11 @@ if (!userOverrideFlash) {
       renderPlaylistEditor();
     }
 
+    // 智能传送门入口：跳转到 03 区档案柜的新建清单兵工厂
+    function shortcutToNewPlaylist() {
+      openPlaylistEditor();
+    }
+
     function updatePlaylistData(index, field, value) {
       if (!customPlaylists[index]) return;
       // 👉 处理图标更新，如果用户清空了，兜底用 📑
@@ -11762,7 +11140,7 @@ if (!userOverrideFlash) {
       const sel = document.getElementById('selPlaylist');
       if (!sel) return;
       const oldVal = sel.value;
-      sel.innerHTML = '<option value="">🔮 --- 默认 (不限定清单) ---</option>';
+      sel.innerHTML = '<option value="">🔮 不限定清单 (全域抽卡)</option>';
       customPlaylists.forEach(pl => {
         // v6.9.5：严禁被冷冻的清单进入抽卡筛选器
         if (pl.inColdStorage === true) return;
@@ -11941,20 +11319,11 @@ if (!userOverrideFlash) {
 
       try {
         const payload = getBackupDataObj();
-        // 携带通行证进行同步
         const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Anchor-Auth': currentPassword || ''
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
-        if (res.status === 403 || res.status === 401) {
-          showToast("🔒 密码错误或无权限覆盖该身份的数据！");
-          return;
-        }
 
         if (res.ok) {
           showToast("☁️ 已成功同步到云端！");
@@ -11963,7 +11332,7 @@ if (!userOverrideFlash) {
         }
       } catch(e) {
         console.error(e);
-        showToast("⚠️ 无法连接到本地服务器，大姐可能下班了");
+        showToast("⚠️ 无法连接到本地服务器，大爷可能下班了");
       } finally {
         if(btn) btn.innerText = "☁️ 推送当前进度至云端";
       }
@@ -11979,18 +11348,7 @@ if (!userOverrideFlash) {
       if(btn) btn.innerText = "☁️ 拉取中...";
 
       try {
-        // 携带通行证拉取数据
-        const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
-          headers: {
-            'X-Anchor-Auth': currentPassword || ''
-          }
-        });
-
-        if (res.status === 403 || res.status === 401) {
-          showToast("🔒 密码错误，无法拉取该身份的数据！");
-          return;
-        }
-
+        const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`);
         const json = await res.json();
 
         if (Object.keys(json).length === 0) {
@@ -12002,7 +11360,7 @@ if (!userOverrideFlash) {
         const dataArea = document.getElementById('dataArea');
         if(dataArea) {
           dataArea.value = JSON.stringify(json, null, 2);
-          executeImport(true); // 这会弹出现有的“覆盖 / 合并”极度安全的对话框
+          executeImport(); // 这会弹出现有的“覆盖 / 合并”极度安全的对话框
         }
       } catch(e) {
         console.error(e);
@@ -12010,77 +11368,6 @@ if (!userOverrideFlash) {
       } finally {
         if(btn) btn.innerText = "☁️ 从云端拉取存档";
       }
-    }
-
-    // 👉 v6.9.9：静默处理云端收件箱 (Inbox Auto-Digestion - 工业级防崩溃版)
-    async function processCloudInbox() {
-        if (!currentUsername || currentUsername === 'Anchor') return;
-        if (typeof CLOUD_API_BASE === 'undefined') return;
-
-        try {
-            const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
-                headers: { 'X-Anchor-Auth': currentPassword || '' }
-            });
-            if (!res.ok) {
-                console.warn("📥 云端收件箱拉取被拦截，状态码:", res.status);
-                return;
-            }
-            const json = await res.json();
-
-            if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
-                console.log(`📥 发现 ${json.inbox.length} 条收件箱任务，准备消化...`);
-                const inp = document.getElementById('inpTitle');
-                const originalVal = inp ? inp.value : '';
-
-                // 记录原始的弹窗函数
-                const originalShowToast = window.showToast;
-
-                // 核心防御罩：无论内部发生什么崩溃，必须保证喇叭被还原
-                try {
-                    window.showToast = function() {}; // 临时捂住喇叭
-
-                    json.inbox.forEach(taskText => {
-                        if (inp) {
-                            // 强制清除上一轮 UI 状态残影
-                            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-                            const defaultTag = document.querySelector('.tag[data-v="indoor"]');
-                            if (defaultTag) defaultTag.classList.add('active'); // 兜底归位到“室内”
-                            if (typeof toggleSwitch === 'function') {
-                                toggleSwitch('cycle', false);
-                                toggleSwitch('flash', false);
-                            }
-                            inp.value = taskText;
-                            if (typeof autoTag === 'function') autoTag(); 
-                            if (typeof addNew === 'function') addNew(); 
-                        }
-                    });
-                } finally {
-                    // 💥 绝对铁律：即使上面的 forEach 报错崩溃，这里也一定会执行！
-                    window.showToast = originalShowToast;
-                    if (inp) inp.value = originalVal;
-                }
-
-                // 弹出一个优雅的总提示
-                if (typeof showToast === 'function') {
-                    showToast(`📥 收到 ${json.inbox.length} 条云端灵感，已自动整理入库！`);
-                }
-
-                // 阅后即焚：将包含最新 db 的数据静默推送给后端以清空 inbox
-                if (typeof getBackupDataObj === 'function') {
-                    const payload = getBackupDataObj();
-                    await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-Anchor-Auth': currentPassword || ''
-                        },
-                        body: JSON.stringify(payload)
-                    });
-                }
-            }
-        } catch (e) {
-            console.error("📥 处理云端收件箱时发生底层网络错误:", e);
-        }
     }
 
     // 根据 APP_VARIANT 调整 UI（personal / common）
@@ -12147,7 +11434,7 @@ function initOnboarding() {
       {
         // Step 2：任务输入区
         targetId: 'inpTitle',
-        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：大项目可使用下方的📦「任务清单」)</span>'
+        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：大项目可使用右上方✂️「专属清单」)</span>'
       },
       {
         // Step 3 (新增)：高亮能量药丸与筛选区
@@ -12489,53 +11776,40 @@ document.addEventListener("DOMContentLoaded", function() {
     // Why: addNew() 依赖 db 和 DOM 输入框；setEnergyMode() 依赖能量药丸 UI；
     //      必须等所有初始化完成后才能安全调用。
     handleUrlRouting();
-
-    // v6.9.9：页面加载完毕后，静默检查并消化收件箱 (解除版本隔离)
-    setTimeout(() => {
-        if (typeof processCloudInbox === 'function') {
-            processCloudInbox();
-        }
-    }, 1500); 
 });
 
-// v6.9.7 升级：异步唤起时间收割弹窗，并支持顺手修改当前进度
-function openHarvestDialogAsync(defaultMins, task = null) {
+// v6.9.X：异步唤起时间收割弹窗
+function openHarvestDialogAsync(defaultMins) {
     return new Promise(resolve => {
         const dlg = document.getElementById('harvestDialog');
-        if (!dlg) { resolve({ mins: defaultMins, bookmark: null }); return; }
-        
         const selH = document.getElementById('harvestH');
         const selM = document.getElementById('harvestM');
-        const bookmarkInput = document.getElementById('harvestBookmark');
-        
+
+        if (!dlg || !selH || !selM) {
+            resolve(0);
+            return;
+        }
+
         selH.innerHTML = '';
         selM.innerHTML = '';
-        for(let i=0; i<24; i++) selH.add(new Option(i+'h', i));
-        // 👉 v6.9.7：分钟选项强制补全两位数，如 01m, 02m
-        for(let i=0; i<60; i++) selM.add(new Option(i.toString().padStart(2,'0') + 'm', i));
-        
+        for (let i = 0; i <= 23; i++) selH.innerHTML += `<option value="${i}">${i}h</option>`;
+        for (let i = 0; i <= 59; i++) selM.innerHTML += `<option value="${i}">${i.toString().padStart(2, '0')}m</option>`;
+
         selH.value = Math.floor(defaultMins / 60);
         selM.value = defaultMins % 60;
-        
-        // 自动填入当前书签进度
-        if (bookmarkInput) {
-            bookmarkInput.value = (task && task.bookmarkText) ? task.bookmarkText : '';
-        }
 
         const msgEl = document.getElementById('harvestMsg');
         if (msgEl) {
-            msgEl.innerText = defaultMins > 180 
+            msgEl.innerText = defaultMins > 180
                 ? `似乎挂机了 ${Math.floor(defaultMins/60)} 小时😅 请手动修正：`
                 : `本次专注了 ${defaultMins} 分钟，要存入记忆吗？`;
         }
-        
+
         dlg.style.display = 'flex';
-        
+
         window._resolveHarvest = (val) => {
             dlg.style.display = 'none';
-            const finalMins = val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0;
-            const finalBookmark = (val === -1 && bookmarkInput) ? bookmarkInput.value.trim() : null;
-            resolve({ mins: finalMins, bookmark: finalBookmark });
+            resolve(val === -1 ? (parseInt(selH.value, 10) * 60 + parseInt(selM.value, 10)) : 0);
         };
     });
 }
@@ -12725,15 +11999,6 @@ function lobbyEnter(action) {
     }, 300);
 }
 
-// 👉 v6.9.9：PWA 后台切回前台时，自动触发云端收件箱检查
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-        if (typeof processCloudInbox === 'function') {
-            processCloudInbox();
-        }
-    }
-});
-
 </script>
     <!-- 每日打卡图弹窗（默认隐藏）；点击遮罩/图片外任意处关闭 -->
     <div id="dailyPosterOverlay" class="daily-poster-overlay" onclick="if(event.target===this)closeDailyPoster()">
@@ -12792,14 +12057,9 @@ document.addEventListener('visibilitychange', () => {
                 <select id="harvestH" class="memory-time-select" style="font-size:1.1rem; padding:8px 12px;"></select> <span style="font-weight:bold;">:</span>
                 <select id="harvestM" class="memory-time-select" style="font-size:1.1rem; padding:8px 12px;"></select>
             </div>
-            <!-- 👉 v6.9.7 新增：顺手更新进度 -->
-            <div id="harvestBookmarkZone" style="margin-bottom:20px; display:flex; justify-content:center; align-items:center; gap:8px;">
-                <span style="font-size:0.85rem; color:#777; font-weight:500;">🔖 进度:</span>
-                <input type="text" id="harvestBookmark" placeholder="当前(如P135, 选填)" style="flex:1; max-width:60%; padding:8px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;" />
-            </div>
             <div class="cold-dialog-buttons">
                 <button type="button" class="cold-btn-cancel" onclick="window._resolveHarvest(0)">不记录</button>
-                <button type="button" class="backup-btn-merge" onclick="window._resolveHarvest(-1)" style="background:#d3f3d6; color:#2d6a3a; font-weight:bold;">💾 存入记忆</button>
+                <button type="button" class="backup-btn-merge" onclick="window._resolveHarvest(-1)" style="background:#d3f3d6; color:#2d6a3a; font-weight:bold;">💾 存为时长</button>
             </div>
         </div>
     </div>
