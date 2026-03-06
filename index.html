@@ -10694,7 +10694,7 @@ function openRitual(type) {
             t = 'culture';
         }
         // 运动相关
-        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操')) {
+        else if (v.includes('动') || v.includes('跑') || v.includes('球') || v.includes('舞') || v.includes('操') || v.includes('帕梅拉') || v.includes('瑜伽') || v.includes('健身') || v.includes('练')) {
             t = 'sport';
         }
         // 买东西 / 出去办事
@@ -12034,15 +12034,24 @@ if (!userOverrideFlash) {
                 const originalShowToast = window.showToast;
                 window.showToast = function() {}; 
 
-                // 3. 借用现有的洗稿机和分类器处理每一条信件
-                json.inbox.forEach(taskText => {
-                    if (inp) {
-                        inp.value = taskText;
-                        // 👉 核心修复：在入库前，强制触发智能大脑识别标签
-                        if (typeof autoTag === 'function') autoTag(); 
-                        if (typeof addNew === 'function') addNew(); 
+            // 3. 借用现有的洗稿机和分类器处理每一条信件
+            json.inbox.forEach(taskText => {
+                if (inp) {
+                    // 👉 核心修复：每次处理新任务前，强制清除上一轮的 UI 状态残影
+                    document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                    const defaultTag = document.querySelector('.tag[data-v="indoor"]');
+                    if (defaultTag) defaultTag.classList.add('active'); // 兜底归位到“室内”
+                    if (typeof toggleSwitch === 'function') {
+                        toggleSwitch('cycle', false);
+                        toggleSwitch('flash', false);
                     }
-                });
+
+                    inp.value = taskText;
+                    // 调用现有的新增逻辑
+                    if (typeof autoTag === 'function') autoTag(); 
+                    if (typeof addNew === 'function') addNew(); 
+                }
+            });
 
                 // 恢复喇叭和输入框
                 window.showToast = originalShowToast;
