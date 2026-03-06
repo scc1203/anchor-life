@@ -12012,58 +12012,60 @@ if (!userOverrideFlash) {
       }
     }
 
-    // 👉 v6.9.9：静默处理云端收件箱 (Inbox Auto-Digestion)
+    // 👉 v6.9.9：静默处理云端收件箱 (Inbox Auto-Digestion - 工业级防崩溃版)
     async function processCloudInbox() {
         if (!currentUsername || currentUsername === 'Anchor') return;
         if (typeof CLOUD_API_BASE === 'undefined') return;
 
         try {
-            // 1. 静默拉取云端数据看是否有信件
             const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
                 headers: { 'X-Anchor-Auth': currentPassword || '' }
             });
-            if (!res.ok) return;
+            if (!res.ok) {
+                console.warn("📥 云端收件箱拉取被拦截，状态码:", res.status);
+                return;
+            }
             const json = await res.json();
 
-            // 2. 检查是否存在 inbox 且有内容
             if (json.inbox && Array.isArray(json.inbox) && json.inbox.length > 0) {
+                console.log(`📥 发现 ${json.inbox.length} 条收件箱任务，准备消化...`);
                 const inp = document.getElementById('inpTitle');
                 const originalVal = inp ? inp.value : '';
 
-                // 临时捂住喇叭：替换原有的 showToast，防止 addNew 循环时疯狂弹窗
+                // 记录原始的弹窗函数
                 const originalShowToast = window.showToast;
-                window.showToast = function() {}; 
 
-            // 3. 借用现有的洗稿机和分类器处理每一条信件
-            json.inbox.forEach(taskText => {
-                if (inp) {
-                    // 👉 核心修复：每次处理新任务前，强制清除上一轮的 UI 状态残影
-                    document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
-                    const defaultTag = document.querySelector('.tag[data-v="indoor"]');
-                    if (defaultTag) defaultTag.classList.add('active'); // 兜底归位到“室内”
-                    if (typeof toggleSwitch === 'function') {
-                        toggleSwitch('cycle', false);
-                        toggleSwitch('flash', false);
-                    }
+                // 核心防御罩：无论内部发生什么崩溃，必须保证喇叭被还原
+                try {
+                    window.showToast = function() {}; // 临时捂住喇叭
 
-                    inp.value = taskText;
-                    // 调用现有的新增逻辑
-                    if (typeof autoTag === 'function') autoTag(); 
-                    if (typeof addNew === 'function') addNew(); 
+                    json.inbox.forEach(taskText => {
+                        if (inp) {
+                            // 强制清除上一轮 UI 状态残影
+                            document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+                            const defaultTag = document.querySelector('.tag[data-v="indoor"]');
+                            if (defaultTag) defaultTag.classList.add('active'); // 兜底归位到“室内”
+                            if (typeof toggleSwitch === 'function') {
+                                toggleSwitch('cycle', false);
+                                toggleSwitch('flash', false);
+                            }
+                            inp.value = taskText;
+                            if (typeof autoTag === 'function') autoTag(); 
+                            if (typeof addNew === 'function') addNew(); 
+                        }
+                    });
+                } finally {
+                    // 💥 绝对铁律：即使上面的 forEach 报错崩溃，这里也一定会执行！
+                    window.showToast = originalShowToast;
+                    if (inp) inp.value = originalVal;
                 }
-            });
 
-                // 恢复喇叭和输入框
-                window.showToast = originalShowToast;
-                if (inp) inp.value = originalVal;
-
-                // 4. 弹出一个优雅的总提示
+                // 弹出一个优雅的总提示
                 if (typeof showToast === 'function') {
                     showToast(`📥 收到 ${json.inbox.length} 条云端灵感，已自动整理入库！`);
                 }
 
-                // 5. 阅后即焚：将包含最新 db 的数据静默推送给后端
-                // 因为 getBackupDataObj() 产生的 payload 不包含 inbox，推送覆盖后自然清空了后端的 inbox
+                // 阅后即焚：将包含最新 db 的数据静默推送给后端以清空 inbox
                 if (typeof getBackupDataObj === 'function') {
                     const payload = getBackupDataObj();
                     await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
@@ -12077,7 +12079,7 @@ if (!userOverrideFlash) {
                 }
             }
         } catch (e) {
-            console.warn("📥 检查云端收件箱时未响应，静默跳过", e);
+            console.error("📥 处理云端收件箱时发生底层网络错误:", e);
         }
     }
 
@@ -12488,12 +12490,12 @@ document.addEventListener("DOMContentLoaded", function() {
     //      必须等所有初始化完成后才能安全调用。
     handleUrlRouting();
 
-    // v6.9.9：页面加载完毕后，静默检查并消化收件箱
-    if (APP_VARIANT === 'personal' || APP_VARIANT === 'common') {
-        setTimeout(() => {
+    // v6.9.9：页面加载完毕后，静默检查并消化收件箱 (解除版本隔离)
+    setTimeout(() => {
+        if (typeof processCloudInbox === 'function') {
             processCloudInbox();
-        }, 1500); // 延迟 1.5 秒执行，让出页面的首屏渲染性能
-    }
+        }
+    }, 1500); 
 });
 
 // v6.9.7 升级：异步唤起时间收割弹窗，并支持顺手修改当前进度
@@ -12725,7 +12727,7 @@ function lobbyEnter(action) {
 
 // 👉 v6.9.9：PWA 后台切回前台时，自动触发云端收件箱检查
 document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && (APP_VARIANT === 'personal' || APP_VARIANT === 'common')) {
+    if (document.visibilityState === 'visible') {
         if (typeof processCloudInbox === 'function') {
             processCloudInbox();
         }
