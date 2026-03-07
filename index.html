@@ -3185,6 +3185,9 @@ body.immersive-locked {
                         <option value="50">50</option>
                         <option value="55">55</option>
                     </select>
+                    <span id="memoryTimeLockHint" style="display:none; color:#e65100; font-size:0.75rem; margin-left:8px; font-weight:bold;">
+                        ⏱️ 专注中，时长由系统结算
+                    </span>
                 </div>
             </div>
             
@@ -10321,6 +10324,12 @@ function openRitual(type) {
         }
         if (hoursSelect) hoursSelect.value = '0';
         if (minutesSelect) minutesSelect.value = '0';
+        // 👉 核心逻辑：判断当前任务是否正在舞台上计时 (ING 状态)
+        const isCurrentlyTicking = (typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
+        if (hoursSelect) hoursSelect.disabled = isCurrentlyTicking;
+        if (minutesSelect) minutesSelect.disabled = isCurrentlyTicking;
+        const lockHint = document.getElementById('memoryTimeLockHint');
+        if (lockHint) lockHint.style.display = isCurrentlyTicking ? 'inline-block' : 'none';
         if (noteTextarea) noteTextarea.value = task.noteText || '';
 
         // 显示/隐藏清空按钮
@@ -10403,6 +10412,7 @@ function openRitual(type) {
         // 1. 保存书签（覆盖式）
         const newBookmark = bookmarkInput.value.trim();
         const newTotal = totalInput ? totalInput.value.trim() : '';
+        const newNote = noteTextarea.value.trim();
         
         if (newBookmark !== memoryOriginalState.bookmarkText || newTotal !== memoryOriginalState.bookmarkTotal) {
             task.bookmarkText = newBookmark;
@@ -10416,19 +10426,38 @@ function openRitual(type) {
         const minutes = parseInt(minutesSelect.value) || 0;
         const addMinutes = hours * 60 + minutes;
         
+        // 👉 核心判断：是否处于补录状态（增加了时间，且当前任务没在舞台上计时）
+        const isCurrentlyTicking = (typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
+
         if (addMinutes > 0) {
             task.totalMinutes = (task.totalMinutes || 0) + addMinutes;
             task.lastAddMinutes = addMinutes;
             task.totalUpdatedAt = Date.now();
             hasChanges = true;
-            
-            // 重置选择器
-            hoursSelect.value = '0';
-            minutesSelect.value = '0';
+
+            // 如果是事后补录，主动向今日足迹发射一条记录
+            if (!isCurrentlyTicking) {
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                const anchorDateStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : now).toDateString();
+                if (typeof dailyLog !== 'undefined' && Array.isArray(dailyLog)) {
+                    dailyLog.unshift({
+                        id: Date.now(),
+                        title: `[补录] ${task.title}`,
+                        icon: task.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(task) : '📝'),
+                        timeStr: timeStr,
+                        date: anchorDateStr,
+                        done: true,
+                        taskId: task.id,
+                        bookmarkSnapshot: newBookmark || task.bookmarkText || '',
+                        noteSnapshot: newNote || task.noteText || '',
+                        lastAddMinutes: addMinutes
+                    });
+                }
+            }
         }
 
         // 3. 保存备注（覆盖式）
-        const newNote = noteTextarea.value.trim();
         if (newNote !== memoryOriginalState.noteText) {
             if (newNote) {
                 task.noteText = newNote;
@@ -10439,68 +10468,25 @@ function openRitual(type) {
         }
 
         if (hasChanges) {
-            save();
-            // 更新 currentTask 如果它是同一个任务（同步到防丢装甲，并强制重绘卡片）
-            if (currentTask && currentTask.id === task.id) {
-                // 同步记忆数据到 currentTask
+            if (typeof save === 'function') save(); // 🚨 绝对铁律：强制落盘
+
+            // 更新 currentTask（如果恰好是同一个任务）
+            if (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id) {
                 currentTask.bookmarkText = task.bookmarkText;
-                currentTask.bookmarkTotal = task.bookmarkTotal; // 补充同步目标
                 currentTask.bookmarkUpdatedAt = task.bookmarkUpdatedAt;
                 currentTask.totalMinutes = task.totalMinutes;
                 currentTask.lastAddMinutes = task.lastAddMinutes;
                 currentTask.totalUpdatedAt = task.totalUpdatedAt;
                 currentTask.noteText = task.noteText;
                 currentTask.noteUpdatedAt = task.noteUpdatedAt;
-
-                // 👉 v6.9.7 修复状态丢失：将新数据同步到“防丢装甲”中
-                if (currentStatus === 'anchor' && typeof KEY_LIVE_STATE !== 'undefined' && typeof anchorStartTime !== 'undefined') {
-                    localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
-                        task: currentTask,
-                        startTime: anchorStartTime,
-                        activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
-                    }));
-                }
-                
-                // 🚨 核心时序修复：在强制重绘之前，先“缓存”当前是否处于进行中状态
-                // 因为 renderResultCard 内部会无条件将 currentStatus 重置为 'suggest'
-                const wasAnchor = (currentStatus === 'anchor');
-
-                // 强制重绘卡片以保证进度条和 UI 绝对同步
-                if (typeof renderResultCard === 'function') {
-                    renderResultCard(currentTask);
-                    // 剥离进场动画，防止保存时卡片闪烁
-                    const cardEl = document.getElementById('resultCard');
-                    if (cardEl) cardEl.style.animation = 'none'; 
-
-                    // 🚨 核心时序修复：如果重绘前是进行中状态，强行调用 setCardAsAnchor 恢复
-                    if (wasAnchor) {
-                        if (typeof setCardAsAnchor === 'function') {
-                            // 传入 true，代表 keepTime = true，完美继承原有时间戳，不会从0开始
-                            setCardAsAnchor(true); 
-                        }
-                    }
-                }
+                // 刷新结果卡的进度提示行
+                if (typeof renderResultCard === 'function') renderResultCard(currentTask);
             }
-            
-            // v6.5：更新历史记录中的记忆数据（如果任务已经有历史记录）
-            const todayStr = getAnchorDate().toDateString();
-            for (let i = 0; i < dailyLog.length; i++) {
-                const log = dailyLog[i];
-                if (log.date === todayStr && log.taskId === task.id) {
-                    // 更新记忆数据到历史记录（仅同步书签与备注快照，保留原始时间快照）
-                    log.bookmarkSnapshot = task.bookmarkText
-                        ? (task.bookmarkTotal ? task.bookmarkText + ' / ' + task.bookmarkTotal : task.bookmarkText)
-                        : '';
-                    log.noteSnapshot = task.noteText || '';
-                    save();
-                    renderHistory();
-                    break;
-                }
-            }
-            
-            // 更新列表显示
-            renderList();
-            showToast("✅ 记忆已保存");
+
+            if (typeof renderList === 'function') renderList();
+            if (typeof renderLog === 'function') renderLog();         // 刷新足迹
+            if (typeof renderHistory === 'function') renderHistory(); // 刷新历史记录
+            if (typeof showToast === 'function') showToast("✅ 记忆与足迹已安全保存");
         }
 
         closeMemoryPanel();
