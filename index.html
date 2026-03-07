@@ -7435,14 +7435,50 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (cntEl) cntEl.innerText = count;
     }
 
-    // v6.3-edit-buttons-enter：删除今日足迹记录（与荣誉殿堂一致，二次确认）
+    // v6.3-edit-buttons-enter：删除今日足迹记录（支持智能撤销时长）
     function deleteLogEntry(idx) {
         if (idx < 0 || idx >= dailyLog.length) return;
+        const log = dailyLog[idx];
+
+        // 1. 第一层确认：是否删除足迹
         if (!confirm("确定从今日足迹删除这条记录吗？")) return;
+
+        // 2. 第二层智能拦截：如果这条足迹包含了新增时长，询问是否连带撤销
+        if (log.taskId && log.lastAddMinutes && log.lastAddMinutes > 0) {
+            const wantDeduct = confirm(`⚠️ 这条记录包含了 ⏱ ${log.lastAddMinutes} 分钟的投入时长。\n\n是否要同时从该任务的总时长中【撤销】这部分时间？\n\n[确定] = 连同总时长一起扣除\n[取消] = 仅删除足迹，保留总时长`);
+
+            if (wantDeduct) {
+                // 全域追踪：先去任务库找
+                let targetTask = db.find(t => t.id === log.taskId);
+                let foundIn = 'db';
+
+                // 如果任务库找不到，去荣誉殿堂找（可能刚被归档）
+                if (!targetTask) {
+                    targetTask = archive.find(t => t.id === log.taskId);
+                    foundIn = 'archive';
+                }
+
+                if (targetTask) {
+                    // 执行撤销：总时长减去当次新增，确保不小于0
+                    targetTask.totalMinutes = Math.max(0, (targetTask.totalMinutes || 0) - log.lastAddMinutes);
+                    targetTask.totalUpdatedAt = Date.now();
+                    if (typeof showToast === 'function') showToast(`↩️ 已撤销 ${log.lastAddMinutes} 分钟专注时长`);
+
+                    // 如果当时是最后一次添加，撤销后可以把 lastAddMinutes 清空或减去，这里简单置空以防误导
+                    if (targetTask.lastAddMinutes === log.lastAddMinutes) {
+                        targetTask.lastAddMinutes = 0;
+                    }
+                }
+            }
+        }
+
+        // 3. 执行删除足迹与保存刷新
         dailyLog.splice(idx, 1);
-        save();
-        renderLog();
-        renderHistory();
+        if (typeof save === 'function') save();
+        if (typeof renderLog === 'function') renderLog();
+        if (typeof renderHistory === 'function') renderHistory();
+        if (typeof renderList === 'function') renderList(); // 刷新主列表，更新可能的记忆小圆点
+        if (typeof renderArchive === 'function') renderArchive(); // 刷新荣誉殿堂（如果时间被扣除了）
     }
 
     function renderHistory() {
