@@ -12823,7 +12823,7 @@ function saveDailyPoster() {
     const padX = w * 0.05;
     let currentY = h - (w * 0.05);
 
-    const subFontSize = Math.round(w * 0.021);
+    const subFontSize = Math.round(w * 0.024);
     ctx.font = `${subFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.textAlign = 'left';
@@ -12832,11 +12832,11 @@ function saveDailyPoster() {
     currentY -= (subFontSize + w * 0.022);
 
     let statsTexts = [];
-    if (chkCount && elCount && elCount.textContent) statsTexts.push(elCount.textContent);
     if (chkFlow && elFlow && elFlow.textContent) statsTexts.push(elFlow.textContent);
+    if (chkCount && elCount && elCount.textContent) statsTexts.push(elCount.textContent);
 
     if (statsTexts.length > 0) {
-      const statFontSize = Math.round(w * 0.024);
+      const statFontSize = Math.round(w * 0.028);
       ctx.font = `${statFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       const combinedStats = statsTexts.join('  |  ');
@@ -12846,7 +12846,7 @@ function saveDailyPoster() {
 
     currentY -= w * 0.005;
 
-    const dayFontSize = Math.round(w * 0.034);
+    const dayFontSize = Math.round(w * 0.038);
     ctx.font = `bold ${dayFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
 
     const titleWidth = ctx.measureText(dayText).width;
@@ -13012,11 +13012,11 @@ document.addEventListener('visibilitychange', () => {
             <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.4); margin: 6px 0 4px;"></div>
         </div>
 
-        <!-- 统计数据区 (合并为单行：锚点在前，心流在后) -->
+        <!-- 统计数据区 (合并为单行：心流在前，锚点在后) -->
         <div id="posterPreviewStats" style="display:none; flex-direction:row; align-items:center; flex-wrap:wrap; margin-bottom: 6px; font-size:0.7rem; opacity:0.95;">
-            <span id="previewAnchorCount" style="display:none;">📍 今日点亮了 0 个生活锚点</span>
-            <span id="previewDivider" style="display:none; margin: 0 6px; color:rgba(255,255,255,0.4);">|</span>
             <span id="previewFlowTime" style="display:none;">🌊 心流沉浸 0h 0m</span>
+            <span id="previewDivider" style="display:none; margin: 0 6px; color:rgba(255,255,255,0.4);">|</span>
+            <span id="previewAnchorCount" style="display:none;">📍 今日点亮了 0 个生活锚点</span>
         </div>
 
         <div class="daily-poster-subline" id="dailyPosterDate">
