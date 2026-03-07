@@ -7537,7 +7537,12 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 //      快照字段（bookmarkSnapshot / noteSnapshot / lastAddMinutes）
                 //      在 completeTaskCore / changeTask 等写入 dailyLog 时已经保存，
                 //      这里只需直接读取，不再查询 db。
-                const displayBookmark = (log.bookmarkSnapshot && log.bookmarkSnapshot.trim()) ? log.bookmarkSnapshot : null;
+                let displayBookmark = (log.bookmarkSnapshot && log.bookmarkSnapshot.trim()) ? log.bookmarkSnapshot : null;
+                const targetSnap = (log.targetProgressSnapshot || '').trim();
+                // 智能防重叠：如果原书签中已经包含斜杠，则不再强行拼接目标进度
+                if (displayBookmark && targetSnap && !displayBookmark.includes('/')) {
+                    displayBookmark = displayBookmark + ' / ' + targetSnap;
+                }
                 const displayNote = (log.noteSnapshot && log.noteSnapshot.trim()) ? log.noteSnapshot : null;
                 const displayLastAddMinutes = (log.lastAddMinutes && log.lastAddMinutes > 0) ? log.lastAddMinutes : null;
                 
@@ -7710,7 +7715,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const timeNote = log.timeStr ? `<span style="color:#aaa; font-size:0.75rem; margin-left:4px;">${log.timeStr}</span>` : '';
         let snapshot = '';
         if (log.bookmarkSnapshot || log.lastAddMinutes) {
-          const b = log.bookmarkSnapshot || '';
+          let b = (log.bookmarkSnapshot || '').trim();
+          const tSnap = (log.targetProgressSnapshot || '').trim();
+          if (b && tSnap && !b.includes('/')) {
+            b = b + ' / ' + tSnap;
+          }
           const t = log.lastAddMinutes ? `${log.lastAddMinutes}m` : '';
           let inner = '';
           if (b && t) {
@@ -8007,7 +8016,11 @@ function renderResultCard(result) {
                 if (hasBookmark || hasTotal || hasCount) {
                     // 第一行：书签与马卡龙进度条
                     if (hasBookmark) {
-                        progressHtml += `<div style="margin-bottom:6px;">🔖 当前进度: ${bText}${bTotal ? ' / ' + bTotal : ''}`;
+                        const bTextTrim = (bText || '').trim();
+                        const bTotalTrim = (bTotal || '').trim();
+                        // 智能防重叠：如果原书签中已包含斜杠，则不再强行拼接目标
+                        const progressLabel = (bTotalTrim && !bTextTrim.includes('/')) ? `${bTextTrim} / ${bTotalTrim}` : bTextTrim;
+                        progressHtml += `<div style="margin-bottom:6px;">🔖 当前进度: ${progressLabel}`;
                         
                         // 只有存在当前和目标，且【不是电影】时，才渲染进度条
                         const subtype = active.subtype;
@@ -9922,6 +9935,22 @@ function openRitual(type) {
                 db[idx].totalMinutes = finalTask.totalMinutes;
                 db[idx].lastAddMinutes = finalTask.lastAddMinutes;
             }
+
+            // 👉 新增：如果是清单子任务，找到它在档案柜中的真身，并将时间存入隐形存钱罐
+            if (finalTask.isPlaylist && typeof customPlaylists !== 'undefined' && typeof activePlaylist !== 'undefined' && activePlaylist) {
+                const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
+                if (pIdx > -1 && Array.isArray(customPlaylists[pIdx].items)) {
+                    const rawText = finalTask.rawTaskText;
+                    const matchIdx = customPlaylists[pIdx].items.findIndex(it => it && (it.text === rawText || it.title === rawText));
+                    if (matchIdx > -1 && customPlaylists[pIdx].items[matchIdx]) {
+                        // 累加时间并记录最新变动
+                        customPlaylists[pIdx].items[matchIdx].totalMinutes = (customPlaylists[pIdx].items[matchIdx].totalMinutes || 0) + harvestMins;
+                        customPlaylists[pIdx].items[matchIdx].lastAddMinutes = harvestMins;
+                        // 立刻落盘保存
+                        if (typeof savePlaylists === 'function') savePlaylists();
+                    }
+                }
+            }
         }
 
         const bookmarkSnapshot = finalTask.bookmarkText
@@ -9946,6 +9975,7 @@ function openRitual(type) {
                 done: true,
                 taskId: finalTask.id,
                 bookmarkSnapshot: bookmarkSnapshot,
+                targetProgressSnapshot: (finalTask.bookmarkTotal || '').trim(),
                 noteSnapshot: noteSnapshot,
                 lastAddMinutes: lastAddMinutes,
                 isTrailer: opts.isTrailer || false
@@ -10149,7 +10179,10 @@ function openRitual(type) {
           statsHtml += `<div style="margin-bottom:4px; color:#FF9AA2; font-weight:bold;">💪 累计打卡: ${task.completeCount} 次</div>`;
         }
         if (hasBookmark) {
-          statsHtml += `<div>🔖 <b>当前进度:</b> ${task.bookmarkText}${task.bookmarkTotal ? ' / ' + task.bookmarkTotal : ''}</div>`;
+          const bTextD = (task.bookmarkText || '').trim();
+          const bTotalD = (task.bookmarkTotal || '').trim();
+          const progressLabelD = (bTotalD && !bTextD.includes('/')) ? `${bTextD} / ${bTotalD}` : bTextD;
+          statsHtml += `<div>🔖 <b>当前进度:</b> ${progressLabelD}</div>`;
         }
         statsHtml += `</div>`;
       }
@@ -10409,11 +10442,24 @@ function openRitual(type) {
 
         if (!bookmarkInput || !hoursSelect || !minutesSelect || !noteTextarea) return;
 
-        // 找到任务在 db 中的索引
-        const taskIndex = db.findIndex(t => t.id === currentMemoryTask.id);
-        if (taskIndex === -1) return;
+        // 👉 双通道雷达：根据是否为清单子任务，去不同的库里找真身
+        let task = null;
+        let isSubtask = false;
 
-        const task = db[taskIndex];
+        if (currentMemoryTask.isPlaylist && typeof customPlaylists !== 'undefined' && typeof activePlaylist !== 'undefined' && activePlaylist) {
+            isSubtask = true;
+            const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
+            if (pIdx > -1 && customPlaylists[pIdx].items) {
+                const rawText = currentMemoryTask.rawTaskText;
+                const matchIdx = customPlaylists[pIdx].items.findIndex(it => it && (it.text === rawText || it.title === rawText));
+                if (matchIdx > -1) task = customPlaylists[pIdx].items[matchIdx];
+            }
+        } else {
+            const taskIndex = db.findIndex(t => t.id === currentMemoryTask.id);
+            if (taskIndex > -1) task = db[taskIndex];
+        }
+
+        if (!task) return; // 找不到真身，直接拦截
         let hasChanges = false;
 
         // 1. 保存书签（覆盖式）
@@ -10457,6 +10503,7 @@ function openRitual(type) {
                         done: true,
                         taskId: task.id,
                         bookmarkSnapshot: newBookmark || task.bookmarkText || '',
+                        targetProgressSnapshot: (task.bookmarkTotal || '').trim(),
                         noteSnapshot: newNote || task.noteText || '',
                         lastAddMinutes: addMinutes
                     });
@@ -10475,11 +10522,25 @@ function openRitual(type) {
         }
 
         if (hasChanges) {
-            if (typeof save === 'function') save(); // 🚨 绝对铁律：强制落盘
+            // 👉 双通道落盘
+            if (isSubtask) {
+                if (typeof savePlaylists === 'function') savePlaylists();
+            } else {
+                if (typeof save === 'function') save();
+            }
 
-            // 更新 currentTask（如果恰好是同一个任务）
-            if (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id) {
+            // 👉 双通道 UI 同步判断：如果是清单子任务，按原始文本匹配；否则按 ID 匹配
+            let isCurrentMatch = false;
+            if (isSubtask) {
+                isCurrentMatch = (typeof currentTask !== 'undefined' && currentTask && currentTask.isPlaylist && (currentTask.rawTaskText === task.text || currentTask.rawTaskText === task.title));
+            } else {
+                isCurrentMatch = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
+            }
+
+            // 更新 currentTask（如果恰好是当前正在舞台上的任务）
+            if (isCurrentMatch) {
                 currentTask.bookmarkText = task.bookmarkText;
+                currentTask.bookmarkTotal = task.bookmarkTotal;
                 currentTask.bookmarkUpdatedAt = task.bookmarkUpdatedAt;
                 currentTask.totalMinutes = task.totalMinutes;
                 currentTask.lastAddMinutes = task.lastAddMinutes;
@@ -10516,10 +10577,24 @@ function openRitual(type) {
         if (!currentMemoryTask) return;
         if (!confirm("确定要清空书签和备注吗？（累计时长不会被清空）")) return;
 
-        const taskIndex = db.findIndex(t => t.id === currentMemoryTask.id);
-        if (taskIndex === -1) return;
+        // 👉 双通道雷达
+        let task = null;
+        let isSubtask = false;
 
-        const task = db[taskIndex];
+        if (currentMemoryTask.isPlaylist && typeof customPlaylists !== 'undefined' && typeof activePlaylist !== 'undefined' && activePlaylist) {
+            isSubtask = true;
+            const pIdx = customPlaylists.findIndex(p => p && String(p.id) === String(activePlaylist.id));
+            if (pIdx > -1 && customPlaylists[pIdx].items) {
+                const rawText = currentMemoryTask.rawTaskText;
+                const matchIdx = customPlaylists[pIdx].items.findIndex(it => it && (it.text === rawText || it.title === rawText));
+                if (matchIdx > -1) task = customPlaylists[pIdx].items[matchIdx];
+            }
+        } else {
+            const taskIndex = db.findIndex(t => t.id === currentMemoryTask.id);
+            if (taskIndex > -1) task = db[taskIndex];
+        }
+
+        if (!task) return;
         let hasChanges = false;
 
         // 清空书签
@@ -10537,8 +10612,20 @@ function openRitual(type) {
         }
 
         if (hasChanges) {
-            save();
-            if (currentTask && currentTask.id === task.id) {
+            if (isSubtask) {
+                if (typeof savePlaylists === 'function') savePlaylists();
+            } else {
+                if (typeof save === 'function') save();
+            }
+            // 👉 双通道 UI 同步判断
+            let isCurrentMatch = false;
+            if (isSubtask) {
+                isCurrentMatch = (typeof currentTask !== 'undefined' && currentTask && currentTask.isPlaylist && (currentTask.rawTaskText === task.text || currentTask.rawTaskText === task.title));
+            } else {
+                isCurrentMatch = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
+            }
+
+            if (isCurrentMatch) {
                 currentTask = task;
                 renderResultCard(currentTask);
             }
@@ -10597,7 +10684,14 @@ function openRitual(type) {
         if (item.noteText) memoryText += `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0e0e0;">📝 <b>沉淀备注:</b> <br><span style="color:#666; font-size:0.85rem; line-height:1.5;">${item.noteText.replace(/\n/g, '<br>')}</span></div>`;
       } else {
         if (item.lastAddMinutes) memoryText += `<div style="margin-bottom:6px;">⏱ <b>当次投入:</b> ${item.lastAddMinutes}m</div>`;
-        if (item.bookmarkSnapshot) memoryText += `<div style="margin-bottom:6px;">🔖 <b>当次进度:</b> ${item.bookmarkSnapshot}</div>`;
+        if (item.bookmarkSnapshot) {
+          let progressDisplay = (item.bookmarkSnapshot || '').trim();
+          const targetDisplay = (item.targetProgressSnapshot || '').trim();
+          if (progressDisplay && targetDisplay && !progressDisplay.includes('/')) {
+            progressDisplay = progressDisplay + ' / ' + targetDisplay;
+          }
+          memoryText += `<div style="margin-bottom:6px;">🔖 <b>当次进度:</b> ${progressDisplay}</div>`;
+        }
         if (item.noteSnapshot) memoryText += `<div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e0e0e0;">📝 <b>当次备注:</b> <br><span style="color:#666; font-size:0.85rem; line-height:1.5;">${item.noteSnapshot.replace(/\n/g, '<br>')}</span></div>`;
       }
 
