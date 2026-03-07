@@ -10017,7 +10017,8 @@ function openRitual(type) {
         // 3）普通任务 / 长期任务 分流
         else {
             if (task.recurrence === 'long_term' || task.type === 'long_term') {
-                // 长期任务：绝不删除，留在池中累加时间
+                // 长期任务：绝不删除，留在池中累加时间（必须落盘，否则刷新后足迹丢失）
+                if (typeof save === 'function') save();
                 if (typeof renderList === 'function') renderList();
                 if (typeof showToast === 'function') showToast("🚀 阶段推进成功！");
             } else if (task.recurrence === 'weekly' || task.recurrence === 'monthly') {
