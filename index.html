@@ -12685,6 +12685,79 @@ function openHarvestDialogAsync(defaultMins, task = null) {
     });
 }
 
+// --- 日签定制器逻辑 ---
+function getTodayPosterStats() {
+  const todayStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : new Date()).toDateString();
+  let count = 0;
+  let mins = 0;
+  if (Array.isArray(dailyLog)) {
+    dailyLog.forEach(log => {
+      if (log.date === todayStr) {
+        if (log.done !== false && !log.title.includes('【整体完成】')) count++;
+        if (log.lastAddMinutes && !isNaN(log.lastAddMinutes)) mins += Number(log.lastAddMinutes);
+      }
+    });
+  }
+  return { count, mins };
+}
+
+function openPosterStudio() {
+  const stats = getTodayPosterStats();
+  const h = Math.floor(stats.mins / 60);
+  const m = stats.mins % 60;
+  const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+
+  document.getElementById('chkAnchorCount').checked = stats.count > 0;
+  document.getElementById('chkFlowTime').checked = stats.mins > 0;
+
+  document.getElementById('studioAnchorNum').textContent = stats.count;
+  document.getElementById('studioFlowNum').textContent = timeStr;
+
+  document.getElementById('posterMainActions').style.display = 'none';
+  document.getElementById('posterStudioPanel').style.display = 'flex';
+  const saveBtn = document.querySelector('.poster-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
+
+  updatePosterPreview();
+}
+
+function closePosterStudio() {
+  document.getElementById('posterStudioPanel').style.display = 'none';
+  document.getElementById('posterMainActions').style.display = 'flex';
+  const saveBtn = document.querySelector('.poster-save-btn');
+  if (saveBtn) saveBtn.style.display = 'inline-block';
+  const preview = document.getElementById('posterPreviewStats');
+  if (preview) preview.style.display = 'none';
+}
+
+function updatePosterPreview() {
+  const chkCount = document.getElementById('chkAnchorCount');
+  const chkFlow = document.getElementById('chkFlowTime');
+  const container = document.getElementById('posterPreviewStats');
+  const elCount = document.getElementById('previewAnchorCount');
+  const elFlow = document.getElementById('previewFlowTime');
+  if (!chkCount || !chkFlow || !container || !elCount || !elFlow) return;
+
+  const stats = getTodayPosterStats();
+  const h = Math.floor(stats.mins / 60);
+  const m = stats.mins % 60;
+
+  elCount.textContent = `📍 今日点亮了 ${stats.count} 个生活锚点`;
+  elFlow.textContent = `🌊 心流沉浸 ${h > 0 ? h + 'h ' : ''}${m}m`;
+
+  elCount.style.display = chkCount.checked ? 'block' : 'none';
+  elFlow.style.display = chkFlow.checked ? 'block' : 'none';
+
+  if (chkCount.checked || chkFlow.checked) {
+    container.style.display = 'flex';
+    container.style.animation = 'none';
+    void container.offsetWidth;
+    container.style.animation = 'tooltipPop 0.3s ease forwards';
+  } else {
+    container.style.display = 'none';
+  }
+}
+
 // ============================================================
 // v6.7.3 一键保存海报 — Canvas 暗房合成
 // ============================================================
@@ -12726,31 +12799,56 @@ function saveDailyPoster() {
     ctx.fillStyle = grad;
     ctx.fillRect(0, h - gradH, w, gradH);
 
-    // --- 4. 绘制文字（天数 + 日期文案） ---
-    // 字号按图片宽度自适应，确保不同分辨率的图片都美观
-    const caller = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
+    // --- 4. 绘制文字（动态适配定制器） ---
+    const caller = (typeof currentUsername !== 'undefined' && currentUsername !== 'Anchor') ? currentUsername : '你';
     const dayText = daySpan ? `这是 ${caller} 和 Anchor 的第 ${daySpan.textContent.trim()} 天` : '';
-    const subText = dateEl  ? dateEl.textContent.trim() : '';
+    const dateText = dateEl ? dateEl.textContent.trim() : '';
 
-    // 天数行：较大字号，加粗
-    const dayFontSize = Math.round(w * 0.038);
-    ctx.font = `bold ${dayFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
-    ctx.fillStyle = '#ffffff';
+    const chkCount = document.getElementById('chkAnchorCount') && document.getElementById('chkAnchorCount').checked;
+    const chkFlow = document.getElementById('chkFlowTime') && document.getElementById('chkFlowTime').checked;
+    const elCount = document.getElementById('previewAnchorCount');
+    const elFlow = document.getElementById('previewFlowTime');
+
+    let currentY = canvas.height - 50;
+
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-    ctx.shadowBlur = 6;
-    ctx.fillText(dayText, w * 0.04, h - w * 0.06);
+    ctx.fillText(dateText, canvas.width / 2, currentY);
 
-    // 日期行：较小字号，略透明
-    const subFontSize = Math.round(w * 0.026);
-    ctx.font = `${subFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-    ctx.shadowBlur = 4;
-    ctx.fillText(subText, w * 0.04, h - w * 0.025);
+    let statsTexts = [];
+    if (chkFlow && elFlow && elFlow.textContent) statsTexts.unshift(elFlow.textContent);
+    if (chkCount && elCount && elCount.textContent) statsTexts.unshift(elCount.textContent);
 
-    // 清除阴影，避免影响后续绘制
+    currentY -= 28;
+    if (statsTexts.length > 0) {
+      ctx.font = '14px sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      for (let i = statsTexts.length - 1; i >= 0; i--) {
+        ctx.fillText(statsTexts[i], canvas.width / 2, currentY);
+        currentY -= 20;
+      }
+      currentY -= 6;
+      ctx.beginPath();
+      ctx.moveTo(canvas.width / 2 - 16, currentY);
+      ctx.lineTo(canvas.width / 2 + 16, currentY);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      currentY -= 22;
+    } else {
+      currentY -= 12;
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(dayText, canvas.width / 2, currentY);
+
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
 
     // --- 5. 右下角水印（右/下边距一致，更靠右、略上移）---
     const pad = w * 0.02;
@@ -12889,12 +12987,18 @@ document.addEventListener('visibilitychange', () => {
       🖼️ 信号丢失，但今天依然是很好的一天。
     </div>
     <!-- v6.7.3 一键保存海报按钮：右上角小印章 -->
-    <button type="button" class="poster-save-btn" onclick="saveDailyPoster()" title="保存日签">保存日签</button>
+    <button type="button" class="poster-save-btn" onclick="openPosterStudio()" title="保存日签">保存日签</button>
     <div class="daily-poster-caption">
         <div class="daily-poster-day">
             这是你和 Anchor 的第
             <span id="dailyPosterDayCount">1</span> 天
         </div>
+          <!-- v6.9.X 新增：博物馆风格的数据铭牌预览 (默认隐藏) -->
+          <div id="posterPreviewStats" style="display:none; flex-direction:column; align-items:center; margin-top:8px; opacity:0;">
+            <div style="width:24px; height:1px; background:rgba(255,255,255,0.4); margin-bottom:6px;"></div>
+            <div id="previewAnchorCount" style="font-size:0.75rem; opacity:0.95; margin-bottom:3px; display:none;">📍 今日点亮了 0 个生活锚点</div>
+            <div id="previewFlowTime" style="font-size:0.75rem; opacity:0.95; display:none;">🌊 心流沉浸 0h 0m</div>
+          </div>
         <div class="daily-poster-subline" id="dailyPosterDate">
             2025.01.01 像一次短暂停靠，看看今天走到了哪里。
         </div>
@@ -12902,15 +13006,24 @@ document.addEventListener('visibilitychange', () => {
 </div>
 
             <div class="daily-poster-actions">
-                <button type="button" class="poster-btn-primary" onclick="dailyPosterEatCandy()">
-                    先吃颗糖
-                </button>
-                <button type="button" class="poster-btn-secondary" onclick="dailyPosterSkipToGacha()">
-                    直接抽卡
-                </button>
-                <button type="button" class="poster-btn-tertiary" onclick="closeDailyPoster()">
-                    稍后再说
-                </button>
+                <div id="posterMainActions" style="display:flex; flex-direction:column; gap:6px; width:100%;">
+                    <button type="button" class="poster-btn-primary" onclick="dailyPosterEatCandy()">先吃颗糖</button>
+                    <button type="button" class="poster-btn-secondary" onclick="dailyPosterSkipToGacha()">直接抽卡</button>
+                    <button type="button" class="poster-btn-tertiary" onclick="closeDailyPoster()">稍后再说</button>
+                </div>
+
+                <!-- v6.9.X 新增：定制工作室面板 -->
+                <div id="posterStudioPanel" style="display:none; flex-direction:column; gap:10px; background:rgba(255,255,255,0.1); padding:16px; border-radius:16px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.15); text-align:left;">
+                    <div style="font-size:0.8rem; color:#fff; font-weight:bold; margin-bottom:2px;">✨ 在海报上印下今日足迹？</div>
+                    <label style="font-size:0.75rem; color:#fff; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="chkAnchorCount" onchange="updatePosterPreview()"> 📍 锚点件数 (今日 <span id="studioAnchorNum">0</span> 件)
+                    </label>
+                    <label style="font-size:0.75rem; color:#fff; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="chkFlowTime" onchange="updatePosterPreview()"> 🌊 心流时长 (共 <span id="studioFlowNum">0m</span>)
+                    </label>
+                    <button class="poster-btn-primary" style="margin-top:4px;" onclick="saveDailyPoster()">⬇️ 生成并保存高清海报</button>
+                    <div style="font-size:0.7rem; color:#ccc; text-align:center; text-decoration:underline; cursor:pointer; margin-top:2px;" onclick="closePosterStudio()">取消定制</div>
+                </div>
             </div>
         </div>
     </div>
