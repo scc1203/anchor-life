@@ -9929,54 +9929,25 @@ function openRitual(type) {
             : '';
         const noteSnapshot = finalTask.noteText || '';
         const lastAddMinutes = finalTask.lastAddMinutes || 0;
-    
-        let marked = false;
-        for (let i = 0; i < dailyLog.length; i++) {
-            const log = dailyLog[i];
-            // 👉 核心修复：只有找到一条 done === false 的进行中占位记录，才执行覆盖更新。
-            // 如果是已经 done === true 的记录，说明是以前完成的，必须跳过，从而在下方 unshift 一条新的。
-            if (log.date === anchorTodayStr && log.taskId === task.id && log.done === false) {
-                log.done = true;
-                log.title = finalTask.title;
-                log.icon = finalTask.icon || getSmartIcon(finalTask);
-                log.timeStr = log.timeStr || timeStr;
-                // v6.5：保存快照（使用最新状态）
-                log.bookmarkSnapshot = bookmarkSnapshot;
-                log.noteSnapshot = noteSnapshot;
-                log.lastAddMinutes = lastAddMinutes;
-                // v6.8：预告片模式标记
-                log.isTrailer = opts.isTrailer || false;
-                marked = true;
-                break;
-            }
-        }
 
-        // 👉 动态生成足迹标题与计数
-        let logTitle = task.title;
-        let logIcon = task.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(task) : '✅');
-
-        // 处理循环与长期任务的足迹展示
+        // 👉 动态生成足迹标题与计数（仅影响任务池中的 completeCount 等）
         if (['daily', 'weekly', 'monthly'].includes(task.recurrence) && taskInDb) {
             taskInDb.completeCount = (taskInDb.completeCount || 0) + 1;
-            logTitle = `【+${taskInDb.completeCount}】${task.title}`;
-        } else if (task.recurrence === 'long_term' || task.type === 'long_term') {
-            logTitle = `【推进】${task.title}`;
         }
 
-        // 写入 dailyLog
-        if (!marked && !silent) {
+        // 写入 dailyLog：每次完成必定创建一条独立新足迹，不做覆盖，防快照污染
+        if (!silent) {
             dailyLog.unshift({
-                title: logTitle,
-                icon: logIcon,
+                id: Date.now(),
+                title: finalTask.title,
+                icon: finalTask.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(finalTask) : '✅'),
                 timeStr: timeStr,
                 date: anchorTodayStr,
                 done: true,
-                taskId: task.id,
-                // v6.5：保存快照
+                taskId: finalTask.id,
                 bookmarkSnapshot: bookmarkSnapshot,
                 noteSnapshot: noteSnapshot,
                 lastAddMinutes: lastAddMinutes,
-                // v6.8：预告片模式标记
                 isTrailer: opts.isTrailer || false
             });
         }
@@ -10515,8 +10486,20 @@ function openRitual(type) {
                 currentTask.totalUpdatedAt = task.totalUpdatedAt;
                 currentTask.noteText = task.noteText;
                 currentTask.noteUpdatedAt = task.noteUpdatedAt;
-                // 刷新结果卡的进度提示行
-                if (typeof renderResultCard === 'function') renderResultCard(currentTask);
+
+                // 1. 提前缓存重绘前的真实状态，防止被 renderResultCard 内部篡改
+                const wasAnchor = (typeof currentStatus !== 'undefined' && currentStatus === 'anchor');
+
+                // 2. 调用全局重绘，展示最新的进度条与打卡次数等高级 UI
+                if (typeof renderResultCard === 'function') {
+                    renderResultCard(currentTask);
+                }
+
+                // 3. 状态强锁：如果刚才正在专注中，直接呼叫底层定锚函数
+                // 传入 true (keepTime) 代表时间动能继承。它会自动恢复所有的按钮态、时钟动画并更新防丢装甲！
+                if (wasAnchor && typeof setCardAsAnchor === 'function') {
+                    setCardAsAnchor(true);
+                }
             }
 
             if (typeof renderList === 'function') renderList();
