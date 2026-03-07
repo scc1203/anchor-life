@@ -3941,10 +3941,11 @@ body.immersive-locked {
           <button class="btn-file" style="padding:8px 16px;" onclick="saveUsername()">更新身份</button>
         </div>
         <script>
-          // 延迟填充当前名字到输入框
+          // 延迟填充当前名字到输入框（从 localStorage 读取，不依赖主脚本变量）
           setTimeout(() => {
             const unInp = document.getElementById('settingUsernameInp');
-            if (unInp && currentUsername !== 'Anchor') unInp.value = currentUsername;
+            const name = typeof localStorage !== 'undefined' ? (localStorage.getItem('anchor_live_username') || 'Anchor') : 'Anchor';
+            if (unInp && name !== 'Anchor') unInp.value = name;
           }, 100);
         </script>
 
@@ -4219,16 +4220,14 @@ coloringBgImg.onload = function () {
         titleEl.textContent = `${currentUsername} ⚓️`;
       }
 
-      // 2. 更新打卡图海报文案
+      // 2. 更新打卡图海报文案（含 dailyPosterUname / dailyPosterDayCount）
       const daySpan = document.getElementById('dailyPosterDayCount');
       if (daySpan) {
-        // 找到包裹它的父级 div，替换文本但保留 span
         const dayContainer = daySpan.parentElement;
         if (dayContainer) {
-          const count = daySpan.textContent;
-          // 确保兼容不同的称呼
+          const count = daySpan.textContent.trim() || '1';
           const caller = currentUsername === 'Anchor' ? '你' : currentUsername;
-          dayContainer.innerHTML = `这是 ${caller} 和 Anchor 的第 <span id="dailyPosterDayCount">${count}</span> 天`;
+          dayContainer.innerHTML = `这是 <span id="dailyPosterUname">${caller}</span> 和 Anchor 的第 <span id="dailyPosterDayCount">${count}</span> 天`;
         }
       }
 
@@ -4932,8 +4931,10 @@ function showDailyPosterIfNeeded(openDaysCount) {
     const dateEl  = document.getElementById('dailyPosterDate');
     if (!overlay || !daySpan) return;
 
-    // 更新「第几天」的数字
+    // 更新「第几天」的数字与称呼
     daySpan.textContent = openDaysCount;
+    const unameEl = document.getElementById('dailyPosterUname');
+    if (unameEl) unameEl.textContent = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
 
         // 更新当天日期 + 文案（格式：YYYY.MM.DD | 像一次短暂停靠，看看今天走到了哪里。）
     if (dateEl) {
@@ -5141,6 +5142,8 @@ function markPosterPhase(phaseKey) {
         const openDaysCount = initOpenedDays ? initOpenedDays() : 1;
 
         if (daySpan) daySpan.textContent = openDaysCount;
+        const unameEl = document.getElementById('dailyPosterUname');
+        if (unameEl) unameEl.textContent = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
 
         // 更新日期文案
         if (dateEl) {
@@ -5162,6 +5165,12 @@ function markPosterPhase(phaseKey) {
         // 直接显示（手动打开不需要等图片加载）
         overlay.style.display = 'flex';
     }
+
+    // 挂到全局，供打卡图弹窗内联 onclick 调用
+    window.closeDailyPoster = closeDailyPoster;
+    window.dailyPosterEatCandy = dailyPosterEatCandy;
+    window.dailyPosterSkipToGacha = dailyPosterSkipToGacha;
+    window.openDailyPosterManual = openDailyPosterManual;
 
     // --- 00 区 · 吃糖盲盒引擎 ---
 
@@ -12799,56 +12808,61 @@ function saveDailyPoster() {
     ctx.fillStyle = grad;
     ctx.fillRect(0, h - gradH, w, gradH);
 
-    // --- 4. 绘制文字（动态适配定制器） ---
-    const caller = (typeof currentUsername !== 'undefined' && currentUsername !== 'Anchor') ? currentUsername : '你';
+    // --- 4. 绘制文字（左对齐 + 放大自适应） ---
+    const caller = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
     const dayText = daySpan ? `这是 ${caller} 和 Anchor 的第 ${daySpan.textContent.trim()} 天` : '';
-    const dateText = dateEl ? dateEl.textContent.trim() : '';
+    const subText = dateEl ? dateEl.textContent.trim() : '';
 
     const chkCount = document.getElementById('chkAnchorCount') && document.getElementById('chkAnchorCount').checked;
     const chkFlow = document.getElementById('chkFlowTime') && document.getElementById('chkFlowTime').checked;
     const elCount = document.getElementById('previewAnchorCount');
     const elFlow = document.getElementById('previewFlowTime');
 
-    let currentY = canvas.height - 50;
+    const padX = w * 0.05;
+    let currentY = h - (w * 0.05);
 
-    ctx.font = '14px sans-serif';
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.textAlign = 'center';
+    const subFontSize = Math.round(w * 0.032);
+    ctx.font = `${subFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+    ctx.textAlign = 'left';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(dateText, canvas.width / 2, currentY);
+    ctx.fillText(subText, padX, currentY);
+    currentY -= (subFontSize + w * 0.025);
 
     let statsTexts = [];
     if (chkFlow && elFlow && elFlow.textContent) statsTexts.unshift(elFlow.textContent);
     if (chkCount && elCount && elCount.textContent) statsTexts.unshift(elCount.textContent);
 
-    currentY -= 28;
     if (statsTexts.length > 0) {
-      ctx.font = '14px sans-serif';
+      const statFontSize = Math.round(w * 0.038);
+      ctx.font = `${statFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
       for (let i = statsTexts.length - 1; i >= 0; i--) {
-        ctx.fillText(statsTexts[i], canvas.width / 2, currentY);
-        currentY -= 20;
+        ctx.fillText(statsTexts[i], padX, currentY);
+        currentY -= (statFontSize + w * 0.015);
       }
-      currentY -= 6;
-      ctx.beginPath();
-      ctx.moveTo(canvas.width / 2 - 16, currentY);
-      ctx.lineTo(canvas.width / 2 + 16, currentY);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      currentY -= 22;
-    } else {
-      currentY -= 12;
+      currentY -= w * 0.01;
     }
 
+    const dayFontSize = Math.round(w * 0.052);
+    ctx.font = `bold ${dayFontSize}px -apple-system, "Helvetica Neue", Arial, sans-serif`;
+
+    const titleWidth = ctx.measureText(dayText).width;
+
+    ctx.beginPath();
+    ctx.moveTo(padX, currentY);
+    ctx.lineTo(padX + titleWidth, currentY);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    currentY -= (w * 0.02);
+
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText(dayText, canvas.width / 2, currentY);
+    ctx.fillText(dayText, padX, currentY);
 
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur = 0;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'bottom';
 
     // --- 5. 右下角水印（右/下边距一致，更靠右、略上移）---
     const pad = w * 0.02;
@@ -12967,6 +12981,7 @@ function lobbyEnter(action) {
         }
     }, 300);
 }
+window.lobbyEnter = lobbyEnter;
 
 // 👉 v6.9.9：PWA 后台切回前台时，自动触发云端收件箱检查
 document.addEventListener('visibilitychange', () => {
@@ -12988,19 +13003,21 @@ document.addEventListener('visibilitychange', () => {
     </div>
     <!-- v6.7.3 一键保存海报按钮：右上角小印章 -->
     <button type="button" class="poster-save-btn" onclick="openPosterStudio()" title="保存日签">保存日签</button>
-    <div class="daily-poster-caption">
-        <div class="daily-poster-day">
-            这是你和 Anchor 的第
-            <span id="dailyPosterDayCount">1</span> 天
+    <div class="daily-poster-caption" style="align-items: flex-start; text-align: left;">
+        <div class="daily-poster-day" style="display: inline-flex; flex-direction: column; align-items: flex-start;">
+            <div>这是 <span id="dailyPosterUname">你</span> 和 Anchor 的第 <span id="dailyPosterDayCount">1</span> 天</div>
+            <!-- v6.9.X 新增：预览用的分割线，宽度占满文字容器 -->
+            <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.4); margin: 6px 0 4px;"></div>
         </div>
-          <!-- v6.9.X 新增：博物馆风格的数据铭牌预览 (默认隐藏) -->
-          <div id="posterPreviewStats" style="display:none; flex-direction:column; align-items:center; margin-top:8px; opacity:0;">
-            <div style="width:24px; height:1px; background:rgba(255,255,255,0.4); margin-bottom:6px;"></div>
-            <div id="previewAnchorCount" style="font-size:0.75rem; opacity:0.95; margin-bottom:3px; display:none;">📍 今日点亮了 0 个生活锚点</div>
+
+        <!-- 统计数据区 -->
+        <div id="posterPreviewStats" style="display:none; flex-direction:column; align-items:flex-start; gap:3px; margin-bottom: 6px;">
+            <div id="previewAnchorCount" style="font-size:0.75rem; opacity:0.95; display:none;">📍 今日点亮了 0 个生活锚点</div>
             <div id="previewFlowTime" style="font-size:0.75rem; opacity:0.95; display:none;">🌊 心流沉浸 0h 0m</div>
-          </div>
+        </div>
+
         <div class="daily-poster-subline" id="dailyPosterDate">
-            2025.01.01 像一次短暂停靠，看看今天走到了哪里。
+            2025.01.01 | 像一次短暂停靠，看看今天走到了哪里。
         </div>
     </div>
 </div>
@@ -13022,7 +13039,7 @@ document.addEventListener('visibilitychange', () => {
                         <input type="checkbox" id="chkFlowTime" onchange="updatePosterPreview()"> 🌊 心流时长 (共 <span id="studioFlowNum">0m</span>)
                     </label>
                     <button class="poster-btn-primary" style="margin-top:4px;" onclick="saveDailyPoster()">⬇️ 生成并保存高清海报</button>
-                    <div style="font-size:0.7rem; color:#ccc; text-align:center; text-decoration:underline; cursor:pointer; margin-top:2px;" onclick="closePosterStudio()">取消定制</div>
+                    <div style="font-size:0.75rem; color:#fff; opacity:0.9; text-align:center; text-decoration:underline; cursor:pointer; margin-top:2px;" onclick="closePosterStudio()">取消定制</div>
                 </div>
             </div>
         </div>
