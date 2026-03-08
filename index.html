@@ -2901,17 +2901,6 @@ body.immersive-locked {
 .emoji-input-hint:focus {
     animation: none; /* 点击后停止呼吸 */
 }
-
-/* 🎯 一键直达按钮的呼吸动效 */
-@keyframes targetPulse {
-    0% { transform: scale(1); opacity: 0.8; }
-    50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 4px rgba(74, 144, 226, 0.4)); }
-    100% { transform: scale(1); opacity: 0.8; }
-}
-.target-btn-anim {
-    display: inline-block; /* 必须是 inline-block 才能应用 transform */
-    animation: targetPulse 2.5s infinite ease-in-out;
-}
 </style>
 </head>
 <body>
@@ -6889,7 +6878,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                     plHtml += `<span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="restoreArchivedPlaylist(${pIdx})" title="唤醒/解档">♻️</span>
                                <span style="font-size:0.75rem; color:#bbb; cursor:pointer;" onclick="deleteArchivedPlaylist(${pIdx})" title="彻底删除">🗑️</span>`;
                 } else {
-                    plHtml += `<span class="target-btn-anim" style="font-size:0.75rem; color:#4A90E2; cursor:pointer; margin-right:4px;" onclick="sendPlaylistToStage('${pl.id}')" title="一键送上抽卡台">🎯</span>
+                    plHtml += `<span style="font-size:0.7rem; color:#4A90E2; background:#EBF4FF; padding:2px 8px; border-radius:6px; cursor:pointer; margin-right:6px; font-weight:normal;" onclick="sendPlaylistToStage('${pl.id}')" title="一键送上抽卡台">🎯 直达</span>
                                <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="editPlaylist(${pIdx})" title="编辑">✏️</span>
                                <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="handlePlaylistColdOrDelete(${pIdx})" title="操作">🧊</span>`;
                 }
@@ -13321,6 +13310,27 @@ document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && (APP_VARIANT === 'personal' || APP_VARIANT === 'common')) {
         if (typeof processCloudInbox === 'function') {
             processCloudInbox();
+        }
+    }
+});
+
+// 👉 v7.0.X：全局点击监听（点击外部任意区域自动关闭悬浮气泡）
+document.addEventListener('click', function(event) {
+    // 1. 处理「💡 智能小抄」气泡
+    const cheatSheet = document.getElementById('cheatSheetBox');
+    if (cheatSheet && cheatSheet.style.display === 'block') {
+        const triggerBtn1 = cheatSheet.previousElementSibling; // 获取紧挨着的触发按钮
+        if (!cheatSheet.contains(event.target) && event.target !== triggerBtn1) {
+            cheatSheet.style.display = 'none';
+        }
+    }
+
+    // 2. 处理「❓ 清单怎么玩」气泡
+    const plCheatSheet = document.getElementById('playlistCheatSheet');
+    if (plCheatSheet && plCheatSheet.style.display === 'block') {
+        const triggerBtn2 = plCheatSheet.previousElementSibling; // 获取紧挨着的触发按钮
+        if (!plCheatSheet.contains(event.target) && event.target !== triggerBtn2) {
+            plCheatSheet.style.display = 'none';
         }
     }
 });
