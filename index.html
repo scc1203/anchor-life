@@ -2901,6 +2901,17 @@ body.immersive-locked {
 .emoji-input-hint:focus {
     animation: none; /* 点击后停止呼吸 */
 }
+
+/* 🎯 一键直达按钮的呼吸动效 */
+@keyframes targetPulse {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 4px rgba(74, 144, 226, 0.4)); }
+    100% { transform: scale(1); opacity: 0.8; }
+}
+.target-btn-anim {
+    display: inline-block; /* 必须是 inline-block 才能应用 transform */
+    animation: targetPulse 2.5s infinite ease-in-out;
+}
 </style>
 </head>
 <body>
@@ -3371,7 +3382,8 @@ body.immersive-locked {
                         • <b>0. 概念：</b>「SOP清单」为循环清单可多次打卡；「每日待办」为一次性清单。<br>
                         • <b>1. 建造：</b>点击下方按钮创建并存入档案柜。<br>
                         • <b>2. 召唤：</b>前往顶部「01区」，展开「🔽高级筛选」，在清单列表中选中它。<br>
-                        • <b>3. 心流：</b>点击抽取，开启沉浸式的隧道连抽体验！
+                        • <b>3. 心流：</b>点击抽取，开启沉浸式的隧道连抽体验！<br>
+                        • <b>🎯 一键直达：</b> 点击档案柜清单旁的 🎯，可瞬间将其送上抽卡台，直达心流。
                     </div>
                 </div>
             </div>
@@ -4049,13 +4061,15 @@ function saveDayStartOffset() {
 
 // v6.8 核心魔法：所有需要判断“今天日期”的地方，都调用此函数
 // 原理：如果当前真实时间早于设定的偏移量（如凌晨 3点 < 设定 4点），则逻辑上退回昨天
-function getAnchorDate() {
-  const now = new Date();
+function getAnchorDate(baseDate) {
+  // 如果传入了基准时间，就基于传入时间计算；否则使用当前时间
+  const d = baseDate ? new Date(baseDate) : new Date();
   const offsetHours = getDayStartOffset();
-  if (now.getHours() < offsetHours) {
-    now.setDate(now.getDate() - 1); // 拨回昨天
+  // 核心：判定传入的时间点是否早于夜猫子偏移量
+  if (d.getHours() < offsetHours) {
+    d.setDate(d.getDate() - 1); // 拨回昨天
   }
-  return now;
+  return d;
 }
 
 // 重写原有的 getTodayDateStr 函数
@@ -6875,7 +6889,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                     plHtml += `<span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="restoreArchivedPlaylist(${pIdx})" title="唤醒/解档">♻️</span>
                                <span style="font-size:0.75rem; color:#bbb; cursor:pointer;" onclick="deleteArchivedPlaylist(${pIdx})" title="彻底删除">🗑️</span>`;
                 } else {
-                    plHtml += `<span style="font-size:0.75rem; color:#4A90E2; cursor:pointer;" onclick="sendPlaylistToStage('${pl.id}')" title="一键送上抽卡台">🎯</span>
+                    plHtml += `<span class="target-btn-anim" style="font-size:0.75rem; color:#4A90E2; cursor:pointer; margin-right:4px;" onclick="sendPlaylistToStage('${pl.id}')" title="一键送上抽卡台">🎯</span>
                                <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="editPlaylist(${pIdx})" title="编辑">✏️</span>
                                <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="handlePlaylistColdOrDelete(${pIdx})" title="操作">🧊</span>`;
                 }
@@ -10058,7 +10072,13 @@ function openRitual(type) {
         // 写入「今日足迹 / 历史记录」
         const now = new Date();
         let timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-        const anchorTodayStr = getAnchorDate().toDateString();
+
+        // 👉 v6.9.X 修复：跨界时间结算。如果任务有明确的开始时间，该任务的“归属日”由开始时间决定
+        let taskBaseDate = now;
+        if (!silent && typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
+            taskBaseDate = new Date(anchorStartTime);
+        }
+        const anchorTodayStr = getAnchorDate(taskBaseDate).toDateString();
 
         // v6.5：保存书签和备注快照（使用任务的最新状态）
         // 如果任务在 db 中，使用 db 中的最新状态；否则使用传入的 task
