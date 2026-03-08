@@ -2916,7 +2916,7 @@ body.immersive-locked {
 
 <div class="container">
         <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v6.9.9 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.0.2 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3399,11 +3399,11 @@ body.immersive-locked {
     <div class="section-list">
         <div class="section-list-title">03 · 任务库 & 记录</div>
 
-        <!-- 📁 档案柜 (项目 & 临时清单) -->
+        <!-- 🗄️ 档案柜 (项目 & 临时清单) -->
         <div class="section-cold" style="margin-bottom: 12px;">
-            <details id="cabinetDetails">
+            <details id="cabinetDetails" open>
                 <summary>
-                    <span style="font-size:0.95rem; font-weight:bold; color:#444;">📁 档案柜</span>
+                    <span style="font-size:0.95rem; font-weight:bold; color:#444;">🗄️ 档案柜</span>
                     <span style="font-size:0.75rem; color:#999; margin-left:auto;">(轻量清单 & 项目)</span>
                     <span id="cabinetCountDisplay" style="font-size:0.8rem; color:#999; margin-left:4px; margin-right:6px;">(0)</span>
                 </summary>
@@ -3813,18 +3813,27 @@ body.immersive-locked {
             <summary>📑 更新日志</summary>
             <div class="manual-content" style="padding-top: 10px;">
 
-  <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">☁️ v6.9：云端纪元与时空生命力</div>
-  <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
-    <li><b>v6.9.1：</b> ☁️ <b>多端同步：</b>建立云端专属账号 🆔，打通多设备数据拉取与推送，数据不再局限于单机。</li>
-    <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式♻️新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
-    <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」🖼️/🎭智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
-    <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器⏱️，自动记录任务时长。</li>
-    <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜🗄️，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
-    <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
-    <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
-    <li><b>v6.9.8：</b> ♻️ <b>循环进阶：</b>增加🔁每天/每周/每月循环任务，并自动记录打卡次数，新增🚀长期任务种类，持续记录。</li>
-    <li><b>v6.9.9：</b> 📥 <b>快捷收件箱：</b>上线云端 Inbox 接口，联动快捷指令一键”进货“入库；历史记录可修正时间轴。</li>
+<div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">🌌 v7.0：架构升维与时空手账</div>
+<ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+    <li><b>v7.0.2：</b> 🗄️ <b>双层档案柜与时空追认：</b>档案柜升级为「案头手边事/归档手账本」双抽屉，升级归档系统；归档手账本支持“跨时空补卡”✨。</li>
+    <li><b>v7.0.1：</b> 🧠 <b>记忆系统全面升维：</b>新增任务记忆补录功能；删除历史记录时智能询问是否撤回时长；修复进度多次覆盖Bug；隐藏级彩蛋：清单子任务全面接入记忆雷达。</li>
+</ul>
+
+<!-- 将 v6.9 时代整体打包折叠 -->
+<details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
+    <summary style="font-size: 0.85rem; padding: 8px; border-bottom: none;">☁️ v6.9：云端纪元与生命流转</summary>
+    <ul style="margin-top:0; padding-left:24px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+        <li><b>v6.9.1：</b> ☁️ <b>多端同步：</b>建立云端专属账号 🆔，打通多设备数据拉取与推送，数据不再局限于单机。</li>
+        <li><b>v6.9.2：</b> 🧭 <b>动态向导：</b>新增互动式♻️新手聚光灯引导（支持随时重播），让初次登岛的体验如丝般顺滑。</li>
+        <li><b>v6.9.3：</b> 🎭 <b>文娱标签：</b>升级「文娱/展览/演出」🖼️/🎭智能识别，自动剥离前缀并分配专属图标，体验后极速归档。</li>
+        <li><b>v6.9.4：</b> ⏳ <b>计时器：</b>无惧意外刷新或杀后台，进行中的任务与计时完美恢复；新增卡片秒表计时器⏱️，自动记录任务时长。</li>
+        <li><b>v6.9.5：</b> 📁 <b>档案柜：</b>上线全新 03 区档案柜🗄️，「每日待办」一键生成且“阅后即焚”，「SOP清单」支持记录循环计次（🏆 X次）。</li>
+        <li><b>v6.9.6：</b> 🔐 <b>云端密码锁：</b>个人🆔增加密码功能，一人一账户，安全有保障。</li>
+        <li><b>v6.9.7：</b> 🎯 <b>目标进度：</b>新增目标进度设定与马卡龙色可视化进度条。</li>
+        <li><b>v6.9.8：</b> ♻️ <b>循环进阶：</b>增加🔁每天/每周/每月循环任务，并自动记录打卡次数，新增🚀长期任务种类，持续记录。</li>
+        <li><b>v6.9.9：</b> 📥 <b>快捷收件箱：</b>上线云端 Inbox 接口，联动快捷指令一键”进货“入库；历史记录可修正时间轴。</li>
   </ul>
+</details>
 
   <details style="margin-bottom: 8px; background: transparent; border: 1px solid #eee; border-radius: 8px;">
     <summary style="font-size: 0.85rem; padding: 8px; border-bottom: none;">🚀 v6.8：心流引擎与数据轮回</summary>
@@ -6796,73 +6805,206 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (typeof renderPlaylistDropdown === 'function') renderPlaylistDropdown();
     }
 
+    // 👉 v6.9.X：跨时空静默自动归档机
+    function autoArchivePlaylists() {
+        if (typeof customPlaylists === 'undefined' || !Array.isArray(customPlaylists)) return;
+        let hasChanges = false;
+        const todayStr = typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString();
+
+        customPlaylists.forEach(pl => {
+            // 仅处理：一次性清单 + 尚未归档 + 不在冷库
+            if (pl.playlistType === 'once' && pl.isArchived !== true && pl.inColdStorage !== true) {
+                // 检查是否 100% 满进度
+                const isAllDone = pl.items && pl.items.length > 0 && pl.items.every(i => i.done);
+                // 如果存在创建日期，且创建日期不是“今天(Anchor Date)”
+                if (isAllDone && pl.createdDate && pl.createdDate !== todayStr) {
+                    pl.isArchived = true;
+                    const d = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+                    pl.archivedDate = (d.getMonth() + 1) + '/' + d.getDate();
+                    hasChanges = true;
+                }
+            }
+        });
+
+        if (hasChanges) {
+            savePlaylists();
+        }
+    }
+
     function renderCabinet() {
+        // 渲染前，先执行跨日自动归档巡视
+        if (typeof autoArchivePlaylists === 'function') autoArchivePlaylists();
+
         const container = document.getElementById('cabinetContent');
         if (!container) return;
-        // 👉 v6.9.7：更新标题旁边的小数字
-        const countEl = document.getElementById('cabinetCountDisplay');
-        if (countEl) countEl.innerText = `(${customPlaylists ? customPlaylists.length : 0})`;
-        // v6.9.5 修复跳动：记录重绘前的滚动高度
-        const scrollBox = container.querySelector('.cabinet-scroll-area');
+
+        // 👉 新增：记录两个抽屉的展开状态，防止重绘后强制闭合
+        const drawerA = container.querySelector('#drawerActive');
+        const drawerB = container.querySelector('#drawerArchived');
+        const activeIsOpen = (drawerA && drawerA.open) ? 'open' : '';
+        const archivedIsOpen = (drawerB && drawerB.open) ? 'open' : '';
+
+        const scrollBox = container.querySelector('.cabinet-scroll-area') || container.querySelector('details[open] > div');
         const savedScrollTop = scrollBox ? scrollBox.scrollTop : 0;
 
-        let html = '';
-        if (!customPlaylists || customPlaylists.length === 0) {
-            container.innerHTML = html + '<div style="font-size:0.8rem; color:#999; text-align:center; padding:10px 0;">当前档案柜空空如也。<br>未来可在此处导入你的轻量待办或 SOP。</div>';
-            return;
+        let activeHtml = '';
+        let archivedHtml = '';
+        let activeCount = 0;
+        let archivedCount = 0;
+
+        if (typeof customPlaylists !== 'undefined' && customPlaylists.length > 0) {
+            customPlaylists.forEach((pl, pIdx) => {
+                if (pl.inColdStorage) return; // 彻底冻结的在底部冷库，不在此处显示
+
+                // 1. 构建单张清单的 HTML 骨架 (保留原有的极简缩进风格)
+                const plIcon = pl.icon || '📑';
+                let plHtml = `<div style="padding: 10px 4px; border-bottom: 1px dashed #f0f1f5;">`;
+
+                const countBadge = (pl.playlistType === 'sop' || !pl.playlistType) && pl.completeCount
+                    ? `<span class="manual-tag" style="margin-left:6px; background:#e8f5e9; color:#2e7d32; font-weight:bold; font-size:0.75rem;">🏆 ${pl.completeCount}次</span>` : '';
+                const dateStamp = pl.archivedDate ? `<span style="font-size:0.7rem; color:#887A6A; background:#FDF6E3; padding:2px 6px; border-radius:4px; margin-left:6px; font-weight:normal; border:1px solid #F5E6C4;">🏷️ 归档于 ${pl.archivedDate}</span>` : '';
+
+                plHtml += `<div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:0.85rem; font-weight:bold; color:#555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>${plIcon} ${pl.title || pl.name || '未命名清单'} ${dateStamp} ${countBadge}</span>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">`;
+
+                // 按钮区：活跃的显示 ✏️ 和 🧊；归档的显示 ♻️ 和 🗑️
+                if (pl.isArchived) {
+                    plHtml += `<span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="restoreArchivedPlaylist(${pIdx})" title="唤醒/解档">♻️</span>
+                               <span style="font-size:0.75rem; color:#bbb; cursor:pointer;" onclick="deleteArchivedPlaylist(${pIdx})" title="彻底删除">🗑️</span>`;
+                } else {
+                    plHtml += `<span style="font-size:0.75rem; color:#4A90E2; cursor:pointer;" onclick="sendPlaylistToStage('${pl.id}')" title="一键送上抽卡台">🎯</span>
+                               <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="editPlaylist(${pIdx})" title="编辑">✏️</span>
+                               <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="handlePlaylistColdOrDelete(${pIdx})" title="操作">🧊</span>`;
+                }
+
+                plHtml += `<span style="font-size:0.75rem; color:#999;">${pl.items ? pl.items.filter(i=>i.done).length : 0}/${pl.items ? pl.items.length : 0}</span>
+                    </div>
+                </div>`;
+
+                // 子任务列表（归档只读+追认 / 活跃 checkbox）
+                if (pl.items && pl.items.length > 0) {
+                    plHtml += `<div style="display:flex; flex-direction:column; gap:8px; padding-left: 22px; margin-top: 10px;">`;
+                    pl.items.forEach((item, iIdx) => {
+                        if (pl.isArchived) {
+                            const isSOP = pl.playlistType === 'sop';
+                            let icon = '⏳';
+                            let textStyle = 'color:#888;';
+                            let cursorStyle = 'cursor:pointer;';
+                            let clickAction = `onclick="if(confirm('✨ 要跨越时空，追认完成这项任务吗？')) toggleCabinetItem(${pIdx}, ${iIdx}, true, false)"`;
+                            let titleHint = '点击追认打卡';
+
+                            // 🚨 逻辑分流：SOP 直接封死，绝对不可追认
+                            if (isSOP) {
+                                icon = item.done ? '✅' : '<span style="color:#ddd;">➖</span>';
+                                textStyle = item.done ? 'text-decoration:line-through; color:#aaa;' : 'color:#bbb;';
+                                cursorStyle = 'cursor:default;';
+                                clickAction = '';
+                                titleHint = item.done ? '已完成' : '已过期';
+                            } else {
+                                // ⚡️ Once 清单：允许追认魔法
+                                if (item.done) {
+                                    icon = item.isRetroactive ? '✨' : '✅';
+                                    textStyle = item.isRetroactive
+                                        ? 'text-decoration:line-through; color:#d6a8a8;' // 追认的温柔褪色粉
+                                        : 'text-decoration:line-through; color:#aaa;';   // 正常的静谧灰
+                                    cursorStyle = 'cursor:default;';
+                                    clickAction = '';
+                                    titleHint = item.isRetroactive ? '跨时空追认' : '已完成';
+                                }
+                            }
+
+                            plHtml += `
+                        <div style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; margin-bottom:8px;">
+                            <span style="margin-top:2px; font-size:0.8rem; ${cursorStyle}" ${clickAction} title="${titleHint}">${icon}</span>
+                            <span style="flex:1; line-height:1.4; ${textStyle}">${item.text || item.title || '未知任务'}</span>
+                        </div>`;
+                        } else {
+                            // 👉 活跃状态：保持原有的 checkbox 交互
+                            const isChecked = item.done ? 'checked' : '';
+                            const textStyle = item.done ? 'text-decoration:line-through; color:#aaa;' : 'color:#555;';
+                            plHtml += `
+                        <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; margin-bottom:8px; cursor:pointer;">
+                            <input type="checkbox" style="margin-top:2px;" ${isChecked}
+                                onchange="toggleCabinetItem(${pIdx}, ${iIdx}, this.checked, false)">
+                            <span style="flex:1; line-height:1.4; ${textStyle}">${item.text || item.title || '未知任务'}</span>
+                        </label>`;
+                        }
+                    });
+                    plHtml += `</div>`;
+                }
+                plHtml += `</div>`;
+
+                // 2. 分流：活跃 vs 归档
+                if (pl.isArchived) {
+                    archivedCount++;
+                    archivedHtml += plHtml;
+                } else {
+                    activeCount++;
+                    activeHtml += plHtml;
+                }
+            });
         }
 
-        // 新增：给清单列表加定高和滚动条（class 便于恢复滚动）
-        html += `<div class="cabinet-scroll-area" style="max-height: 260px; overflow-y: auto; padding-right: 4px;">`;
+        // 3. 兜底空状态
+        if (activeCount === 0) activeHtml = '<div style="font-size:0.75rem; color:#bbb; padding:10px 4px; text-align:center;">暂无案头手边事</div>';
+        if (archivedCount === 0) archivedHtml = '<div style="font-size:0.75rem; color:#bbb; padding:10px 4px; text-align:center;">暂无归档手账本</div>';
 
-        customPlaylists.forEach((pl, pIdx) => {
-            const isCold = pl.inColdStorage === true;
-            const plIcon = pl.icon || '📑';
+        // 4. 组装平级双抽屉 UI (使用一致的浅灰白底色，极其优雅平级)
+        let html = '';
+        const drawerStyle = "background: #fcfcfc; border: 1px solid #f0f1f5; border-radius: 12px; padding: 6px 12px; margin-bottom: 8px;";
+        const summaryStyle = "font-size:0.85rem; font-weight:bold; color:#555; padding: 4px 0; cursor:pointer; display:flex; align-items:center;";
 
-            if (isCold) {
-                return; // v6.9.5: 彻底移出档案柜显示，交由底部的真实冷库去渲染
-            }
+        // 抽屉 A：案头 (赋予 ID 和记忆状态)
+        html += `<details id="drawerActive" style="${drawerStyle}" ${activeIsOpen}>`;
+        html += `<summary style="${summaryStyle}">🪴 案头手边事 <span style="font-size:0.75rem; font-weight:normal; color:#999; margin-left:6px;">(${activeCount})</span></summary>`;
+        html += `<div style="padding-top: 8px; max-height: 220px; overflow-y: auto;">${activeHtml}</div>`;
+        html += `</details>`;
 
-            // 极简树状排版：无底色，仅底部虚线分割
-            html += `<div style="padding: 10px 4px; border-bottom: 1px dashed #f0f1f5;">`;
+        // 抽屉 B：手账本 (赋予 ID 和记忆状态)
+        html += `<details id="drawerArchived" style="${drawerStyle}" ${archivedIsOpen}>`;
+        html += `<summary style="${summaryStyle}">📔 归档手账本 <span style="font-size:0.75rem; font-weight:normal; color:#999; margin-left:6px;">(${archivedCount})</span></summary>`;
+        html += `<div style="padding-top: 8px; max-height: 220px; overflow-y: auto;">${archivedHtml}</div>`;
+        html += `</details>`;
 
-            const countBadge = (pl.playlistType === 'sop' || !pl.playlistType) && pl.completeCount
-                ? `<span class="manual-tag" style="color:#75B79E; background:#e8f5e9; font-weight:bold;">🏆 ${pl.completeCount}次</span>`
-                : '';
-
-            html += `<div style="font-size: 0.85rem; font-weight: bold; color: #555; display:flex; justify-content:space-between; align-items:center;">
-                        <span>${plIcon} ${pl.title || '未命名清单'} ${countBadge}</span>
-                        <div style="display:flex; gap:8px; align-items:center;">
-                            <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="editPlaylist(${pIdx})" title="编辑">✏️</span>
-                            <span style="font-size:0.75rem; color:#999; cursor:pointer;" onclick="handlePlaylistColdOrDelete(${pIdx})" title="操作">🧊</span>
-                            <span style="font-size:0.75rem; color:#999;">${pl.items ? pl.items.filter(i=>i.done).length : 0}/${pl.items ? pl.items.length : 0}</span>
-                        </div>
-                     </div>`;
-
-            if (pl.items && pl.items.length > 0) {
-                // 增加左侧 padding，形成视觉上的树状缩进从属关系
-                html += `<div style="display:flex; flex-direction:column; gap:8px; padding-left: 22px; margin-top: 10px;">`;
-                pl.items.forEach((item, iIdx) => {
-                    const isDone = !!item.done;
-                    const textStyle = isDone ? 'text-decoration: line-through; color: #bbb;' : 'color: #666;';
-                    html += `
-                        <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; cursor:pointer;">
-                            <input type="checkbox" class="ritual-step-checkbox" style="margin-top:3px;"
-                                   ${isDone ? 'checked' : ''}
-                                   onchange="toggleCabinetItem(${pIdx}, ${iIdx}, this.checked)">
-                            <span style="flex:1; ${textStyle}">${item.text || item.title || '未知任务'}</span>
-                        </label>
-                    `;
-                });
-                html += `</div>`;
-            }
-            html += `</div>`;
-        });
-        html += `</div>`;
         container.innerHTML = html;
-        // 恢复滚动高度
-        const newScrollBox = container.querySelector('.cabinet-scroll-area');
+
+        // 5. 更新大档案柜旁边的小数字
+        const countEl = document.getElementById('cabinetCountDisplay');
+        if (countEl) countEl.innerText = `(${activeCount + archivedCount})`;
+
+        // 6. 恢复滚动高度 (防止打钩时跳动)
+        const newScrollBox = container.querySelector('details[open] > div');
         if (newScrollBox) newScrollBox.scrollTop = savedScrollTop;
+    }
+
+    // 智能传送门：从档案柜一键将清单送上 01 区抽卡台
+    function sendPlaylistToStage(plId) {
+        const sel = document.getElementById('selPlaylist');
+        if (sel) {
+            // 1. 选中对应的清单并更新按钮 UI
+            sel.value = plId;
+            if (typeof handlePlaylistChange === 'function') handlePlaylistChange();
+
+            // 2. 直接触发抽卡，弹出大面板
+            if (typeof draw === 'function') draw();
+
+            // 3. 强制关闭高级筛选抽屉，保持视野纯净
+            const filterDrawer = document.getElementById('filterDrawer');
+            if (filterDrawer && filterDrawer.style.display !== 'none') {
+                filterDrawer.style.display = 'none';
+            }
+
+            // 4. 平滑滚动到 01 区最顶部标准机位
+            setTimeout(() => {
+                const hero = document.querySelector('.hero-wrapper');
+                if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+
+            showToast("🎯 已为您直达专属清单！");
+        }
     }
 
     // 处理清单打钩：持久化 + 记入足迹
@@ -6880,6 +7022,15 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const item = items[iIdx];
         item.done = isChecked;
 
+        // 👉 修复状态坍缩：如果是归档清单的补打卡，打上时空追认的专属钢印
+        if (customPlaylists[pIdx].isArchived) {
+            if (isChecked) {
+                item.isRetroactive = true;
+            } else {
+                delete item.isRetroactive; // 以防万一的容错
+            }
+        }
+
         // 1. 钢印记忆：立刻存入硬盘，防止刷新丢失
         savePlaylists();
 
@@ -6889,12 +7040,15 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const anchorDateStr = getAnchorDate().toDateString();
         const taskName = item.text || item.title || '未知子任务';
         const plIcon = customPlaylists[pIdx].icon || '📑';
-        const logTitle = `【${customPlaylists[pIdx].title || '清单'}】${taskName}`; // 恢复【】格式
+        const isArchived = customPlaylists[pIdx].isArchived === true;
+        const prefix = isArchived ? '追认·' : '';
+        const logTitle = `【${prefix}${customPlaylists[pIdx].title || customPlaylists[pIdx].name || '清单'}】${taskName}`;
 
         if (isChecked) {
             dailyLog.unshift({
                 id: Date.now(), title: logTitle, icon: plIcon, timeStr: timeStr,
-                date: anchorDateStr, done: true, type: 'checklist_item'
+                date: anchorDateStr, done: true, type: 'checklist_item',
+                playlistId: customPlaylists[pIdx].id
             });
             save(); renderLog();
             if (typeof renderHistory === 'function') renderHistory();
@@ -6904,18 +7058,23 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 showToast(`🎉 恭喜！「${customPlaylists[pIdx].title}」已全部完成！`);
 
                 if (customPlaylists[pIdx].playlistType === 'once') {
+                    // 🚨 核心修复：写入新记录前，先删掉旧的整体完成记录（防止完成后再加任务导致重复）
+                    const doneIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.type === 'playlist_done' && l.playlistId === customPlaylists[pIdx].id);
+                    if (doneIdx > -1) dailyLog.splice(doneIdx, 1);
+
                     dailyLog.unshift({
-                        id: Date.now(), title: `【整体完成】${customPlaylists[pIdx].title}`,
-                        icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done'
+                        id: Date.now(),
+                        title: `【整体完成】${customPlaylists[pIdx].title || customPlaylists[pIdx].name}`,
+                        icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done',
+                        playlistId: customPlaylists[pIdx].id
                     });
                     save(); renderLog();
                     if (typeof renderHistory === 'function') renderHistory();
 
                     if (fromCard) {
                         setTimeout(() => {
-                            customPlaylists.splice(pIdx, 1);
                             savePlaylists(); renderCabinet();
-                            showToast('⚡️ 一次性清单已满进度，自动清理出库');
+                            showToast('🎉 100% 达成！将作为战利品展示至次日');
                             if (typeof closePlaylistOverlay === 'function') closePlaylistOverlay(true);
                         }, 1000);
                     }
@@ -6926,7 +7085,8 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
                         dailyLog.unshift({
                             id: Date.now(), title: `【+${customPlaylists[pIdx].completeCount}】${customPlaylists[pIdx].title}`,
-                            icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done'
+                            icon: '🏆', timeStr: timeStr, date: anchorDateStr, done: true, type: 'playlist_done',
+                            playlistId: customPlaylists[pIdx].id
                         });
 
                         if (customPlaylists[pIdx].items) {
@@ -6942,7 +7102,13 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                     }, 1000);
                 }
             } else {
-                if (isChecked && typeof safeVibrate === 'function') safeVibrate();
+                if (isChecked) {
+                    if (isArchived) {
+                        showToast("✨ 跨越时空的补卡！已记录");
+                    } else if (typeof safeVibrate === 'function') {
+                        safeVibrate();
+                    }
+                }
             }
         } else {
             // 撤销打卡：在今日足迹中寻找并抹除这一条
@@ -6954,8 +7120,8 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             }
 
             // 额外防御：如果之前因为一次性清单全部完成而写入了整体完成记录，这里一旦有子任务被撤销，就一并撤销整体完成足迹
-            const plTitleFull = `【整体完成】${customPlaylists[pIdx].title}`;
-            const doneIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.title === plTitleFull && l.type === 'playlist_done');
+            // 升级防御：优先使用 playlistId 匹配，以防用户改名导致匹配失败
+            const doneIdx = dailyLog.findIndex(l => l.date === anchorDateStr && l.type === 'playlist_done' && l.playlistId === customPlaylists[pIdx].id);
             if (doneIdx > -1) {
                 dailyLog.splice(doneIdx, 1);
                 save(); renderLog();
@@ -7062,7 +7228,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 playlistType: pendingCreatorType,
                 icon: iconRaw,
                 items: tasksRaw.map(t => ({ text: t, done: false })), tasks: tasksRaw,
-                completeCount: 0
+                completeCount: 0,
+                isArchived: false,  // 默认不归档
+                createdDate: typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString()  // 👉 创建日期标记(夜猫子)
             };
             customPlaylists.unshift(newPl);
             showToast('✅ 清单已落盘');
@@ -7070,12 +7238,12 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         hidePlaylistCreator();
         savePlaylists();
         renderCabinet();
-        // v6.9.5：保存后自动展开档案柜并平滑滚动，建立空间感
-        const cabinet = document.getElementById('cabinetDetails');
-        if (cabinet) {
-            cabinet.open = true;
+        // v7.0.X 修复：定位到新的「案头手边事」抽屉
+        const drawerActive = document.getElementById('drawerActive');
+        if (drawerActive) {
+            drawerActive.open = true;
             setTimeout(() => {
-                cabinet.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                drawerActive.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 150);
         }
     }
@@ -9433,11 +9601,17 @@ function startPlaylist(playMode) {
     }
   });
 
+  // 🚨 修复：如果全打钩了，直接阻断，绝对不准回退到源数据
+  if (remainingTasks.length === 0) {
+    if (typeof showToast === 'function') showToast("🎉 该清单已没有待办任务啦！");
+    return;
+  }
+
   activePlaylist = {
     id: targetPl.id,
     name: targetPl.name,
-    icon: targetPl.icon || '📑', // 👉 记住该清单的专属图标
-    tasks: remainingTasks.length > 0 ? remainingTasks : sourceTasks, // 只将未完成任务送入牌堆，兜底源数据
+    icon: targetPl.icon || '📑',
+    tasks: remainingTasks,
     mode: playMode
   };
 
@@ -9464,7 +9638,7 @@ function drawFromPlaylist() {
         const plTitle = pl.title || pl.name || activePlaylist.name || '清单';
 
         if (pl.playlistType === 'once') {
-          // 一次性清单：整体完成 + 出库
+          // 一次性清单：整体完成，保留至跨日自动归档
           dailyLog.unshift({
             id: Date.now(),
             title: `【整体完成】${plTitle}`,
@@ -9474,7 +9648,6 @@ function drawFromPlaylist() {
             done: true,
             type: 'playlist_done'
           });
-          customPlaylists.splice(pIdx, 1);
         } else {
           // SOP 清单：本次 +1，并重置所有子任务打钩
           pl.completeCount = (pl.completeCount || 0) + 1;
@@ -11355,10 +11528,41 @@ if (!userOverrideFlash) {
         const dlg = document.getElementById('coldDialog');
         if (dlg) {
             const titleEl = dlg.querySelector('.cold-dialog-title');
-            if(titleEl) titleEl.innerText = "要怎么处理这条清单？";
+            if (titleEl) titleEl.innerText = "要怎么处理这条清单？";
+            const btnDel = dlg.querySelector('.cold-btn-delete');
+            const btnCold = dlg.querySelector('.cold-btn-cold');
+            const btnThird = dlg.querySelector('.cold-btn-cancel');
+            if (btnDel) { btnDel.innerText = '🗑️ 彻底删除'; btnDel.onclick = () => confirmColdAction('delete'); }
+            if (btnCold) { btnCold.innerText = '🧊 搁置(冷库)'; btnCold.onclick = () => confirmColdAction('cold'); }
+            if (btnThird) { btnThird.innerText = '🗄️ 结束并归档'; btnThird.onclick = () => confirmColdAction('archive_playlist'); }
             dlg.style.display = 'flex';
         }
     }
+
+    // 唤醒归档的清单
+    function restoreArchivedPlaylist(pIdx) {
+        if (customPlaylists[pIdx]) {
+            customPlaylists[pIdx].isArchived = false;
+            // 👉 喝下孟婆汤：洗掉归档钢印和旧的完成时间，防止被扫地机器人误杀或产生 UI 幽灵
+            delete customPlaylists[pIdx].archivedDate;
+            delete customPlaylists[pIdx].completedDate;
+
+            savePlaylists();
+            renderCabinet();
+            showToast("♻️ 清单已重返案头");
+        }
+    }
+
+    // 彻底删除归档的清单
+    function deleteArchivedPlaylist(pIdx) {
+        if (confirm("确定要彻底销毁这份手账本吗？\n此操作不可恢复。")) {
+            customPlaylists.splice(pIdx, 1);
+            savePlaylists();
+            renderCabinet();
+            showToast("🗑️ 手账已销毁");
+        }
+    }
+
     // 弹窗中点击三个按钮之一：delete / cold / cancel
     function confirmColdAction(action) {
         const dlg = document.getElementById('coldDialog');
@@ -11382,6 +11586,11 @@ if (!userOverrideFlash) {
                     customPlaylists.splice(id, 1);
                     savePlaylists(); renderCabinet(); renderList(); showToast("🗑️ 清单已彻底删除");
                 }
+            } else if (action === 'archive_playlist') {
+                customPlaylists[id].isArchived = true;
+                const d = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+                customPlaylists[id].archivedDate = (d.getMonth() + 1) + '/' + d.getDate();
+                savePlaylists(); renderCabinet(); showToast("🗄️ 清单已归档至手账本");
             } else if (action === 'cancel') {
                 if (customPlaylists[id].inColdStorage) {
                     customPlaylists[id].inColdStorage = false;
@@ -11389,7 +11598,9 @@ if (!userOverrideFlash) {
                 }
             }
             const titleEl = dlg.querySelector('.cold-dialog-title');
-            if(titleEl) titleEl.innerText = "要怎么处理这条任务？";
+            if (titleEl) titleEl.innerText = "要怎么处理这条任务？";
+            const btnThird = dlg.querySelector('.cold-btn-cancel');
+            if (btnThird) { btnThird.innerText = '🔙 取消'; btnThird.onclick = () => confirmColdAction('cancel'); }
             return;
         }
 
