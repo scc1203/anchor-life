@@ -4977,6 +4977,12 @@ function stopStarShineSound() {
         
         if (imgEl && typeof DAILY_POSTER_IMAGES !== 'undefined' && DAILY_POSTER_IMAGES.length > 0) {
             const idx = (dayNum - 1) % DAILY_POSTER_IMAGES.length;
+            // 👉 核心修复：强制脱下隐身衣，恢复图片可见性
+            imgEl.style.display = 'block';
+            imgEl.style.opacity = '1';
+            const fallbackEl = document.getElementById('dailyPosterFallback');
+            if (fallbackEl) fallbackEl.style.display = 'none';
+
             imgEl.src = DAILY_POSTER_IMAGES[idx];
         }
         if (daySpan) daySpan.textContent = dayNum;
@@ -4988,11 +4994,15 @@ function stopStarShineSound() {
             } else {
                 dateEl.textContent = `时光机 | 这是你过去留下的风景。`;
             }
+
         }
         
         // 极其暴力的显隐控制
         if (prevBtn) prevBtn.style.display = (dayNum > 1) ? 'flex' : 'none';
         if (nextBtn) nextBtn.style.display = (dayNum < maxDay) ? 'flex' : 'none';
+
+        // 👉 翻页后，通知底层重新计算并刷新预览框数据
+        if (typeof updatePosterPreview === 'function') updatePosterPreview();
     }
 
     function navigatePoster(delta, event) {
@@ -13087,39 +13097,59 @@ function openHarvestDialogAsync(defaultMins, task = null) {
 }
 
 // --- 日签定制器逻辑 ---
-function getTodayPosterStats() {
-  const todayStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : new Date()).toDateString();
-  let count = 0;
-  let mins = 0;
-  if (Array.isArray(dailyLog)) {
-    dailyLog.forEach(log => {
-      if (log.date === todayStr) {
-        if (log.done !== false && !log.title.includes('【整体完成】')) count++;
-        if (log.lastAddMinutes && !isNaN(log.lastAddMinutes)) mins += Number(log.lastAddMinutes);
-      }
-    });
-  }
-  return { count, mins };
+// 👉 v7.0.X：升级版海报统计器（支持时空穿梭与去重）
+function getPosterStatsByDay(dayNum) {
+    const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+    const daysAgo = maxDay - dayNum;
+
+    // 计算出目标历史日期
+    const targetDateObj = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+    targetDateObj.setDate(targetDateObj.getDate() - daysAgo);
+    const targetDateStr = targetDateObj.toDateString();
+
+    let count = 0;
+    let mins = 0;
+    if (typeof dailyLog !== 'undefined' && Array.isArray(dailyLog)) {
+        // 先筛选出那一天的所有足迹，并复用去重逻辑，防止清单任务重复计算
+        const rawLogs = dailyLog.filter(log => log.date === targetDateStr);
+        const validLogs = typeof dedupeChecklistTwins === 'function' ? dedupeChecklistTwins(rawLogs) : rawLogs;
+
+        validLogs.forEach(log => {
+            // 排除整体完成标记，统计真实任务数
+            if (log.done !== false && !log.title.includes('【整体完成】') && !log.title.includes('【本次+')) {
+                count++;
+            }
+            if (log.lastAddMinutes && !isNaN(log.lastAddMinutes)) {
+                mins += Number(log.lastAddMinutes);
+            }
+        });
+    }
+    return { count, mins, isToday: daysAgo === 0 };
 }
 
 function openPosterStudio() {
-  const stats = getTodayPosterStats();
-  const h = Math.floor(stats.mins / 60);
-  const m = stats.mins % 60;
-  const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    const dayNum = (typeof currentViewedPosterDay !== 'undefined')
+        ? currentViewedPosterDay
+        : (typeof initOpenedDays === 'function' ? initOpenedDays() : 1);
+    const stats = getPosterStatsByDay(dayNum);
+    const h = Math.floor(stats.mins / 60);
+    const m = stats.mins % 60;
+    const timeStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
 
-  document.getElementById('chkAnchorCount').checked = stats.count > 0;
-  document.getElementById('chkFlowTime').checked = stats.mins > 0;
+    document.getElementById('chkAnchorCount').checked = stats.count > 0;
+    document.getElementById('chkFlowTime').checked = stats.mins > 0;
 
-  document.getElementById('studioAnchorNum').textContent = stats.count;
-  document.getElementById('studioFlowNum').textContent = timeStr;
+    const studioAnchorNum = document.getElementById('studioAnchorNum');
+    const studioFlowNum = document.getElementById('studioFlowNum');
+    if (studioAnchorNum) studioAnchorNum.textContent = stats.count;
+    if (studioFlowNum) studioFlowNum.textContent = timeStr;
 
-  document.getElementById('posterMainActions').style.display = 'none';
-  document.getElementById('posterStudioPanel').style.display = 'flex';
-  const saveBtn = document.querySelector('.poster-save-btn');
-  if (saveBtn) saveBtn.style.display = 'none';
+    document.getElementById('posterMainActions').style.display = 'none';
+    document.getElementById('posterStudioPanel').style.display = 'flex';
+    const saveBtn = document.querySelector('.poster-save-btn');
+    if (saveBtn) saveBtn.style.display = 'none';
 
-  updatePosterPreview();
+    if (typeof updatePosterPreview === 'function') updatePosterPreview();
 }
 
 function closePosterStudio() {
@@ -13131,34 +13161,58 @@ function closePosterStudio() {
   if (preview) preview.style.display = 'none';
 }
 
+// 👉 v7.0.X：动态同步海报预览 UI
 function updatePosterPreview() {
-  const chkCount = document.getElementById('chkAnchorCount');
-  const chkFlow = document.getElementById('chkFlowTime');
-  const container = document.getElementById('posterPreviewStats');
-  const elCount = document.getElementById('previewAnchorCount');
-  const elFlow = document.getElementById('previewFlowTime');
-  const elDivider = document.getElementById('previewDivider');
-  if (!chkCount || !chkFlow || !container || !elCount || !elFlow) return;
+    if (typeof currentViewedPosterDay === 'undefined') return;
+    
+    // 1. 获取当前正在查看的那一天的真实数据
+    const stats = getPosterStatsByDay(currentViewedPosterDay);
+    const dayLabel = stats.isToday ? '今日' : '该日';
 
-  const stats = getTodayPosterStats();
-  const h = Math.floor(stats.mins / 60);
-  const m = stats.mins % 60;
+    // 2. 更新面板下方的数字与文案（不破坏 Checkbox 结构）
+    const studioAnchorNum = document.getElementById('studioAnchorNum');
+    const studioFlowNum = document.getElementById('studioFlowNum');
+    if (studioAnchorNum) {
+        studioAnchorNum.textContent = stats.count;
+        // 安全替换前面的 "今日" 字眼
+        const textNode = studioAnchorNum.previousSibling;
+        if (textNode && textNode.nodeType === 3) {
+            textNode.nodeValue = textNode.nodeValue.replace(/今日|该日/, dayLabel);
+        }
+    }
+    if (studioFlowNum) {
+        const h = Math.floor(stats.mins / 60);
+        const m = stats.mins % 60;
+        studioFlowNum.textContent = h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
 
-  elCount.textContent = `📍 今日点亮了 ${stats.count} 个生活锚点`;
-  elFlow.textContent = `🌊 心流沉浸 ${h > 0 ? h + 'h ' : ''}${m}m`;
+    // 3. 更新海报图片上的预览文字
+    const elCount = document.getElementById('previewAnchorCount');
+    const elFlow = document.getElementById('previewFlowTime');
+    const elDivider = document.getElementById('previewDivider');
+    const container = document.getElementById('posterPreviewStats');
+    const chkCount = document.getElementById('chkAnchorCount');
+    const chkFlow = document.getElementById('chkFlowTime');
 
-  elCount.style.display = chkCount.checked ? 'inline' : 'none';
-  elFlow.style.display = chkFlow.checked ? 'inline' : 'none';
-  if (elDivider) elDivider.style.display = (chkCount.checked && chkFlow.checked) ? 'inline' : 'none';
+    if (!elCount || !elFlow || !chkCount || !chkFlow) return;
 
-  if (chkCount.checked || chkFlow.checked) {
-    container.style.display = 'flex';
-    container.style.animation = 'none';
-    void container.offsetWidth;
-    container.style.animation = 'tooltipPop 0.3s ease forwards';
-  } else {
-    container.style.display = 'none';
-  }
+    const h2 = Math.floor(stats.mins / 60);
+    const m2 = stats.mins % 60;
+    elCount.textContent = `📍 ${dayLabel}点亮了 ${stats.count} 个生活锚点`;
+    elFlow.textContent = `🌊 心流沉浸 ${h2 > 0 ? h2 + 'h ' : ''}${m2}m`;
+
+    elCount.style.display = chkCount.checked ? 'inline' : 'none';
+    elFlow.style.display = chkFlow.checked ? 'inline' : 'none';
+    if (elDivider) elDivider.style.display = (chkCount.checked && chkFlow.checked) ? 'inline' : 'none';
+
+    if (chkCount.checked || chkFlow.checked) {
+        container.style.display = 'flex';
+        container.style.animation = 'none';
+        void container.offsetWidth;
+        container.style.animation = 'tooltipPop 0.3s ease forwards';
+    } else {
+        container.style.display = 'none';
+    }
 }
 
 // ============================================================
