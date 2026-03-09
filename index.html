@@ -2901,6 +2901,48 @@ body.immersive-locked {
 .emoji-input-hint:focus {
     animation: none; /* 点击后停止呼吸 */
 }
+
+/* 日签时光机切换按钮 */
+.poster-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    /* 👉 调优：极其克制的透明度 */
+    background: rgba(0, 0, 0, 0.08);
+    color: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+}
+.poster-nav-btn:hover { 
+    background: rgba(0, 0, 0, 0.25); 
+    color: rgba(255, 255, 255, 0.9); 
+}
+.poster-prev { left: 8px; }
+.poster-next { right: 8px; }
+
+/* 隐藏档案柜抽屉原生的 +/- 符号，让位给中文破折号 */
+.cabinet-summary {
+    list-style: none !important;
+}
+.cabinet-summary::-webkit-details-marker,
+.cabinet-summary::marker {
+    display: none !important;
+    content: none !important;
+}
+.cabinet-summary::after,
+.cabinet-summary::before {
+    display: none !important;
+    content: none !important;
+}
 </style>
 </head>
 <body>
@@ -4920,6 +4962,53 @@ function stopStarShineSound() {
         return arr.length;
     }
 
+    // 👉 日签时光机引擎
+    let currentViewedPosterDay = 1;
+
+    function updatePosterDisplay(dayNum) {
+        // 强制内部自主计算，杜绝外部参数传递丢失
+        const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+        
+        const imgEl = document.getElementById('dailyPosterImg');
+        const daySpan = document.getElementById('dailyPosterDayCount');
+        const dateEl = document.getElementById('dailyPosterDate');
+        const prevBtn = document.querySelector('.poster-prev');
+        const nextBtn = document.querySelector('.poster-next');
+        
+        if (imgEl && typeof DAILY_POSTER_IMAGES !== 'undefined' && DAILY_POSTER_IMAGES.length > 0) {
+            const idx = (dayNum - 1) % DAILY_POSTER_IMAGES.length;
+            imgEl.src = DAILY_POSTER_IMAGES[idx];
+        }
+        if (daySpan) daySpan.textContent = dayNum;
+        
+        if (dateEl) {
+            if (dayNum === maxDay) {
+                const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr().replace(/-/g, '.') : new Date().toLocaleDateString();
+                dateEl.textContent = `${todayStr} | 像一次短暂停靠，看看今天走到了哪里。`;
+            } else {
+                dateEl.textContent = `时光机 | 这是你过去留下的风景。`;
+            }
+        }
+        
+        // 极其暴力的显隐控制
+        if (prevBtn) prevBtn.style.display = (dayNum > 1) ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = (dayNum < maxDay) ? 'flex' : 'none';
+    }
+
+    function navigatePoster(delta, event) {
+        if (event) event.stopPropagation();
+        const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+        
+        let target = currentViewedPosterDay + delta;
+        if (target < 1) target = 1;
+        if (target > maxDay) target = maxDay;
+        
+        if (target !== currentViewedPosterDay) {
+            currentViewedPosterDay = target;
+            updatePosterDisplay(currentViewedPosterDay); // 仅传当前天数
+        }
+    }
+
     // 如有需要，弹出今日打卡图（优化：添加图片预加载和错误处理）
 function showDailyPosterIfNeeded(openDaysCount) {
     // v6.7.2 一日三季：按时段判断是否弹出打卡图
@@ -4946,20 +5035,10 @@ function showDailyPosterIfNeeded(openDaysCount) {
     const dateEl  = document.getElementById('dailyPosterDate');
     if (!overlay || !daySpan) return;
 
-    // 更新「第几天」的数字与称呼
-    daySpan.textContent = openDaysCount;
+    currentViewedPosterDay = openDaysCount;
+    updatePosterDisplay(currentViewedPosterDay);
     const unameEl = document.getElementById('dailyPosterUname');
     if (unameEl) unameEl.textContent = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
-
-        // 更新当天日期 + 文案（格式：YYYY.MM.DD | 像一次短暂停靠，看看今天走到了哪里。）
-    if (dateEl) {
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, '0');
-        const d = String(now.getDate()).padStart(2, '0');
-        const dateStr = `${y}.${m}.${d}`;
-        dateEl.textContent = `${dateStr} | 像一次短暂停靠，看看今天走到了哪里。`;
-    }
 
     // 按天数在图库里选一张图
     if (imgEl && Array.isArray(DAILY_POSTER_IMAGES) && DAILY_POSTER_IMAGES.length > 0) {
@@ -5156,26 +5235,10 @@ function markPosterPhase(phaseKey) {
         const dateEl  = document.getElementById('dailyPosterDate');
         const openDaysCount = initOpenedDays ? initOpenedDays() : 1;
 
-        if (daySpan) daySpan.textContent = openDaysCount;
+        currentViewedPosterDay = openDaysCount;
+        updatePosterDisplay(currentViewedPosterDay);
         const unameEl = document.getElementById('dailyPosterUname');
         if (unameEl) unameEl.textContent = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
-
-        // 更新日期文案
-        if (dateEl) {
-            const now = new Date();
-            const y = now.getFullYear();
-            const m = String(now.getMonth() + 1).padStart(2, '0');
-            const d = String(now.getDate()).padStart(2, '0');
-            dateEl.textContent = `${y}.${m}.${d} | 像一次短暂停靠，看看今天走到了哪里。`;
-        }
-
-        // 更新图片（按天数轮换）
-        if (imgEl && Array.isArray(DAILY_POSTER_IMAGES) && DAILY_POSTER_IMAGES.length > 0) {
-            const idx = (openDaysCount - 1) % DAILY_POSTER_IMAGES.length;
-            imgEl.src = DAILY_POSTER_IMAGES[idx];
-            imgEl.style.opacity = '1';
-            imgEl.style.display = 'block';
-        }
 
         // 直接显示（手动打开不需要等图片加载）
         overlay.style.display = 'flex';
@@ -6962,13 +7025,13 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
         // 抽屉 A：案头 (赋予 ID 和记忆状态)
         html += `<details id="drawerActive" style="${drawerStyle}" ${activeIsOpen}>`;
-        html += `<summary style="${summaryStyle}">🪴 案头手边事 <span style="font-size:0.75rem; font-weight:normal; color:#999; margin-left:6px;">(${activeCount})</span></summary>`;
+        html += `<summary class="cabinet-summary" style="${summaryStyle}">🪴 案头手边事 <span style="font-size:0.75rem; font-weight:normal; color:#999; margin-left:6px;">(${activeCount}) ——</span></summary>`;
         html += `<div style="padding-top: 8px; max-height: 220px; overflow-y: auto;">${activeHtml}</div>`;
         html += `</details>`;
 
         // 抽屉 B：手账本 (赋予 ID 和记忆状态)
         html += `<details id="drawerArchived" style="${drawerStyle}" ${archivedIsOpen}>`;
-        html += `<summary style="${summaryStyle}">📔 归档手账本 <span style="font-size:0.75rem; font-weight:normal; color:#999; margin-left:6px;">(${archivedCount})</span></summary>`;
+        html += `<summary class="cabinet-summary" style="${summaryStyle}">📓 归档手账本 <span style="font-size:0.75rem; font-weight:normal; color:#999; margin-left:6px;">(${archivedCount}) ——</span></summary>`;
         html += `<div style="padding-top: 8px; max-height: 220px; overflow-y: auto;">${archivedHtml}</div>`;
         html += `</details>`;
 
@@ -7862,8 +7925,17 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
       }) : [];
       const items = dedupeChecklistTwins(itemsRaw);
 
-      // 标题恢复“完成多少项”的统计信息
-      projDate.innerText = `📅 ${displayDate} · 完成 ${items.length} 项`;
+      // 计算当日总投入时长
+      let totalMins = 0;
+      items.forEach(log => { totalMins += (log.lastAddMinutes || 0); });
+      let timeHtml = '';
+      if (totalMins > 0) {
+        const h = Math.floor(totalMins / 60);
+        const m = totalMins % 60;
+        const timeStr = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+        timeHtml = ` <span style="font-weight:normal; font-size:0.8rem; color:#888;">(共专注 ${timeStr})</span>`;
+      }
+      hmProjDate.innerHTML = `📅 ${displayDate} · 完成 ${items.length} 项${timeHtml}`;
 
       if (items.length === 0) {
         projList.innerHTML = '<div style="color:#aaa; font-size:0.8rem; font-style:italic; padding:8px 0;">🍃 这一天，你选择了留白与休息。</div>';
@@ -13341,6 +13413,9 @@ document.addEventListener('click', function(event) {
         <div class="daily-poster-card">
 <div class="daily-poster-image">
     <img id="dailyPosterImg" class="daily-poster-photo" src="" alt="今日打卡图" style="opacity: 0; transition: opacity 0.3s; display: block;">
+    <!-- 时光机切换按钮 -->
+    <div class="poster-nav-btn poster-prev" onclick="navigatePoster(-1, event)" style="display:none;" title="前一天">❮</div>
+    <div class="poster-nav-btn poster-next" onclick="navigatePoster(1, event)" style="display:none;" title="后一天">❯</div>
     <div id="dailyPosterFallback" style="display:none; position:absolute; inset:0; align-items:center; justify-content:center; background:#1A1C23; color:#777; font-size:0.85rem; z-index:1;">
       🖼️ 信号丢失，但今天依然是很好的一天。
     </div>
