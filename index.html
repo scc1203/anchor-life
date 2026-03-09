@@ -2958,7 +2958,7 @@ body.immersive-locked {
 
 <div class="container">
         <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.0.2 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.0.3 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3858,6 +3858,7 @@ body.immersive-locked {
 
 <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">🌌 v7.0：架构升维与时空手账</div>
 <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+    <li><b>v7.0.3：</b> 🌁 <b>日签时光机重构：</b>新增历史日签功能；支持自定义勾选🌊「心流时长与锚点」，完美复刻当日并无损合成高清海报。</li>
     <li><b>v7.0.2：</b> 🗄️ <b>双层档案柜与时空追认：</b>档案柜升级为「案头手边事/归档手账本」双抽屉，升级归档系统；归档手账本支持“跨时空补卡”✨。</li>
     <li><b>v7.0.1：</b> 🧠 <b>记忆系统全面升维：</b>新增任务记忆补录功能；删除历史记录时智能询问是否撤回时长；修复进度多次覆盖Bug；隐藏级彩蛋：清单子任务全面接入记忆雷达。</li>
 </ul>
@@ -4992,9 +4993,16 @@ function stopStarShineSound() {
                 const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr().replace(/-/g, '.') : new Date().toLocaleDateString();
                 dateEl.textContent = `${todayStr} | 像一次短暂停靠，看看今天走到了哪里。`;
             } else {
-                dateEl.textContent = `时光机 | 这是你过去留下的风景。`;
+                // 👉 v7.0.3：时光机日期倒推算法，赋予历史海报真实的时空坐标
+                const daysAgo = maxDay - dayNum;
+                const historyDate = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+                historyDate.setDate(historyDate.getDate() - daysAgo);
+                const y = historyDate.getFullYear();
+                const m = String(historyDate.getMonth() + 1).padStart(2, '0');
+                const d = String(historyDate.getDate()).padStart(2, '0');
+                
+                dateEl.textContent = `${y}.${m}.${d} | 时光机：这是你过去留下的风景。`;
             }
-
         }
         
         // 极其暴力的显隐控制
