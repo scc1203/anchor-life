@@ -8401,6 +8401,8 @@ function renderResultCard(result) {
             activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
         }));
         startLiveTimer();
+        // v6.9.X：物联网联动，任务上台时自动静默通知大姐
+        if (typeof syncToCloud === 'function') syncToCloud(true);
     }
 
     function formatTrailerTime(seconds) {
@@ -8617,6 +8619,9 @@ function renderResultCard(result) {
       if (ingEl) ingEl.style.display = 'none';
       
       if (typeof draw === 'function') draw();
+
+      // v6.9.X：物联网联动，状态重置时自动静默通知大姐
+      if (typeof syncToCloud === 'function') syncToCloud(true);
     }
 
 function playGachaAnimation(result) {
@@ -10380,6 +10385,9 @@ function openRitual(type) {
             if (typeof activePlaylist !== 'undefined' && activePlaylist) {
               drawFromPlaylist();
             }
+
+            // v6.9.X：物联网联动，任务完结时自动静默通知大姐
+            if (typeof syncToCloud === 'function') syncToCloud(true);
         }
     }
 
@@ -12495,14 +12503,14 @@ if (!userOverrideFlash) {
 
     const CLOUD_API_BASE = 'https://anchor-api.dawnharbour.com/api/data';
 
-    // 👉 1. 将数据 Push 到云端
-    async function syncToCloud() {
+    // 👉 1. 将数据 Push 到云端（支持静默模式 isSilent）
+    async function syncToCloud(isSilent = false) {
       if (currentUsername === 'Anchor' || !currentUsername) {
-        showToast("⚠️ 请先在上方设置你的专属身份标识（名字）！");
+        if (!isSilent) showToast("⚠️ 请先在上方设置你的专属身份标识（名字）！");
         return;
       }
       const btn = document.getElementById('btnSyncCloud');
-      if(btn) btn.innerText = "☁️ 正在同步...";
+      if(btn && !isSilent) btn.innerText = "☁️ 正在同步...";
 
       try {
         const payload = getBackupDataObj();
@@ -12517,20 +12525,20 @@ if (!userOverrideFlash) {
         });
 
         if (res.status === 403 || res.status === 401) {
-          showToast("🔒 密码错误或无权限覆盖该身份的数据！");
+          if (!isSilent) showToast("🔒 密码错误或无权限覆盖该身份的数据！");
           return;
         }
 
         if (res.ok) {
-          showToast("☁️ 已成功同步到云端！");
+          if (!isSilent) showToast("☁️ 已成功同步到云端！");
         } else {
-          showToast("⚠️ 云端同步失败，请检查机房");
+          if (!isSilent) showToast("⚠️ 云端同步失败，请检查机房");
         }
       } catch(e) {
         console.error(e);
-        showToast("⚠️ 无法连接到本地服务器，大姐可能下班了");
+        if (!isSilent) showToast("⚠️ 无法连接到本地服务器，大姐可能下班了");
       } finally {
-        if(btn) btn.innerText = "☁️ 推送当前进度至云端";
+        if(btn && !isSilent) btn.innerText = "☁️ 推送当前进度至云端";
       }
     }
 
