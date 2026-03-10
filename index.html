@@ -12365,6 +12365,7 @@ if (!userOverrideFlash) {
         let dayStartOffset = 0;
         let visitedV66 = null;
         let energyModeBackup = null;
+        let liveState = null;
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -12420,6 +12421,14 @@ if (!userOverrideFlash) {
             } catch (e) {
                 energyModeBackup = typeof energyMode !== 'undefined' ? energyMode : null;
             }
+
+            // 👉 进行中任务（Live State）
+            try {
+                const liveStateRaw = localStorage.getItem(KEY_LIVE_STATE);
+                liveState = liveStateRaw ? JSON.parse(liveStateRaw) : null;
+            } catch (e) {
+                liveState = null;
+            }
         } catch (e) {
             console.warn('读取 localStorage 数据时出错', e);
         }
@@ -12448,7 +12457,8 @@ if (!userOverrideFlash) {
                 username: usernameForBackup,
                 dayStartOffset: dayStartOffset,
                 visitedV66: visitedV66,
-                energyMode: energyModeBackup
+                energyMode: energyModeBackup,
+                liveState: liveState
             }
         };
     }
