@@ -4217,6 +4217,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let trailerTimer = null;
     let trailerTimeElapsed = 0; // 正计时，记录已过去的秒数
     let switchState = { cycle: false, flash: false };
+    // v7.0.4：云端雷达互斥锁，防止主动推流与被动轮询打架
+    let isRadarPaused = false;
 
     // --- v6.9.4: 状态装甲与计时器引擎 ---
     const KEY_LIVE_STATE = 'anchor_live_state_v69';
@@ -12513,6 +12515,7 @@ if (!userOverrideFlash) {
       if(btn && !isSilent) btn.innerText = "☁️ 正在同步...";
 
       try {
+        isRadarPaused = true;
         const payload = getBackupDataObj();
         // 携带通行证进行同步
         const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
@@ -12539,8 +12542,88 @@ if (!userOverrideFlash) {
         if (!isSilent) showToast("⚠️ 无法连接到本地服务器，大姐可能下班了");
       } finally {
         if(btn && !isSilent) btn.innerText = "☁️ 推送当前进度至云端";
+        setTimeout(() => { isRadarPaused = false; }, 2000);
       }
     }
+
+    // ============================================================
+    // v6.9.X 云端雷达 (Cloud Radar) - 监听小方块的物理动作
+    // ============================================================
+    async function checkCloudLiveState() {
+        if (isRadarPaused) return;
+        if (typeof currentStatus === 'undefined' || currentStatus !== 'anchor') return;
+        if (!currentUsername || currentUsername === 'Anchor') return;
+        if (typeof CLOUD_API_BASE === 'undefined') return;
+
+        try {
+            const res = await fetch(`${CLOUD_API_BASE}/${currentUsername}`, {
+                headers: { 'X-Anchor-Auth': currentPassword || '' }
+            });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (Object.keys(json).length === 0) return;
+
+            const cloudLive = json.local && json.local.liveState;
+
+            // 👉 雷达报警：手机以为在 ING，但大姐说状态空了，说明小方块出手了！
+            if (!cloudLive) {
+                console.log("📡 云端雷达：探测到小方块已经终结了任务！");
+                
+                // 1. 无缝接管大姐更新后的账本 (小方块写的足迹和时长)
+                if (json.dailyLog) dailyLog = json.dailyLog;
+                if (json.db) db = json.db;
+                if (typeof save === 'function') save();
+                if (typeof renderLog === 'function') renderLog();
+                if (typeof renderList === 'function') renderList();
+                if (typeof renderHistory === 'function') renderHistory();
+
+                // 2. 侦测小方块到底点了啥 (完成 还是 换一个)
+                let isCompleted = false;
+                if (currentTask) {
+                    const recentLog = dailyLog.find(l => l.taskId === currentTask.id);
+                    if (recentLog) isCompleted = recentLog.done;
+                }
+
+                // 3. 抹除手机端本地的 ING 状态
+                const oldTask = currentTask;
+                currentTask = null;
+                if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+                if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+                localStorage.removeItem(KEY_LIVE_STATE);
+                if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
+
+                const card = document.getElementById('resultCard');
+                const statusEl = document.getElementById('rStatus');
+                const ingEl = document.getElementById('rIngPulse');
+
+                if (isCompleted) {
+                    // 【小方块点了：已完成】
+                    if (card) card.style.display = 'none';
+                    if (statusEl) statusEl.style.display = 'none';
+                    if (ingEl) ingEl.style.display = 'none';
+                    if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
+                    if (typeof showToast === 'function') showToast("✨ 小方块已完成任务，手机端已自动同步！");
+                } else {
+                    // 【小方块点了：换一个 (或尝试不足10秒丢弃)】
+                    if (typeof showToast === 'function') showToast("🔄 小方块请求切牌，手机端正在自动发牌...");
+                    if (typeof draw === 'function') draw();
+                    
+                    // 延迟等待抽卡动画结束后，自动推上舞台并同步给大姐
+                    setTimeout(() => {
+                        if (currentTask && typeof setCardAsAnchor === 'function') {
+                            setCardAsAnchor();
+                            if (typeof syncToCloud === 'function') syncToCloud(true); // 静默推给小方块
+                        }
+                    }, 1000);
+                }
+            }
+        } catch (e) {
+            console.warn("雷达扫描异常", e);
+        }
+    }
+
+    // 启动心跳：每 3 秒扫一次大姐的账本
+    setInterval(checkCloudLiveState, 3000);
 
     // 👉 2. 从云端 Pull 数据并走安全合并流程
     async function fetchFromCloud() {
