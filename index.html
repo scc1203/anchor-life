@@ -4209,6 +4209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // v6.5：每次刷新页面都重置为 anchor 中间档
     let energyMode = 'anchor';
     let currentTask = null;
+    let lastDrawnTaskId = null; // v6.9.X 全局防连抽记忆
     let customPlaylists = []; // v6.8.3：自定义专属清单数组
     let activePlaylist = null; // 当前正在执行的清单状态
     let currentStatus = 'idle';
@@ -9662,16 +9663,22 @@ function closePlaylistOverlay(isCompleted = false) {
 
         setTimeout(() => {
             let result = null;
- 
-            if (mode === 'sos') { 
-                const r = Math.floor(Math.random() * sosLibrary.length); 
-                result = { ...sosLibrary[r], type: 'sos', time: 0 }; 
+            
+            // 👉 v6.9.X：合并“局部排除(换一个)”与“全局排除(帮我选)”
+            const idToExclude = excludeTaskId || lastDrawnTaskId;
+
+            if (mode === 'sos') {
+                const r = Math.floor(Math.random() * sosLibrary.length);
+                result = { ...sosLibrary[r], type: 'sos', time: 0 };
             } else {
-                result = pickTaskByFilters(excludeTaskId);
+                result = typeof pickTaskByFilters === 'function' ? pickTaskByFilters(idToExclude) : null;
             }
- 
-            // 更新当前任务引用（让后续“就它啦/换一个”等主线逻辑保持一致）
+
+            // 更新当前任务引用与全局短时记忆
             currentTask = result;
+            if (result) {
+                lastDrawnTaskId = result.id; // 👉 记入小本本，下次绝不连发
+            }
  
             const ph = document.getElementById('placeholder');
  
