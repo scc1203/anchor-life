@@ -7968,7 +7968,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
       let insertedDivider = false;
       items.forEach(log => {
         const title = log.title || '未知记录';
-        const icon = log.icon || '';
+        const icon = log.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(log) : '');
         let isNext = false;
         if (log.timeStr) {
           const h = parseInt(log.timeStr.split(':')[0], 10);
