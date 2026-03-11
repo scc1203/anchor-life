@@ -7679,7 +7679,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             li.innerHTML = `
                 <div style="display:flex;align-items:center;gap:6px;width:100%;font-size:0.8rem; flex-wrap:wrap;">
                     <span class="footprint-time" style="color:#999; font-size:0.75rem; white-space:nowrap;">${log.timeStr || ''}${timeAreaHint}</span>
-                    <span class="footprint-item" style="flex:1; min-width:120px;">${log.icon || ''} ${log.title}${suffix}</span>
+                    <span class="footprint-item" style="flex:1; min-width:120px;">${log.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(log) : '')} ${log.title}${suffix}</span>
                     <span style="cursor:pointer;color:#c44;margin-left:auto;" title="删除" onclick="deleteLogEntry(${idx})">🗑️</span>
                 </div>
             `;
@@ -7830,7 +7830,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                 }
                 
                 htmlStr += `<div style="font-size:0.8rem; color:#444; display:flex; align-items:center; gap:4px; margin-bottom:2px;">
-                    <span style="flex:1; cursor:pointer;" onclick="showHistoryTaskDetail('log', ${log._index})">${log.icon || ''} ${log.title}${suffix}</span>
+                    <span style="flex:1; cursor:pointer;" onclick="showHistoryTaskDetail('log', ${log._index})">${log.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(log) : '')} ${log.title}${suffix}</span>
                     <span style="font-size:0.75rem; color:#999;">${memoryInfo}</span>
                 </div>`;
             });
