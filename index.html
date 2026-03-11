@@ -2958,7 +2958,7 @@ body.immersive-locked {
 
 <div class="container">
         <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.0.3 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.0.4 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3858,6 +3858,7 @@ body.immersive-locked {
 
 <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">🌌 v7.0：架构升维与时空手账</div>
 <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+    <li><b>v7.0.4：</b> 📟 <b>实体结界降临：</b>正式打通桌面“小方块”物理联动；支持脱离手机，直接在实体屏幕上进行任务切牌、专注计时与一键结算；软硬件状态无缝同步，小方块完成任务可瞬间点亮网页足迹。</li>
     <li><b>v7.0.3：</b> 🌁 <b>日签时光机重构：</b>新增历史日签功能；支持自定义勾选🌊「心流时长与锚点」，完美复刻当日并无损合成高清海报。</li>
     <li><b>v7.0.2：</b> 🗄️ <b>双层档案柜与时空追认：</b>档案柜升级为「案头手边事/归档手账本」双抽屉，升级归档系统；归档手账本支持“跨时空补卡”✨。</li>
     <li><b>v7.0.1：</b> 🧠 <b>记忆系统全面升维：</b>新增任务记忆补录功能；删除历史记录时智能询问是否撤回时长；修复进度多次覆盖Bug；隐藏级彩蛋：清单子任务全面接入记忆雷达。</li>
@@ -4209,6 +4210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // v6.5：每次刷新页面都重置为 anchor 中间档
     let energyMode = 'anchor';
     let currentTask = null;
+    let lastDrawnTaskId = null; // v6.9.X 全局防连抽记忆
     let customPlaylists = []; // v6.8.3：自定义专属清单数组
     let activePlaylist = null; // 当前正在执行的清单状态
     let currentStatus = 'idle';
@@ -9662,16 +9664,22 @@ function closePlaylistOverlay(isCompleted = false) {
 
         setTimeout(() => {
             let result = null;
- 
-            if (mode === 'sos') { 
-                const r = Math.floor(Math.random() * sosLibrary.length); 
-                result = { ...sosLibrary[r], type: 'sos', time: 0 }; 
+            
+            // 👉 v6.9.X：合并“局部排除(换一个)”与“全局排除(帮我选)”
+            const idToExclude = excludeTaskId || lastDrawnTaskId;
+
+            if (mode === 'sos') {
+                const r = Math.floor(Math.random() * sosLibrary.length);
+                result = { ...sosLibrary[r], type: 'sos', time: 0 };
             } else {
-                result = pickTaskByFilters(excludeTaskId);
+                result = typeof pickTaskByFilters === 'function' ? pickTaskByFilters(idToExclude) : null;
             }
- 
-            // 更新当前任务引用（让后续“就它啦/换一个”等主线逻辑保持一致）
+
+            // 更新当前任务引用与全局短时记忆
             currentTask = result;
+            if (result) {
+                lastDrawnTaskId = result.id; // 👉 记入小本本，下次绝不连发
+            }
  
             const ph = document.getElementById('placeholder');
  
@@ -12180,6 +12188,16 @@ if (!userOverrideFlash) {
                         console.warn('恢复 visitedV66 失败', e);
                     }
                 }
+
+                // 👉 恢复跨端进行中状态 (ING)
+                if (localData && localData.liveState !== undefined) {
+                    const LIVE_KEY = typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state';
+                    if (localData.liveState) {
+                        localStorage.setItem(LIVE_KEY, localData.liveState);
+                    } else {
+                        localStorage.removeItem(LIVE_KEY);
+                    }
+                }
             } catch (e) {
                 console.warn('恢复 localStorage 数据时出错', e);
             }
@@ -12211,6 +12229,10 @@ if (!userOverrideFlash) {
         alert(successMsg);
         
         document.getElementById('dataArea').value = "";
+        // 👉 云端世界线重置，重载页面以完美挂载可能存在的 ING 状态
+        setTimeout(() => {
+            window.location.reload();
+        }, 500);
     }
 
     function triggerImport() { document.getElementById('fileInput').click(); }
@@ -12399,7 +12421,7 @@ if (!userOverrideFlash) {
         let dayStartOffset = 0;
         let visitedV66 = null;
         let energyModeBackup = null;
-        let liveState = null;
+        let liveState = localStorage.getItem(typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state') || null;
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -12454,14 +12476,6 @@ if (!userOverrideFlash) {
                 }
             } catch (e) {
                 energyModeBackup = typeof energyMode !== 'undefined' ? energyMode : null;
-            }
-
-            // 👉 进行中任务（Live State）
-            try {
-                const liveStateRaw = localStorage.getItem(KEY_LIVE_STATE);
-                liveState = liveStateRaw ? JSON.parse(liveStateRaw) : null;
-            } catch (e) {
-                liveState = null;
             }
         } catch (e) {
             console.warn('读取 localStorage 数据时出错', e);
