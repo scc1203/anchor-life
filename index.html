@@ -12637,17 +12637,22 @@ if (!userOverrideFlash) {
                     if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
                     if (typeof showToast === 'function') showToast("✨ 小方块已完成任务，手机端已自动同步！");
                 } else {
-                    // 【小方块点了：换一个 (或尝试不足10秒丢弃)】
-                    if (typeof showToast === 'function') showToast("🔄 小方块请求切牌，手机端正在自动发牌...");
-                    if (typeof draw === 'function') draw();
+                    // 【小方块点了：换一个】
+                    if (typeof showToast === 'function') showToast("🔄 实体结界请求切牌，正在静默发牌...");
                     
-                    // 延迟等待抽卡动画结束后，自动推上舞台并同步给大姐
-                    setTimeout(() => {
-                        if (currentTask && typeof setCardAsAnchor === 'function') {
-                            setCardAsAnchor();
-                            if (typeof syncToCloud === 'function') syncToCloud(true); // 静默推给小方块
-                        }
-                    }, 1000);
+                    // 🚨 核心修复：跳过所有动画，直接利用底层引擎抽取下一张，并强行锚定！
+                    const result = typeof pickTaskByFilters === 'function' ? pickTaskByFilters() : null;
+                    if (result) {
+                        currentTask = result;
+                        if (typeof renderResultCard === 'function') renderResultCard(currentTask);
+                        if (typeof setCardAsAnchor === 'function') setCardAsAnchor(false); // 强制进入 ING 状态
+                        if (typeof syncToCloud === 'function') syncToCloud(true); // 立刻告诉大姐新牌是什么
+                    } else {
+                        // 如果任务池空了
+                        currentTask = null;
+                        if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+                        if (typeof syncToCloud === 'function') syncToCloud(true);
+                    }
                 }
             }
         } catch (e) {
