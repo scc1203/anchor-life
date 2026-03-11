@@ -12193,7 +12193,9 @@ if (!userOverrideFlash) {
                 if (localData && localData.liveState !== undefined) {
                     const LIVE_KEY = typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state';
                     if (localData.liveState) {
-                        localStorage.setItem(LIVE_KEY, localData.liveState);
+                        // 👉 v7.0.4 修复：必须将其重新转为 String 才能刻入 LocalStorage
+                        const valToStore = typeof localData.liveState === 'string' ? localData.liveState : JSON.stringify(localData.liveState);
+                        localStorage.setItem(LIVE_KEY, valToStore);
                     } else {
                         localStorage.removeItem(LIVE_KEY);
                     }
@@ -12421,7 +12423,12 @@ if (!userOverrideFlash) {
         let dayStartOffset = 0;
         let visitedV66 = null;
         let energyModeBackup = null;
-        let liveState = localStorage.getItem(typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state') || null;
+        // 👉 v7.0.4 修复：必须将其解析为 Object，后端才能提取任务名给 IoT 硬件
+        let liveStateRaw = localStorage.getItem(typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state') || null;
+        let liveStateParsed = null;
+        if (liveStateRaw) {
+            try { liveStateParsed = JSON.parse(liveStateRaw); } catch(e) { console.warn(e); }
+        }
         
         try {
             const storedMorning = localStorage.getItem(KEY_RITUAL_MORNING);
@@ -12506,7 +12513,7 @@ if (!userOverrideFlash) {
                 dayStartOffset: dayStartOffset,
                 visitedV66: visitedV66,
                 energyMode: energyModeBackup,
-                liveState: liveState
+                liveState: liveStateParsed // 传入真正的 JSON 对象
             }
         };
     }
