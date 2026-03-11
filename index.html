@@ -12569,9 +12569,42 @@ if (!userOverrideFlash) {
             if (!cloudLive) {
                 console.log("📡 云端雷达：探测到小方块已经终结了任务！");
                 
-                // 1. 无缝接管大姐更新后的账本 (小方块写的足迹和时长)
-                if (json.dailyLog) dailyLog = json.dailyLog;
-                if (json.db) db = json.db;
+                // 1. 安全合并大姐更新后的账本 (绝对防覆盖！)
+                if (json.dailyLog && Array.isArray(json.dailyLog)) {
+                    const logMap = new Map();
+                    // 先放入本地的庞大足迹，保底不丢
+                    if (Array.isArray(dailyLog)) {
+                        dailyLog.forEach(item => logMap.set(JSON.stringify(item), item));
+                    }
+                    // 再放入云端的新足迹，利用 Map 去重合并
+                    json.dailyLog.forEach(item => logMap.set(JSON.stringify(item), item));
+                    dailyLog = Array.from(logMap.values());
+                    
+                    // 按日期和时间倒序重排
+                    dailyLog.sort((a, b) => {
+                        const dateA = new Date(a.date || 0).getTime();
+                        const dateB = new Date(b.date || 0).getTime();
+                        if (dateA !== dateB) return dateB - dateA;
+                        return b.id - a.id;
+                    });
+                }
+                
+                if (json.db && Array.isArray(json.db)) {
+                    const mergedDB = Array.isArray(db) ? db.slice() : [];
+                    json.db.forEach(cloudItem => {
+                        const existingIndex = mergedDB.findIndex(local => local.id === cloudItem.id);
+                        if (existingIndex >= 0) {
+                            // 如果云端的累计时间变长了（小方块刚结束任务），才覆盖本地该任务
+                            if ((cloudItem.totalMinutes || 0) > (mergedDB[existingIndex].totalMinutes || 0)) {
+                                mergedDB[existingIndex] = cloudItem;
+                            }
+                        } else {
+                            mergedDB.push(cloudItem);
+                        }
+                    });
+                    db = mergedDB;
+                }
+                
                 if (typeof save === 'function') save();
                 if (typeof renderLog === 'function') renderLog();
                 if (typeof renderList === 'function') renderList();
