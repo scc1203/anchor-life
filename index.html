@@ -7068,6 +7068,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
     // 智能传送门：从档案柜一键将清单送上 01 区抽卡台
     function sendPlaylistToStage(plId) {
+        // 👉 v6.9.X 护盾：如果有任务正在进行，禁止强行推送清单
+        if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor') {
+            if (typeof showToast === 'function') showToast("⚠️ 当前已有专注任务！请先结算后，再开启专属清单隧道。");
+            return;
+        }
         const sel = document.getElementById('selPlaylist');
         if (sel) {
             // 1. 选中对应的清单并更新按钮 UI
@@ -9887,6 +9892,11 @@ function drawFromPlaylist() {
         }
     }
 function openRitual(type) {
+    // 👉 v6.9.X 护盾：如果有任务正在进行，禁止强行开启仪式覆盖画面
+    if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor') {
+        if (typeof showToast === 'function') showToast("⚠️ 专注期间，请勿进行起飞/着陆仪式，以免打断心流。");
+        return;
+    }
     currentRitualType = type; // 'morning' or 'night'
     const overlay = document.getElementById('ritualOverlay');
     const titleEl = document.getElementById('ritualTitle');
@@ -10499,6 +10509,12 @@ function openRitual(type) {
     //       同时复用已有的 renderResultCard + setCardAsAnchor 链路，确保足迹/心跳一致。
     function handleTaskComplete() {
         if (!currentDialogTask) return;
+        // 👉 v6.9.X 护盾：如果有任务正在进行，禁止强行上台
+        if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor') {
+            if (typeof showToast === 'function') showToast("⚠️ 当前已有专注任务！请先点击卡片的 [已完成] 或 [换一个] 结算。");
+            closeTaskActionDialog();
+            return;
+        }
         const task = currentDialogTask;
 
         // Step 1: 关闭三选项对话框，释放 UI
