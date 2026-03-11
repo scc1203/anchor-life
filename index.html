@@ -8521,6 +8521,8 @@ function renderResultCard(result) {
       // 1. 退出沉浸模式
       exitImmersiveMode();
 
+      const discardedTaskId = (typeof currentTask !== 'undefined' && currentTask) ? currentTask.id : null;
+
       // 2. 清单模式的退回逻辑
       if (typeof activePlaylist !== 'undefined' && activePlaylist) {
         if (!Array.isArray(activePlaylist.tasks)) activePlaylist.tasks = [];
@@ -8542,7 +8544,7 @@ function renderResultCard(result) {
       }
 
       if (!currentTask) {
-        if (typeof draw === 'function') draw();
+        if (typeof draw === 'function') draw(discardedTaskId);
         return;
       }
 
@@ -8625,7 +8627,7 @@ function renderResultCard(result) {
       if (statusEl) statusEl.style.display = 'none';
       if (ingEl) ingEl.style.display = 'none';
       
-      if (typeof draw === 'function') draw();
+      if (typeof draw === 'function') draw(discardedTaskId);
 
       // v6.9.X：物联网联动，状态重置时自动静默通知大姐
       if (typeof syncToCloud === 'function') syncToCloud(true);
@@ -8945,7 +8947,7 @@ function applySmartCooldown(pool, log, currentMode) {
 }
 
 // v6.4 重写 pickTaskByFilters：实现能量药丸筛选逻辑
-function pickTaskByFilters() {
+function pickTaskByFilters(excludeTaskId = null) {
     const ctx = document.getElementById('selContext').value;
     // v6.9.5：若用户在下拉明确选择了限定清单，直接返回该清单对象
     const selPlaylistEl = document.getElementById('selPlaylist');
@@ -9090,13 +9092,19 @@ function pickTaskByFilters() {
         });
     }
 
+    // 👉 v6.9.X 修复：短期记忆防重（防连抽装甲）
+    // 如果传入了刚放弃的任务ID，且当前池子里还有充足的选择（>1），则将其临时剔除
+    if (excludeTaskId && validPool.length > 1) {
+        validPool = validPool.filter(item => String(item.id) !== String(excludeTaskId));
+    }
+
     // Step 3: 加权随机 (Weighted Randomness)
     if (validPool.length === 0) {
         // 兜底：如果 Uptime/Downtime 模式下过滤结果为空，降级为 Anchor 模式
         if (energyMode === 'uptime' || energyMode === 'downtime') {
             const originalMode = energyMode;
             energyMode = 'anchor';
-            const fallbackResult = pickTaskByFilters();
+            const fallbackResult = pickTaskByFilters(excludeTaskId);
             energyMode = originalMode;
             if (fallbackResult) {
                 if (typeof showToast === 'function') {
@@ -9145,7 +9153,7 @@ function pickTaskByFilters() {
         if (energyMode === 'uptime' || energyMode === 'downtime') {
             const originalMode = energyMode;
             energyMode = 'anchor';
-            const fallbackResult = pickTaskByFilters();
+            const fallbackResult = pickTaskByFilters(excludeTaskId);
             energyMode = originalMode;
             if (fallbackResult && typeof showToast === 'function') {
                 showToast('当前模式无合适任务，已自动混合抽取');
@@ -9578,7 +9586,7 @@ function closePlaylistOverlay(isCompleted = false) {
     } catch(e) {}
 }
 
- function draw() {
+ function draw(excludeTaskId = null) {
         const card = document.getElementById('resultCard'); 
         if (card) card.style.display = 'none';
 
@@ -9659,7 +9667,7 @@ function closePlaylistOverlay(isCompleted = false) {
                 const r = Math.floor(Math.random() * sosLibrary.length); 
                 result = { ...sosLibrary[r], type: 'sos', time: 0 }; 
             } else {
-                result = pickTaskByFilters();
+                result = pickTaskByFilters(excludeTaskId);
             }
  
             // 更新当前任务引用（让后续“就它啦/换一个”等主线逻辑保持一致）
@@ -12654,8 +12662,10 @@ if (!userOverrideFlash) {
                     // 【小方块点了：换一个】
                     if (typeof showToast === 'function') showToast("🔄 实体结界请求切牌，正在静默发牌...");
                     
-                    // 🚨 核心修复：跳过所有动画，直接利用底层引擎抽取下一张，并强行锚定！
-                    const result = typeof pickTaskByFilters === 'function' ? pickTaskByFilters() : null;
+                    // 提取刚被 IoT 杀掉的任务 ID
+                    const excludedId = oldTask ? oldTask.id : null;
+                    // 🚨 核心修复：带上短时记忆，静默发牌
+                    const result = typeof pickTaskByFilters === 'function' ? pickTaskByFilters(excludedId) : null;
                     if (result) {
                         currentTask = result;
                         if (typeof renderResultCard === 'function') renderResultCard(currentTask);
