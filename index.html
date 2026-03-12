@@ -2929,6 +2929,23 @@ body.immersive-locked {
 .poster-prev { left: 8px; }
 .poster-next { right: 8px; }
 
+/* 👉 v7.0.X：点亮“一朵花”输入框的提示文字 */
+#inpSoulFlower::placeholder {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+/* 针对不同浏览器的兼容性写法 */
+#inpSoulFlower::-webkit-input-placeholder {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 300;
+}
+#inpSoulFlower::-moz-placeholder {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 300;
+}
+
 /* 隐藏档案柜抽屉原生的 +/- 符号，让位给中文破折号 */
 .cabinet-summary {
     list-style: none !important;
@@ -13459,7 +13476,18 @@ function updatePosterPreview() {
         const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
         const isHistory = typeof currentViewedPosterDay !== 'undefined' && currentViewedPosterDay < maxDay;
         
-        let defaultText = isHistory ? "时光机 | 这是你过去留下的风景。" : "像一次短暂停靠，看看今天走到了哪里。";
+        let defaultText;
+        if (isHistory) {
+            const daysAgo = maxDay - currentViewedPosterDay;
+            const historyDate = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+            historyDate.setDate(historyDate.getDate() - daysAgo);
+            const y = historyDate.getFullYear();
+            const m = String(historyDate.getMonth() + 1).padStart(2, '0');
+            const d = String(historyDate.getDate()).padStart(2, '0');
+            defaultText = `${y}.${m}.${d} | 时光机：这是你过去留下的风景。`;
+        } else {
+            defaultText = "像一次短暂停靠，看看今天走到了哪里。";
+        }
         
         if (chkSoul && chkSoul.checked && inpSoul && inpSoul.value.trim() !== '') {
             dateEl.textContent = `${todayStr} | ${inpSoul.value.trim()}`;
