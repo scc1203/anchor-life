@@ -4238,6 +4238,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let switchState = { cycle: false, flash: false };
     // v7.0.4：云端雷达互斥锁，防止主动推流与被动轮询打架
     let isRadarPaused = false;
+    // v7.0.4：IoT 指令时间戳记忆，用于幂等消费云端切牌事件
+    let lastIotTimestamp = 0;
 
     // --- v6.9.4: 状态装甲与计时器引擎 ---
     const KEY_LIVE_STATE = 'anchor_live_state_v69';
@@ -12696,11 +12698,40 @@ if (!userOverrideFlash) {
             const json = await res.json();
             if (Object.keys(json).length === 0) return;
 
-            const cloudLive = json.local && json.local.liveState;
+            // 兼容旧结构与 v7.0.4 之后的新结构：
+            // - 旧：json.local.liveState
+            // - 新（可能嵌套）：json.local.liveState 或 json.data.local.liveState
+            const rawLocal = (json.local && typeof json.local === 'object')
+                ? json.local
+                : (json.data && json.data.local && typeof json.data.local === 'object'
+                    ? json.data.local
+                    : null);
+
+            const cloudLive = rawLocal && rawLocal.liveState;
+
+            // 提取 IoT 指令时间戳（优先本地 local，其次 data.local），兼容无 timestamp 的旧版本
+            let iotTimestamp = 0;
+            if (rawLocal && rawLocal.iotCommand && typeof rawLocal.iotCommand === 'object') {
+                const ts = rawLocal.iotCommand.timestamp;
+                const n = Number(ts);
+                if (!Number.isNaN(n) && n > 0) iotTimestamp = n;
+            } else if (json.data && json.data.local && json.data.local.iotCommand) {
+                const ts = json.data.local.iotCommand.timestamp;
+                const n = Number(ts);
+                if (!Number.isNaN(n) && n > 0) iotTimestamp = n;
+            }
+
+            // 如果云端认为仍在 ING，则说明还没有“清盘”事件，直接返回并保留 lastIotTimestamp（用于后续对比）
+            if (cloudLive) {
+                return;
+            }
 
             // 👉 雷达报警：手机以为在 ING，但大姐说状态空了，说明小方块出手了！
-            if (!cloudLive) {
-                console.log("📡 云端雷达：探测到小方块已经终结了任务！");
+            // 新协议：只有当云端给出的 IoT 时间戳严格大于 lastIotTimestamp 时，才视为一条新的“清盘/切牌”指令，
+            // 从而做到幂等消费：同一条指令（同一 timestamp）无论轮询多少次都只会被执行一次。
+            if (!cloudLive && iotTimestamp > lastIotTimestamp) {
+                lastIotTimestamp = iotTimestamp;
+                console.log("📡 云端雷达：探测到小方块已经终结了任务！(ts =", iotTimestamp, ")");
                 
                 // 1. 获取正确的嵌套数据 (兼容 v6.8-backup 结构)
                 const cloudLog = (json.data && Array.isArray(json.data.dailyLog)) ? json.data.dailyLog : (Array.isArray(json.dailyLog) ? json.dailyLog : null);
