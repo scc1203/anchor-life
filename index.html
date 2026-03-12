@@ -2975,7 +2975,7 @@ body.immersive-locked {
 
 <div class="container">
         <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.0.4 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.1.1 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3155,6 +3155,7 @@ body.immersive-locked {
           <button class="task-dialog-btn" onclick="resurrectHistoryTask()" style="background:#e8f5e9; color:#2e7d32; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer;">♻️ 无损恢复至任务库</button>
           <!-- 👉 新增：修改时间按钮 -->
           <button class="task-dialog-btn" id="btnEditHistoryTime" onclick="editHistoryTime()" style="background:#fff9c4; color:#f57f17; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer; display:none;">⏱️ 修改记录时间</button>
+          <button class="task-dialog-btn" id="btnEditHistoryMemory" onclick="editHistoryMemory()" style="background:#e3f2fd; color:#1565c0; border:none; padding:10px; border-radius:8px; font-size:0.95rem; font-weight:bold; cursor:pointer; display:none;">📝 修正时长与进度</button>
           <button class="task-dialog-btn" onclick="document.getElementById('historyTaskDialog').style.display='none'" style="background:#f5f5f5; color:#666; border:none; padding:10px; border-radius:8px; font-size:0.95rem; cursor:pointer;">🔙 关闭</button>
         </div>
       </div>
@@ -3180,6 +3181,25 @@ body.immersive-locked {
             <div class="cold-dialog-buttons">
                 <button type="button" class="cold-btn-cancel" onclick="document.getElementById('editTimeDialog').style.display='none'">取消</button>
                 <button type="button" class="backup-btn-merge" onclick="confirmEditHistoryTime()" style="background:#fff9c4; color:#f57f17; font-weight:bold;">✅ 确认修正</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修正记忆专属弹窗 -->
+    <div id="editMemoryDialog" class="cold-dialog-backdrop" style="z-index:10006; display:none;">
+        <div class="cold-dialog" style="text-align:center; width: 85%; max-width: 320px;">
+            <div class="cold-dialog-title" style="font-size:1rem; margin-bottom:15px;">📝 修正当次记忆</div>
+            <div style="margin-bottom:15px; display:flex; justify-content:center; align-items:center; gap:10px;">
+                <select id="editMemH" class="memory-time-select" style="font-size:1rem; padding:6px 10px;"></select> <span style="font-weight:bold;">:</span>
+                <select id="editMemM" class="memory-time-select" style="font-size:1rem; padding:6px 10px;"></select>
+            </div>
+            <div style="margin-bottom:20px; display:flex; align-items:center; gap:8px;">
+                <span style="font-size:0.85rem; color:#777; font-weight:500; white-space:nowrap;">🔖 进度:</span>
+                <input type="text" id="editMemBookmark" style="flex:1; padding:8px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;" />
+            </div>
+            <div class="cold-dialog-buttons">
+                <button type="button" class="cold-btn-cancel" onclick="document.getElementById('editMemoryDialog').style.display='none'">取消</button>
+                <button type="button" class="backup-btn-merge" onclick="confirmEditHistoryMemory()" style="background:#d3f3d6; color:#2d6a3a; font-weight:bold;">✅ 确认修正</button>
             </div>
         </div>
     </div>
@@ -3875,6 +3895,7 @@ body.immersive-locked {
 
 <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">🌌 v7.0：架构升维与时空手账</div>
 <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+    <li><b>v7.1.1：</b> 🌸 <b>灵魂锚点与时光修正：</b>新增「一朵花」每日灵魂锚点，以独立姿态统领全天足迹与热力图；历史记录支持「修正时长与进度」的后悔药机制，数据绝对安全无损回调。</li>
     <li><b>v7.0.4：</b> 📟 <b>实体结界降临：</b>正式打通桌面“小方块”物理联动；支持脱离手机，直接在实体屏幕上进行任务切牌、专注计时与一键结算；软硬件状态无缝同步，小方块完成任务可瞬间点亮网页足迹。</li>
     <li><b>v7.0.3：</b> 🌁 <b>日签时光机重构：</b>新增历史日签功能；支持自定义勾选🌊「心流时长与锚点」，完美复刻当日并无损合成高清海报。</li>
     <li><b>v7.0.2：</b> 🗄️ <b>双层档案柜与时空追认：</b>档案柜升级为「案头手边事/归档手账本」双抽屉，升级归档系统；归档手账本支持“跨时空补卡”✨。</li>
@@ -11113,6 +11134,11 @@ function openRitual(type) {
       if (btnEditTime) {
         btnEditTime.style.display = (type === 'log') ? 'block' : 'none';
       }
+      const btnEditMemory = document.getElementById('btnEditHistoryMemory');
+      // 仅对 dailyLog 允许修正记忆，且必须该记录有关联的 taskId
+      if (btnEditMemory) {
+        btnEditMemory.style.display = (type === 'log' && item.taskId) ? 'block' : 'none';
+      }
       dlg.style.display = 'flex';
     }
 
@@ -11256,6 +11282,77 @@ function openRitual(type) {
 
       showToast("⏱️ 时间轴已精准修正");
       document.getElementById('editTimeDialog').style.display = 'none';
+    }
+
+    function editHistoryMemory() {
+      if (currentResurrectType !== 'log' || currentResurrectIndex < 0) return;
+      const log = dailyLog[currentResurrectIndex];
+      if (!log) return;
+
+      const selH = document.getElementById('editMemH');
+      const selM = document.getElementById('editMemM');
+      const bmkInp = document.getElementById('editMemBookmark');
+
+      if (selH && selH.options.length === 0) {
+        for (let i = 0; i <= 24; i++) selH.add(new Option(i + 'h', i));
+        for (let i = 0; i < 60; i++) selM.add(new Option(i.toString().padStart(2, '0') + 'm', i));
+      }
+
+      const currentMins = log.lastAddMinutes || 0;
+      if (selH) selH.value = Math.floor(currentMins / 60);
+      if (selM) selM.value = currentMins % 60;
+      if (bmkInp) bmkInp.value = log.bookmarkSnapshot || '';
+
+      document.getElementById('historyTaskDialog').style.display = 'none';
+      document.getElementById('editMemoryDialog').style.display = 'flex';
+    }
+
+    function confirmEditHistoryMemory() {
+      if (currentResurrectType !== 'log' || currentResurrectIndex < 0) return;
+      const log = dailyLog[currentResurrectIndex];
+      if (!log) return;
+
+      const selH = document.getElementById('editMemH');
+      const selM = document.getElementById('editMemM');
+      const bmkInp = document.getElementById('editMemBookmark');
+
+      const newMins = (parseInt(selH.value, 10) || 0) * 60 + (parseInt(selM.value, 10) || 0);
+      const newBookmark = bmkInp ? bmkInp.value.trim() : '';
+
+      const oldMins = log.lastAddMinutes || 0;
+      const deltaMins = newMins - oldMins;
+
+      // 1. 修改历史快照
+      log.lastAddMinutes = newMins;
+      log.bookmarkSnapshot = newBookmark;
+
+      // 2. 去主库 (db) 或 荣誉殿堂 (archive) 找真身同步修正
+      if (log.taskId) {
+        let taskInDb = db.find(t => t.id === log.taskId);
+        if (!taskInDb) taskInDb = archive.find(t => t.id === log.taskId);
+
+        if (taskInDb) {
+          // 同步时长差值
+          if (deltaMins !== 0) {
+            taskInDb.totalMinutes = Math.max(0, (taskInDb.totalMinutes || 0) + deltaMins);
+            // 仅当这条足迹的旧时长等于本体的最后新增时长时，才更新本体的最后新增时长
+            if (taskInDb.lastAddMinutes === oldMins) {
+              taskInDb.lastAddMinutes = newMins;
+            }
+          }
+          // 同步进度（简单策略：认为修正的内容就是正确的本体最新内容）
+          taskInDb.bookmarkText = newBookmark;
+        }
+      }
+
+      document.getElementById('editMemoryDialog').style.display = 'none';
+      save();
+      renderLog();
+      if (typeof renderHistory === 'function') renderHistory();
+      if (typeof renderList === 'function') renderList();
+      if (typeof renderArchive === 'function') renderArchive();
+      if (typeof renderHeatmap === 'function') renderHeatmap();
+      showToast("✅ 记忆与时长已修正并同步");
     }
 
     function recordLog() { renderLog(); }
