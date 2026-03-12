@@ -4999,16 +4999,55 @@ function stopStarShineSound() {
 
     // 👉 日签时光机引擎
     let currentViewedPosterDay = 1;
-    let currentLoadingPosterUrl = ''; // 新增：记录当前正在加载的URL，防止疯狂连点导致时空错乱
 
     function updatePosterDisplay(dayNum) {
+        // 强制内部自主计算，杜绝外部参数传递丢失
         const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+        
         const imgEl = document.getElementById('dailyPosterImg');
         const daySpan = document.getElementById('dailyPosterDayCount');
         const dateEl = document.getElementById('dailyPosterDate');
         const prevBtn = document.querySelector('.poster-prev');
         const nextBtn = document.querySelector('.poster-next');
+        
+        if (imgEl && typeof DAILY_POSTER_IMAGES !== 'undefined' && DAILY_POSTER_IMAGES.length > 0) {
+            const idx = (dayNum - 1) % DAILY_POSTER_IMAGES.length;
+            const imageUrl = DAILY_POSTER_IMAGES[idx];
+            const fallbackEl = document.getElementById('dailyPosterFallback');
 
+            // 进入加载中状态：避免透明假死，优先展示兜底层
+            imgEl.style.opacity = '0';
+            let settled = false;
+
+            const finishSuccess = () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(loadTimeout);
+                // 👉 核心修复：强制脱下隐身衣，恢复图片可见性
+                imgEl.src = imageUrl;
+                imgEl.style.display = 'block';
+                imgEl.style.opacity = '1';
+                if (fallbackEl) fallbackEl.style.display = 'none';
+            };
+
+            const finishError = () => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(loadTimeout);
+                // 加载失败或超时：隐藏图片本身，交给黑图兜底 UI
+                imgEl.style.opacity = '0';
+                imgEl.style.display = 'none';
+                if (fallbackEl) fallbackEl.style.display = 'flex';
+            };
+
+            // 超时守卫：5 秒内既未成功也未失败，视为挂起
+            const loadTimeout = setTimeout(finishError, 5000);
+
+            const tempImg = new Image();
+            tempImg.onload = finishSuccess;
+            tempImg.onerror = finishError;
+            tempImg.src = imageUrl;
+        }
         if (daySpan) daySpan.textContent = dayNum;
         
         if (dateEl) {
@@ -5016,60 +5055,24 @@ function stopStarShineSound() {
                 const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr().replace(/-/g, '.') : new Date().toLocaleDateString();
                 dateEl.textContent = `${todayStr} | 像一次短暂停靠，看看今天走到了哪里。`;
             } else {
+                // 👉 v7.0.3：时光机日期倒推算法，赋予历史海报真实的时空坐标
+                const daysAgo = maxDay - dayNum;
+                const historyDate = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+                historyDate.setDate(historyDate.getDate() - daysAgo);
+                const y = historyDate.getFullYear();
+                const m = String(historyDate.getMonth() + 1).padStart(2, '0');
+                const d = String(historyDate.getDate()).padStart(2, '0');
+                
                 dateEl.textContent = `${y}.${m}.${d} | 时光机：这是你过去留下的风景。`;
             }
         }
-
+        
+        // 极其暴力的显隐控制
         if (prevBtn) prevBtn.style.display = (dayNum > 1) ? 'flex' : 'none';
         if (nextBtn) nextBtn.style.display = (dayNum < maxDay) ? 'flex' : 'none';
 
-        if (imgEl && typeof DAILY_POSTER_IMAGES !== 'undefined' && DAILY_POSTER_IMAGES.length > 0) {
-            const idx = (dayNum - 1) % DAILY_POSTER_IMAGES.length;
-            const imageUrl = DAILY_POSTER_IMAGES[idx];
-            
-            // 记录当前目标，用于防连点
-            currentLoadingPosterUrl = imageUrl;
-
-            const fallbackEl = document.getElementById('dailyPosterFallback');
-
-            // 1. 进入加载状态：隐藏旧图，显示温柔的沙漏
-            imgEl.style.opacity = '0';
-            if (fallbackEl) {
-                fallbackEl.innerHTML = '⏳ 正在穿越时光...';
-                fallbackEl.style.display = 'flex';
-            }
-
-            // 2. 在内存中后台加载新图片
-            const tempImg = new Image();
-            
-            tempImg.onload = () => {
-                // 防抖机制：如果用户在加载期间又切到了别的日子，抛弃这张过期的图
-                if (currentLoadingPosterUrl !== imageUrl) return;
-
-                // 加载成功，无缝切换
-                imgEl.src = imageUrl;
-                imgEl.style.display = 'block';
-                if (fallbackEl) fallbackEl.style.display = 'none';
-                
-                // 极短延迟以触发 CSS 渐变动画
-                setTimeout(() => { imgEl.style.opacity = '1'; }, 50);
-            };
-            
-            tempImg.onerror = () => {
-                // 防抖机制
-                if (currentLoadingPosterUrl !== imageUrl) return;
-
-                // 加载失败，优雅降级
-                imgEl.style.display = 'none';
-                if (fallbackEl) {
-                    fallbackEl.innerHTML = '🖼️ 信号丢失，但今天依然是很好的一天。';
-                    fallbackEl.style.display = 'flex';
-                }
-            };
-
-            // 正式触发下载
-            tempImg.src = imageUrl;
-        }
+        // 👉 翻页后，通知底层重新计算并刷新预览框数据
+        if (typeof updatePosterPreview === 'function') updatePosterPreview();
     }
 
     function navigatePoster(delta, event) {
