@@ -4517,7 +4517,7 @@ const MUSIC_CLIPS = [
     }
 ];
 // 每日打卡图图库（优化：添加预加载机制）
-const DAILY_POSTER_IMAGES = [
+let DAILY_POSTER_IMAGES = [
     '/assets/images/daily_posters/poster01.jpg',
     '/assets/images/daily_posters/poster02.jpg',
     '/assets/images/daily_posters/poster03.jpg',
@@ -4616,6 +4616,7 @@ const DAILY_POSTER_IMAGES = [
     '/assets/images/daily_posters/poster96.jpg',
     '/assets/images/daily_posters/poster97.jpg'
 ];
+DAILY_POSTER_IMAGES = DAILY_POSTER_IMAGES.map(url => url + '?v=2');
 
 // 预加载打卡图（在页面加载时提前加载，避免显示时才开始加载）
 // 使用 Map 记录每个图片的加载状态
