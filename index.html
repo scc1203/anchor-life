@@ -7763,11 +7763,25 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             // v6.9.5：历史记录中也做一次“主任务 + 清单子任务”去重
             const dedupedLogs = dedupeChecklistTwins(dayLogs);
             const dateLabel = new Date(dateStr).toLocaleDateString();
-            htmlStr += `<div style="margin-bottom:8px;">`;
-            htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:2px;">${dateLabel}</div>`;
+
+            htmlStr += `<div style="margin-bottom:12px;">`;
+            htmlStr += `<div style="font-size:0.8rem; color:#666; margin-bottom:4px;">${dateLabel}</div>`;
+
+            // 👉 视觉加冕：把灵魂锚点提取出来，作为当天的统治级标题
+            const milestone = dedupedLogs.find(l => l.isMilestone);
+            const regularLogs = dedupedLogs.filter(l => !l.isMilestone);
+
+            if (milestone) {
+                htmlStr += `<div style="font-size:0.95rem; font-weight:bold; color:#FF9AA2; margin-bottom:8px; padding-left:2px;">
+                ${milestone.icon || '🌸'} ${milestone.title}
+            </div>`;
+            }
+
             let foundNextDayLog = false;
             let insertedDivider = false;
-            dedupedLogs.forEach(log => {
+
+            // 让普通任务去循环（替换原来的 dedupedLogs.forEach）
+            regularLogs.forEach(log => {
                 const suffix = log.isTrailer ? ' 🐾' : (log.done ? ' ✅' : '');
                 // 提取时间小时数，判断是否属于客观上的次日凌晨（夜猫子时段）
                 let isNext = false;
@@ -7952,9 +7966,14 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
       }) : [];
       const items = dedupeChecklistTwins(itemsRaw);
 
-      // 计算当日总投入时长
+      // 👉 视觉加冕：分离灵魂锚点与世俗任务
+      const milestone = items.find(l => l.isMilestone);
+      const regularItems = items.filter(l => !l.isMilestone);
+
+      // 计算当日总投入时长（只统计普通任务，防止把其它错误算入）
       let totalMins = 0;
-      items.forEach(log => { totalMins += (log.lastAddMinutes || 0); });
+      regularItems.forEach(log => { totalMins += (log.lastAddMinutes || 0); });
+
       let timeHtml = '';
       if (totalMins > 0) {
         const h = Math.floor(totalMins / 60);
@@ -7962,18 +7981,29 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const timeStr = h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
         timeHtml = ` <span style="font-weight:normal; font-size:0.8rem; color:#888;">(共专注 ${timeStr})</span>`;
       }
-      hmProjDate.innerHTML = `📅 ${displayDate} · 完成 ${items.length} 项${timeHtml}`;
+
+      hmProjDate.innerHTML = `📅 ${displayDate} · 完成 ${regularItems.length} 项${timeHtml}`;
 
       if (items.length === 0) {
         projList.innerHTML = '<div style="color:#aaa; font-size:0.8rem; font-style:italic; padding:8px 0;">🍃 这一天，你选择了留白与休息。</div>';
         return;
       }
 
+      let listHtml = '';
+      
+      // 如果有灵魂锚点，在列表上方高亮悬浮展示
+      if (milestone) {
+        listHtml += `<div style="font-size:1rem; font-weight:bold; color:#FF9AA2; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #eee;">
+            ${milestone.icon || '🌸'} ${milestone.title}
+        </div>`;
+      }
+
       // 列表渲染：标题 + 时间 + 快照
-      let listHtml = '<ul style="margin:0; padding-left:20px;">';
+      listHtml += '<ul style="margin:0; padding-left:20px;">';
       let foundNextDayLog = false;
       let insertedDivider = false;
-      items.forEach(log => {
+      // 让普通任务去循环
+      regularItems.forEach(log => {
         const title = log.title || '未知记录';
         const icon = log.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(log) : '');
         let isNext = false;
@@ -13405,6 +13435,35 @@ function updatePosterPreview() {
     } else {
         container.style.display = 'none';
     }
+
+    // 动态更新底部的“一朵花”副标题
+    const dateEl = document.getElementById('dailyPosterDate');
+    const chkSoul = document.getElementById('chkSoulFlower');
+    const inpSoul = document.getElementById('inpSoulFlower');
+    if (dateEl) {
+        const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr().replace(/-/g, '.') : new Date().toLocaleDateString();
+        // 判断是当天还是历史时光机
+        const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+        const isHistory = typeof currentViewedPosterDay !== 'undefined' && currentViewedPosterDay < maxDay;
+        
+        let defaultText = isHistory ? "时光机 | 这是你过去留下的风景。" : "像一次短暂停靠，看看今天走到了哪里。";
+        
+        if (chkSoul && chkSoul.checked && inpSoul && inpSoul.value.trim() !== '') {
+            dateEl.textContent = `${todayStr} | ${inpSoul.value.trim()}`;
+        } else {
+            dateEl.textContent = isHistory ? defaultText : `${todayStr} | ${defaultText}`;
+        }
+    }
+}
+
+function toggleSoulFlowerInput() {
+    const chk = document.getElementById('chkSoulFlower');
+    const inp = document.getElementById('inpSoulFlower');
+    if (chk && inp) {
+        inp.style.display = chk.checked ? 'block' : 'none';
+        if (chk.checked) inp.focus();
+    }
+    updatePosterPreview();
 }
 
 // ============================================================
@@ -13416,6 +13475,55 @@ function updatePosterPreview() {
 //       合成后自动触发下载（桌面端）或弹出长按保存提示（移动端）。
 // ============================================================
 function saveDailyPoster() {
+    // 👉 v7.0.X：如果有“一朵花”，将其作为 Milestone 写入对应日期的足迹
+    const chkSoul = document.getElementById('chkSoulFlower');
+    const inpSoul = document.getElementById('inpSoulFlower');
+    if (chkSoul && chkSoul.checked && inpSoul && inpSoul.value.trim() !== '') {
+        const flowerText = inpSoul.value.trim();
+
+        // 1. 时空定位：找出这张海报对应的绝对历史日期
+        let targetDateStr = typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString();
+        try {
+            const storedDays = localStorage.getItem('anchor_opened_days_v56');
+            if (storedDays) {
+                const arr = JSON.parse(storedDays);
+                // 确保我们在历史范围内
+                if (Array.isArray(arr) && arr.length > 0 && typeof currentViewedPosterDay !== 'undefined') {
+                    const exactDateStr = arr[currentViewedPosterDay - 1]; 
+                    if (exactDateStr) {
+                        // 将 YYYY-MM-DD 转换为与 dailyLog.date 完全一致的 toDateString() 格式
+                        const [yy, mm, dd] = exactDateStr.split('-');
+                        targetDateStr = new Date(yy, mm - 1, dd).toDateString();
+                    }
+                }
+            }
+        } catch(e) {}
+
+        // 2. 霸道总裁原则：确保这一天只能有一个 Milestone
+        const existingIdx = Array.isArray(dailyLog) ? dailyLog.findIndex(l => l.date === targetDateStr && l.isMilestone) : -1;
+        if (existingIdx > -1) {
+            // 如果已有，直接无情覆盖更新它的文字
+            dailyLog[existingIdx].title = flowerText;
+        } else {
+            // 如果没有，创建新的灵魂锚点
+            const now = new Date();
+            dailyLog.unshift({
+                id: Date.now(),
+                title: flowerText,
+                type: 'milestone',
+                icon: '🌸',
+                isMilestone: true,
+                date: targetDateStr,
+                timeStr: now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0')
+            });
+        }
+
+        if (typeof save === 'function') save();
+        if (typeof renderLog === 'function') renderLog();
+        if (typeof renderHistory === 'function') renderHistory();
+        if (typeof renderHeatmap === 'function') renderHeatmap();
+    }
+
     const imgEl   = document.getElementById('dailyPosterImg');
     const daySpan = document.getElementById('dailyPosterDayCount');
     const dateEl  = document.getElementById('dailyPosterDate');
@@ -13703,6 +13811,10 @@ document.addEventListener('click', function(event) {
                     <label style="font-size:0.75rem; color:#fff; display:flex; align-items:center; gap:8px; cursor:pointer;">
                         <input type="checkbox" id="chkFlowTime" onchange="updatePosterPreview()"> 🌊 心流时长 (共 <span id="studioFlowNum">0m</span>)
                     </label>
+                    <label style="font-size:0.75rem; color:#fff; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input type="checkbox" id="chkSoulFlower" onchange="toggleSoulFlowerInput()"> 🌸 种下一朵花 (自定义今日瞬间)
+                    </label>
+                    <input type="text" id="inpSoulFlower" placeholder="提炼今天最触动灵魂的一个瞬间..." style="display:none; width:100%; padding:6px 8px; border:1px solid rgba(255,255,255,0.3); border-radius:6px; background:rgba(0,0,0,0.2); color:#fff; font-size:0.75rem; outline:none; margin-top:4px;" oninput="updatePosterPreview()">
                     <button class="poster-btn-primary" style="margin-top:4px;" onclick="saveDailyPoster()">⬇️ 生成并保存高清海报</button>
                     <div style="font-size:0.75rem; color:#fff; opacity:0.9; text-align:center; text-decoration:underline; cursor:pointer; margin-top:2px;" onclick="closePosterStudio()">取消定制</div>
                 </div>
