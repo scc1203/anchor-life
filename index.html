@@ -3108,7 +3108,7 @@ body.immersive-locked {
                     <div class="stick-text" id="stickText">任务名称</div>
                 </div>
                 <!-- 竹筒图片继续放大到 240px -->
-                <img id="bambooTubeImg" src="assets/images/bamboo-tube.png" alt="Bamboo Tube" style="width: 240px; z-index: 10; position:relative; transform-origin: center bottom;">
+                <img id="bambooTubeImg" src="/assets/images/bamboo-tube.png" alt="Bamboo Tube" style="width: 240px; z-index: 10; position:relative; transform-origin: center bottom;">
             </div>
             <div class="bamboo-caption" id="bambooCaption" style="margin-top: 20px; font-size: 0.85rem; color: #888; text-align: center;">摇晃竹筒，求得今日的指引…</div>
         </div>
@@ -4622,11 +4622,23 @@ const DAILY_POSTER_IMAGES = [
 const posterLoadCache = new Map();
 
 function preloadDailyPosters() {
-    DAILY_POSTER_IMAGES.forEach(url => {
+    if (typeof DAILY_POSTER_IMAGES === 'undefined' || DAILY_POSTER_IMAGES.length === 0) return;
+    
+    // 1. 获取今天到底是“第几天”
+    const openDaysCount = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+    
+    // 2. 计算出今天和明天的图片索引
+    const todayIdx = (openDaysCount - 1) % DAILY_POSTER_IMAGES.length;
+    const tomorrowIdx = openDaysCount % DAILY_POSTER_IMAGES.length;
+    
+    // 3. 提取只需要加载的这 2 张图
+    const urlsToLoad = [DAILY_POSTER_IMAGES[todayIdx], DAILY_POSTER_IMAGES[tomorrowIdx]];
+    
+    // 4. 执行按需加载，拒绝堵塞网络
+    urlsToLoad.forEach(url => {
+        if (!url) return;
         // 检查是否已经在缓存中
-        if (posterLoadCache.has(url)) {
-            return; // 已经加载过，跳过
-        }
+        if (posterLoadCache.has(url)) return; 
         
         const img = new Image();
         const loadPromise = new Promise((resolve, reject) => {
