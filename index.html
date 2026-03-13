@@ -4163,6 +4163,29 @@ function getTodayDateStr() {
   return `${y}-${m}-${day}`;
 }
 
+// 👉 v6.9.X 提取：全局时间轴精准排序引擎 (兼容夜猫子时区)
+function sortDailyLogByTime() {
+  if (!Array.isArray(dailyLog)) return;
+  dailyLog.sort((a, b) => {
+    const dateA = new Date(a.date || 0).getTime();
+    const dateB = new Date(b.date || 0).getTime();
+    if (dateA !== dateB) return dateB - dateA;
+
+    const offset = typeof getDayStartOffset === 'function' ? getDayStartOffset() : 0;
+    const getMins = (t) => {
+      if (!t) return -1;
+      const matches = (t || '').match(/(\d{1,2}):(\d{2})/g);
+      if (!matches) return -1;
+      const lastTime = matches[matches.length - 1];
+      let [h, m] = lastTime.split(':').map(Number);
+      if (!isNaN(h) && !isNaN(m) && h < offset) h += 24; // 相对论魔法
+      if (isNaN(h) || isNaN(m)) return -1;
+      return h * 60 + m;
+    };
+    return getMins(b.timeStr) - getMins(a.timeStr);
+  });
+}
+
 // 初始化下拉菜单状态
 document.addEventListener('DOMContentLoaded', () => {
   const offsetSel = document.getElementById('dayStartOffset');
@@ -5023,8 +5046,10 @@ function stopStarShineSound() {
             arr = [];
         }
 
+        // 👉 v6.9.X 修复：强制将打卡天数按自然时间先后排序，防止测试环境的时空穿梭导致日签天数错乱
         if (!arr.includes(today)) {
             arr.push(today);
+            arr.sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
             localStorage.setItem(KEY_OPENED_DAYS, JSON.stringify(arr));
         }
 
@@ -5034,16 +5059,34 @@ function stopStarShineSound() {
     // 👉 日签时光机引擎
     let currentViewedPosterDay = 1;
 
-    // 辅助函数：根据日签的 dayNum 算出对应的历史日期字符串（与 dailyLog.date 完全对齐）
+    // 辅助函数：根据日签的 dayNum 算出对应的真实历史日期字符串
     function getPosterHistoryDateStr(dayNum) {
+        try {
+            // 1. 获取打卡天数的真实历史账本
+            const raw = localStorage.getItem(typeof KEY_OPENED_DAYS !== 'undefined' ? KEY_OPENED_DAYS : 'anchor_opened_days_v56');
+            const arr = raw ? JSON.parse(raw) : [];
+
+            // 2. 如果账本有效，且 dayNum 在合法范围内，直接按索引取值 (dayNum 是从 1 开始的，所以索引是 dayNum - 1)
+            if (Array.isArray(arr) && dayNum > 0 && dayNum <= arr.length) {
+                const dateStr = arr[dayNum - 1]; // 例如 "2026-03-01"
+
+                // 严密解析：拆分 YYYY-MM-DD 构建本地 Date，防止直接 new Date(str) 导致的 UTC 时区偏移 Bug
+                const [y, m, d] = dateStr.split('-').map(Number);
+                if (y && m && d) {
+                    const realDate = new Date(y, m - 1, d);
+                    return realDate.toDateString(); // 确保与 dailyLog.date 格式绝对一致
+                }
+            }
+        } catch (e) {
+            console.warn('读取历史日期账本失败，启用兜底算法', e);
+        }
+
+        // 3. 极端情况兜底：如果没找到数组，才退回到加减法计算
         const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
         const diffDays = maxDay - dayNum;
-        const base = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
-        // 避免污染锚点本身，做一次浅拷贝并归零时间
-        const d = new Date(base.getTime());
-        d.setHours(0, 0, 0, 0);
-        d.setDate(d.getDate() - diffDays);
-        return d.toDateString();
+        const baseDate = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+        baseDate.setDate(baseDate.getDate() - diffDays);
+        return baseDate.toDateString();
     }
 
     function updatePosterDisplay(dayNum) {
@@ -11098,6 +11141,9 @@ function openRitual(type) {
                         noteSnapshot: newNote || task.noteText || '',
                         lastAddMinutes: addMinutes
                     });
+
+                    // 👉 核心修复：补录完成后，立刻呼叫档案室大姐按时间线重新整理今日足迹
+                    if (typeof sortDailyLogByTime === 'function') sortDailyLogByTime();
                 }
             }
         }
@@ -11515,33 +11561,8 @@ function openRitual(type) {
 
       log.timeStr = newTimeStr;
 
-      // 👉 核心修复：修改时间后，对整个 dailyLog 进行绝对的时间轴重排
-      // 排序规则：1. 按日期(date)倒序； 2. 同一天内，按时间(timeStr)倒序 (支持夜猫子偏移)
-      dailyLog.sort((a, b) => {
-        const dateA = new Date(a.date || 0).getTime();
-        const dateB = new Date(b.date || 0).getTime();
-        if (dateA !== dateB) return dateB - dateA;
-
-        // 提取 timeStr 中的最晚时间进行换算比较 (兼容 "14:00" 或 "14:00 - 15:30")
-        const offset = typeof getDayStartOffset === 'function' ? getDayStartOffset() : 0;
-        const getMins = (t) => {
-          if (!t) return -1;
-          const matches = (t || '').match(/(\d{1,2}):(\d{2})/g);
-          if (!matches) return -1;
-          const lastTime = matches[matches.length - 1]; // 取最后一个时间
-          let [h, m] = lastTime.split(':').map(Number);
-
-          // 相对论魔法：如果小时数小于夜猫子界限，说明它是物理上的次日凌晨。
-          // 在这一天的逻辑中，它的时间是最晚的，必须 +24 小时以确保它排在最上面！
-          if (!isNaN(h) && !isNaN(m) && h < offset) {
-            h += 24;
-          }
-          if (isNaN(h) || isNaN(m)) return -1;
-          return h * 60 + m;
-        };
-
-        return getMins(b.timeStr) - getMins(a.timeStr);
-      });
+      // 调用全局排序引擎
+      if (typeof sortDailyLogByTime === 'function') sortDailyLogByTime();
 
       if (typeof save === 'function') save();
       if (typeof renderLog === 'function') renderLog();
