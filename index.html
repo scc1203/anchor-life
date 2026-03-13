@@ -2975,7 +2975,7 @@ body.immersive-locked {
 
 <div class="container">
         <div class="header">
-        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.1.1 通用版</span></div>
+        <div><span class="app-title">Anchor ⚓️</span><span class="version-badge">v7.1.2 通用版</span></div>
         <!-- v6.6.2：右侧按钮组 -->
         <div style="display:flex; align-items:center; gap:8px;">
             <button class="header-btn-mini" id="btnDailyPoster" onclick="openDailyPosterManual()" title="日签">🌁 日签</button>
@@ -3267,6 +3267,16 @@ body.immersive-locked {
                     <span id="memoryTimeLockHint" style="display:none; color:#e65100; font-size:0.75rem; margin-left:8px; font-weight:bold;">
                         ⏱️ 专注中，时长由系统结算
                     </span>
+                </div>
+            </div>
+
+            <!-- 👉 v7.1.2 新增：时光机时段补录 (选填) -->
+            <div class="memory-panel-row1" style="margin-bottom: 16px; gap: 6px; align-items: center;">
+                <span style="font-size: 0.85rem; color: #777; white-space: nowrap; font-weight: 500;">🕒 时段:</span>
+                <div style="flex: 1; display: flex; align-items: center; gap: 4px;">
+                    <input type="time" id="memoryTimeStart" onchange="calcMemoryTimeDiff()" style="flex:1; padding:6px; border:1px solid #e0e0e0; border-radius:6px; font-size:0.85rem; outline:none; color:#555;" />
+                    <span style="color:#ccc; font-size:0.8rem;">至</span>
+                    <input type="time" id="memoryTimeEnd" onchange="calcMemoryTimeDiff()" style="flex:1; padding:6px; border:1px solid #e0e0e0; border-radius:6px; font-size:0.85rem; outline:none; color:#555;" />
                 </div>
             </div>
             
@@ -3895,6 +3905,7 @@ body.immersive-locked {
 
 <div style="font-weight: bold; font-size: 0.85rem; color: #444; margin-bottom: 6px;">🌌 v7.0：架构升维与时空手账</div>
 <ul style="margin-top:0; padding-left:20px; padding-bottom: 8px; font-size: 0.8rem; line-height: 1.6; color:#555;">
+    <li><b>v7.1.2：</b> 🕰️ <b>记忆时光机与无损轮回：</b>支持自定义补录时段并自动换算时长；引入「进度任务」的生命周期概念，进度满格自动杀青机制（杜绝复活死循环）。</li>
     <li><b>v7.1.1：</b> 🌸 <b>灵魂锚点与时光修正：</b>新增「一朵花」每日灵魂锚点，以独立姿态统领全天足迹与热力图；历史记录支持「修正时长与进度」的后悔药机制，数据绝对安全无损回调。</li>
     <li><b>v7.0.4：</b> 📟 <b>实体结界降临：</b>正式打通桌面“小方块”物理联动；支持脱离手机，直接在实体屏幕上进行任务切牌、专注计时与一键结算；软硬件状态无缝同步，小方块完成任务可瞬间点亮网页足迹。</li>
     <li><b>v7.0.3：</b> 🌁 <b>日签时光机重构：</b>新增历史日签功能；支持自定义勾选🌊「心流时长与锚点」，完美复刻当日并无损合成高清海报。</li>
@@ -10369,6 +10380,57 @@ function openRitual(type) {
             }
         }
 
+        // 👉 v7.1.2 核心判定：进度满格自动杀青（兼容限速里程碑）
+        const currentProg = (finalTask.bookmarkText || '').trim();
+        const targetProg = (finalTask.bookmarkTotal || '').trim();
+        const isProgressFull = currentProg && targetProg && currentProg === targetProg;
+
+        if (!silent && isProgressFull) {
+            // 1. 写入【大结局】足迹
+            dailyLog.unshift({
+                id: Date.now(),
+                title: finalTask.title,
+                icon: '🏆', // 大结局专属图标
+                timeStr: timeStr,
+                date: anchorTodayStr,
+                done: true,
+                taskId: finalTask.id,
+                bookmarkSnapshot: currentProg + ' / ' + targetProg,
+                noteSnapshot: finalTask.noteText || '',
+                lastAddMinutes: finalTask.lastAddMinutes || 0
+            });
+
+            // 2. 从任务池抹除，升入荣誉殿堂
+            db = db.filter(t => t.id !== finalTask.id);
+            archive.unshift({
+                ...finalTask,
+                finishDate: typeof getAnchorDate === 'function' ? getAnchorDate().toLocaleDateString() : now.toLocaleDateString()
+            });
+
+            // 3. 视觉庆祝与状态清理
+            if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
+            if (typeof showToast === 'function') showToast("🏆 目标达成！伟大里程碑已自动归档");
+            
+            if (typeof save === 'function') save();
+            if (typeof renderLog === 'function') renderLog();
+            if (typeof renderHistory === 'function') renderHistory();
+            if (typeof renderList === 'function') renderList();
+            if (typeof renderArchive === 'function') renderArchive();
+            
+            if (card) card.style.display = 'none';
+            card.style.animation = ''; 
+            if (statusEl) statusEl.style.display = 'none';
+            if (ingEl) ingEl.style.display = 'none';
+            currentTask = null;
+            if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+            if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+            localStorage.removeItem(KEY_LIVE_STATE);
+            if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
+            
+            // 🚨 绝对阻断：终止后续所有的普通循环、单次任务判定逻辑
+            return; 
+        }
+
         const bookmarkSnapshot = finalTask.bookmarkText
             ? (finalTask.bookmarkTotal ? finalTask.bookmarkText + ' / ' + finalTask.bookmarkTotal : finalTask.bookmarkText)
             : '';
@@ -10766,6 +10828,12 @@ function openRitual(type) {
         if (bookmarkInput) bookmarkInput.value = task.bookmarkText || '';
         if (totalInput) totalInput.value = task.bookmarkTotal || '';
 
+        // 清空上次残留的时段
+        const tStart = document.getElementById('memoryTimeStart');
+        const tEnd = document.getElementById('memoryTimeEnd');
+        if (tStart) tStart.value = '';
+        if (tEnd) tEnd.value = '';
+
         // 👉 v6.9.7 智能 UI 适配：根据任务类型调整提示语和目标框显隐
         const separator = document.querySelector('.memory-separator'); // 找到 "/" 分隔符
         if (task.subtype === 'movie' || task.icon === '🎬') {
@@ -10825,6 +10893,25 @@ function openRitual(type) {
                     saveMemoryPanel();
                 }
             };
+        }
+    }
+
+    // 👉 v7.1.2：自动根据起止时间计算分钟数，并同步到下拉框
+    function calcMemoryTimeDiff() {
+        const sEl = document.getElementById('memoryTimeStart');
+        const eEl = document.getElementById('memoryTimeEnd');
+        const s = sEl ? sEl.value : '';
+        const e = eEl ? eEl.value : '';
+        if (s && e) {
+            const [sH, sM] = s.split(':').map(Number);
+            const [eH, eM] = e.split(':').map(Number);
+            let diff = (eH * 60 + eM) - (sH * 60 + sM);
+            if (diff < 0) diff += 24 * 60; // 兼容跨午夜补录 (如 23:00 到 01:00)
+            
+            const hoursSelect = document.getElementById('memoryHours');
+            const minutesSelect = document.getElementById('memoryMinutes');
+            if (hoursSelect) hoursSelect.value = String(Math.floor(diff / 60));
+            if (minutesSelect) minutesSelect.value = String(diff % 60);
         }
     }
 
@@ -10897,6 +10984,15 @@ function openRitual(type) {
             task.bookmarkTotal = newTotal;
             task.bookmarkUpdatedAt = Date.now();
             hasChanges = true;
+
+            // 👉 隐式升级：如果填写了目标进度，且当前是单次任务(none)，自动保送为长期任务防丢失
+            if (newTotal && task.recurrence === 'none') {
+                task.recurrence = 'long_term';
+                task.desc = "长期任务";
+                if (typeof showToast === 'function') {
+                    setTimeout(() => showToast("🚀 测到目标进度，已自动升级为长期任务"), 500);
+                }
+            }
         }
 
         // 2. 保存累计时长（累加式）
@@ -10916,7 +11012,13 @@ function openRitual(type) {
             // 如果是事后补录，主动向今日足迹发射一条记录
             if (!isCurrentlyTicking) {
                 const now = new Date();
-                const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                // 👉 v7.1.2：如果填写了起止时间，优先使用它生成完美足迹时间
+                let timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+                const customStart = document.getElementById('memoryTimeStart') ? document.getElementById('memoryTimeStart').value : '';
+                const customEnd = document.getElementById('memoryTimeEnd') ? document.getElementById('memoryTimeEnd').value : '';
+                if (customStart && customEnd) {
+                    timeStr = `${customStart} - ${customEnd}`;
+                }
                 const anchorDateStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : now).toDateString();
                 if (typeof dailyLog !== 'undefined' && Array.isArray(dailyLog)) {
                     dailyLog.unshift({
@@ -10992,6 +11094,77 @@ function openRitual(type) {
             if (typeof renderLog === 'function') renderLog();         // 刷新足迹
             if (typeof renderHistory === 'function') renderHistory(); // 刷新历史记录
             if (typeof showToast === 'function') showToast("✅ 记忆与足迹已安全保存");
+        }
+
+        // 👉 v7.1.2 核心：差值触发满格自动杀青 (独立防御版)
+        const currentProg = (task.bookmarkText || '').trim();
+        const targetProg = (task.bookmarkTotal || '').trim();
+        const isProgressFull = currentProg && targetProg && currentProg === targetProg;
+        const progressChanged = (currentProg !== memoryOriginalState.bookmarkText);
+
+        if (isProgressFull && progressChanged) {
+            // 1. 独立计算时间字符串 (防 ReferenceError)
+            let killTimeStr = '';
+            const customStart = document.getElementById('memoryTimeStart') ? document.getElementById('memoryTimeStart').value : '';
+            const customEnd = document.getElementById('memoryTimeEnd') ? document.getElementById('memoryTimeEnd').value : '';
+            if (customStart && customEnd) {
+                killTimeStr = `${customStart} - ${customEnd}`;
+            } else {
+                const tempNow = new Date();
+                killTimeStr = tempNow.getHours().toString().padStart(2, '0') + ":" + tempNow.getMinutes().toString().padStart(2, '0');
+            }
+
+            // 2. 写入【大结局】足迹
+            const anchorDateStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : new Date()).toDateString();
+            dailyLog.unshift({
+                id: Date.now(),
+                title: task.title,
+                icon: '🏆',
+                timeStr: killTimeStr,
+                date: anchorDateStr,
+                done: true,
+                taskId: task.id,
+                bookmarkSnapshot: currentProg + ' / ' + targetProg,
+                noteSnapshot: task.noteText || '',
+                lastAddMinutes: 0 // 刚才的增量已在此函数前半部分累加
+            });
+
+            // 3. 从任务池抹除，升入荣誉殿堂
+            db = db.filter(t => t.id !== task.id);
+            const finishDateStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : new Date()).toLocaleDateString();
+            archive.unshift({
+                ...task,
+                finishDate: finishDateStr
+            });
+
+            // 4. 视觉庆祝
+            if (typeof spawnQuietConfetti === 'function') spawnQuietConfetti();
+            if (typeof showToast === 'function') showToast("🏆 目标达成！伟大里程碑已自动归档");
+
+            // 5. 独立核对舞台状态，防报错
+            const isCurrentTarget = (typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id);
+            if (isCurrentTarget) {
+                const card = document.getElementById('resultCard');
+                const statusEl = document.getElementById('rStatus');
+                const ingEl = document.getElementById('rIngPulse');
+                if (card) card.style.display = 'none';
+                if (statusEl) statusEl.style.display = 'none';
+                if (ingEl) ingEl.style.display = 'none';
+                
+                if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
+                if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+                localStorage.removeItem(KEY_LIVE_STATE);
+                if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
+                currentTask = null;
+            }
+            
+            // 6. 强制落盘并全面刷新 UI (生死线)
+            if (typeof save === 'function') save();
+            if (typeof renderLog === 'function') renderLog();
+            if (typeof renderHistory === 'function') renderHistory();
+            if (typeof renderList === 'function') renderList();
+            if (typeof renderArchive === 'function') renderArchive();
+            if (typeof renderHeatmap === 'function') renderHeatmap();
         }
 
         closeMemoryPanel();
@@ -11157,7 +11330,19 @@ function openRitual(type) {
       let newTask = { ...currentResurrectItem };
       newTask.id = targetId || (Date.now() + Math.floor(Math.random() * 1000));
 
-      // 👉 修复 Bug 1：从足迹复活时，若缺失 type，根据图标推断，确保回正确的库房
+      // 👉 v7.1.2 补丁：DNA 溯源。如果从快照复活，由于图标可能被篡改为🏆，优先去荣誉殿堂找回真实基因
+      const originalTask = archive.find(t => t.id === targetId) || db.find(t => t.id === targetId);
+      if (originalTask) {
+        newTask.type = originalTask.type;
+        newTask.subtype = originalTask.subtype;
+        newTask.isSeries = originalTask.isSeries;
+        // 如果快照里的图标是奖杯，强制恢复为它本体的真实图标
+        if (newTask.icon === '🏆') {
+          newTask.icon = originalTask.icon;
+        }
+      }
+
+      // 👉 修复 Bug 1：如果溯源后依然缺失 type，才根据图标兜底推断，确保回正确的库房
       if (!newTask.type) {
         if (newTask.icon === '📖') { newTask.type = 'culture'; newTask.subtype = 'book'; }
         else if (newTask.icon === '🎬') { newTask.type = 'culture'; newTask.subtype = 'movie'; }
@@ -11172,7 +11357,26 @@ function openRitual(type) {
       delete newTask.timeStr;
       delete newTask.date;
 
-      if (newTask.bookmarkSnapshot) newTask.bookmarkText = newTask.bookmarkSnapshot;
+      // 👉 v7.1.2 补丁：终极洗稿机。清洗掉补录、大结局、SOP计次等所有附加前缀
+      if (newTask.title) {
+        newTask.title = newTask.title.replace(/^\[补录\]\s*/, '');
+        newTask.title = newTask.title.replace(/^【整体完成】\s*/, '');
+        newTask.title = newTask.title.replace(/^【\+\d+】\s*/, '');
+      }
+
+      // 👉 v7.1.2：智能拆解书签快照，恢复分离的“当前”与“目标”
+      if (newTask.bookmarkSnapshot) {
+        const snap = newTask.bookmarkSnapshot.trim();
+        if (snap.includes('/')) {
+          const parts = snap.split('/');
+          const cur = (parts[0] || '').trim();
+          const total = (parts[1] || '').trim();
+          if (cur) newTask.bookmarkText = cur;
+          if (total) newTask.bookmarkTotal = total;
+        } else {
+          newTask.bookmarkText = snap;
+        }
+      }
       if (newTask.noteSnapshot) newTask.noteText = newTask.noteSnapshot;
       if (!newTask.totalMinutes && newTask.lastAddMinutes) newTask.totalMinutes = newTask.lastAddMinutes;
 
