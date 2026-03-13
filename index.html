@@ -5034,6 +5034,18 @@ function stopStarShineSound() {
     // 👉 日签时光机引擎
     let currentViewedPosterDay = 1;
 
+    // 辅助函数：根据日签的 dayNum 算出对应的历史日期字符串（与 dailyLog.date 完全对齐）
+    function getPosterHistoryDateStr(dayNum) {
+        const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+        const diffDays = maxDay - dayNum;
+        const base = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
+        // 避免污染锚点本身，做一次浅拷贝并归零时间
+        const d = new Date(base.getTime());
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - diffDays);
+        return d.toDateString();
+    }
+
     function updatePosterDisplay(dayNum) {
         // 强制内部自主计算，杜绝外部参数传递丢失
         const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
@@ -5085,27 +5097,55 @@ function stopStarShineSound() {
         if (daySpan) daySpan.textContent = dayNum;
         
         if (dateEl) {
-            if (dayNum === maxDay) {
-                const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr().replace(/-/g, '.') : new Date().toLocaleDateString();
-                dateEl.textContent = `${todayStr} | 像一次短暂停靠，看看今天走到了哪里。`;
-            } else {
-                // 👉 v7.0.3：时光机日期倒推算法，赋予历史海报真实的时空坐标
-                const daysAgo = maxDay - dayNum;
-                const historyDate = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
-                historyDate.setDate(historyDate.getDate() - daysAgo);
-                const y = historyDate.getFullYear();
-                const m = String(historyDate.getMonth() + 1).padStart(2, '0');
-                const d = String(historyDate.getDate()).padStart(2, '0');
-                
-                dateEl.textContent = `${y}.${m}.${d} | 时光机：这是你过去留下的风景。`;
-            }
+            // 统一通过时光机日期辅助函数计算日期，再生成展示文案
+            const historyDateStr = getPosterHistoryDateStr(dayNum);
+            const historyDate = new Date(historyDateStr);
+            const y = historyDate.getFullYear();
+            const m = String(historyDate.getMonth() + 1).padStart(2, '0');
+            const d = String(historyDate.getDate()).padStart(2, '0');
+
+            const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
+            const isToday = (dayNum === maxDay);
+            const baseDesc = isToday
+                ? '像一次短暂停靠，看看今天走到了哪里。'
+                : '时光机：这是你过去留下的风景。';
+
+            dateEl.textContent = `${y}.${m}.${d} | ${baseDesc}`;
         }
         
         // 极其暴力的显隐控制
         if (prevBtn) prevBtn.style.display = (dayNum > 1) ? 'flex' : 'none';
         if (nextBtn) nextBtn.style.display = (dayNum < maxDay) ? 'flex' : 'none';
 
-        // 👉 翻页后，通知底层重新计算并刷新预览框数据
+        // 👉 翻页后，根据当前海报对应日期，同步“一朵花”输入框与勾选状态
+        const chkSoul = document.getElementById('chkSoulFlower');
+        const inpSoul = document.getElementById('inpSoulFlower');
+        if (chkSoul && inpSoul) {
+            const historyDateStr = getPosterHistoryDateStr(dayNum);
+            let flowerText = '';
+            let hasFlower = false;
+
+            if (typeof dailyLog !== 'undefined' && Array.isArray(dailyLog)) {
+                const flowerLog = dailyLog.find(l =>
+                    l.date === historyDateStr &&
+                    (
+                        l.isMilestone === true ||
+                        l.type === 'milestone' ||
+                        l.icon === '🌸'
+                    )
+                );
+                if (flowerLog) {
+                    hasFlower = true;
+                    flowerText = flowerLog.title || '';
+                }
+            }
+
+            chkSoul.checked = hasFlower;
+            inpSoul.value = flowerText;
+            inpSoul.style.display = hasFlower ? 'block' : 'none';
+        }
+
+        // 👉 翻页后，通知底层重新计算并刷新预览框数据（含“一朵花”文案）
         if (typeof updatePosterPreview === 'function') updatePosterPreview();
     }
 
@@ -10828,11 +10868,13 @@ function openRitual(type) {
         if (bookmarkInput) bookmarkInput.value = task.bookmarkText || '';
         if (totalInput) totalInput.value = task.bookmarkTotal || '';
 
-        // 清空上次残留的时段
+        // 👉 v7.1.2 体验优化：打开时默认双双填入当前时间，消除原生控件的“假死/禁用”错觉
         const tStart = document.getElementById('memoryTimeStart');
         const tEnd = document.getElementById('memoryTimeEnd');
-        if (tStart) tStart.value = '';
-        if (tEnd) tEnd.value = '';
+        const nowTime = new Date();
+        const hhmm = nowTime.getHours().toString().padStart(2, '0') + ':' + nowTime.getMinutes().toString().padStart(2, '0');
+        if (tStart) tStart.value = hhmm;
+        if (tEnd) tEnd.value = hhmm;
 
         // 👉 v6.9.7 智能 UI 适配：根据任务类型调整提示语和目标框显隐
         const separator = document.querySelector('.memory-separator'); // 找到 "/" 分隔符
@@ -10896,7 +10938,7 @@ function openRitual(type) {
         }
     }
 
-    // 👉 v7.1.2：自动根据起止时间计算分钟数，并同步到下拉框
+    // 👉 v7.1.2：自动根据起止时间计算分钟数，并动态突破下拉框固定选项限制
     function calcMemoryTimeDiff() {
         const sEl = document.getElementById('memoryTimeStart');
         const eEl = document.getElementById('memoryTimeEnd');
@@ -10910,8 +10952,30 @@ function openRitual(type) {
             
             const hoursSelect = document.getElementById('memoryHours');
             const minutesSelect = document.getElementById('memoryMinutes');
-            if (hoursSelect) hoursSelect.value = String(Math.floor(diff / 60));
-            if (minutesSelect) minutesSelect.value = String(diff % 60);
+            
+            // 1. 处理小时数
+            if (hoursSelect) {
+                const hVal = Math.floor(diff / 60);
+                let hasH = Array.from(hoursSelect.options).some(opt => Number(opt.value) === hVal);
+                if (!hasH) hoursSelect.add(new Option(hVal + 'h', hVal));
+                hoursSelect.value = String(hVal);
+            }
+            
+            // 2. 处理分钟数 (智能造格子)
+            if (minutesSelect) {
+                const mVal = diff % 60;
+                let hasM = Array.from(minutesSelect.options).some(opt => Number(opt.value) === mVal);
+                if (!hasM) {
+                    // 如果没有这个精确数字，临时造一个选项
+                    minutesSelect.add(new Option(mVal + 'm', mVal));
+                    // 排序，保持下拉框美学秩序
+                    const opts = Array.from(minutesSelect.options);
+                    opts.sort((a, b) => Number(a.value) - Number(b.value));
+                    minutesSelect.innerHTML = '';
+                    opts.forEach(opt => minutesSelect.appendChild(opt));
+                }
+                minutesSelect.value = String(mVal);
+            }
         }
     }
 
@@ -13712,12 +13776,10 @@ function openHarvestDialogAsync(defaultMins, task = null) {
 // 👉 v7.0.X：升级版海报统计器（支持时空穿梭与去重）
 function getPosterStatsByDay(dayNum) {
     const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
-    const daysAgo = maxDay - dayNum;
+    const diffDays = maxDay - dayNum;
 
-    // 计算出目标历史日期
-    const targetDateObj = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
-    targetDateObj.setDate(targetDateObj.getDate() - daysAgo);
-    const targetDateStr = targetDateObj.toDateString();
+    // 计算出目标历史日期（完全复用时光机日期辅助逻辑）
+    const targetDateStr = getPosterHistoryDateStr(dayNum);
 
     let count = 0;
     let mins = 0;
@@ -13736,7 +13798,7 @@ function getPosterStatsByDay(dayNum) {
             }
         });
     }
-    return { count, mins, isToday: daysAgo === 0 };
+    return { count, mins, isToday: diffDays === 0 };
 }
 
 function openPosterStudio() {
@@ -13831,29 +13893,30 @@ function updatePosterPreview() {
     const chkSoul = document.getElementById('chkSoulFlower');
     const inpSoul = document.getElementById('inpSoulFlower');
     if (dateEl) {
-        const todayStr = typeof getTodayDateStr === 'function' ? getTodayDateStr().replace(/-/g, '.') : new Date().toLocaleDateString();
-        // 判断是当天还是历史时光机
         const maxDay = typeof initOpenedDays === 'function' ? initOpenedDays() : 1;
         const isHistory = typeof currentViewedPosterDay !== 'undefined' && currentViewedPosterDay < maxDay;
-        
-        let defaultText;
-        if (isHistory) {
-            const daysAgo = maxDay - currentViewedPosterDay;
-            const historyDate = typeof getAnchorDate === 'function' ? getAnchorDate() : new Date();
-            historyDate.setDate(historyDate.getDate() - daysAgo);
-            const y = historyDate.getFullYear();
-            const m = String(historyDate.getMonth() + 1).padStart(2, '0');
-            const d = String(historyDate.getDate()).padStart(2, '0');
-            defaultText = `${y}.${m}.${d} | 时光机：这是你过去留下的风景。`;
-        } else {
-            defaultText = "像一次短暂停靠，看看今天走到了哪里。";
-        }
-        
-        if (chkSoul && chkSoul.checked && inpSoul && inpSoul.value.trim() !== '') {
-            dateEl.textContent = `${todayStr} | ${inpSoul.value.trim()}`;
-        } else {
-            dateEl.textContent = isHistory ? defaultText : `${todayStr} | ${defaultText}`;
-        }
+
+        // 使用统一的时光机日期映射，确保与 dailyLog.date 完全一致
+        const historyDateStr = getPosterHistoryDateStr(
+            typeof currentViewedPosterDay !== 'undefined'
+                ? currentViewedPosterDay
+                : maxDay
+        );
+        const historyDate = new Date(historyDateStr);
+        const y = historyDate.getFullYear();
+        const m = String(historyDate.getMonth() + 1).padStart(2, '0');
+        const d = String(historyDate.getDate()).padStart(2, '0');
+        const dateLabel = `${y}.${m}.${d}`;
+
+        const baseDesc = isHistory
+            ? '时光机：这是你过去留下的风景。'
+            : '像一次短暂停靠，看看今天走到了哪里。';
+
+        const flowerText = (chkSoul && chkSoul.checked && inpSoul && inpSoul.value.trim() !== '')
+            ? inpSoul.value.trim()
+            : baseDesc;
+
+        dateEl.textContent = `${dateLabel} | ${flowerText}`;
     }
 }
 
@@ -13882,26 +13945,22 @@ function saveDailyPoster() {
     if (chkSoul && chkSoul.checked && inpSoul && inpSoul.value.trim() !== '') {
         const flowerText = inpSoul.value.trim();
 
-        // 1. 时空定位：找出这张海报对应的绝对历史日期
-        let targetDateStr = typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString();
-        try {
-            const storedDays = localStorage.getItem('anchor_opened_days_v56');
-            if (storedDays) {
-                const arr = JSON.parse(storedDays);
-                // 确保我们在历史范围内
-                if (Array.isArray(arr) && arr.length > 0 && typeof currentViewedPosterDay !== 'undefined') {
-                    const exactDateStr = arr[currentViewedPosterDay - 1]; 
-                    if (exactDateStr) {
-                        // 将 YYYY-MM-DD 转换为与 dailyLog.date 完全一致的 toDateString() 格式
-                        const [yy, mm, dd] = exactDateStr.split('-');
-                        targetDateStr = new Date(yy, mm - 1, dd).toDateString();
-                    }
-                }
-            }
-        } catch(e) {}
+        // 1. 时空定位：统一通过时光机日期辅助函数，找出当前预览海报对应的绝对历史日期
+        let targetDateStr;
+        if (typeof currentViewedPosterDay !== 'undefined') {
+            targetDateStr = getPosterHistoryDateStr(currentViewedPosterDay);
+        } else {
+            // 极端兜底：若找不到当前预览天数，则退回锚点当日
+            targetDateStr = (typeof getAnchorDate === 'function' ? getAnchorDate() : new Date()).toDateString();
+        }
 
-        // 2. 霸道总裁原则：确保这一天只能有一个 Milestone
-        const existingIdx = Array.isArray(dailyLog) ? dailyLog.findIndex(l => l.date === targetDateStr && l.isMilestone) : -1;
+        // 2. 霸道总裁原则：确保这一天只能有一个 Milestone（兼容旧数据字段）
+        const existingIdx = Array.isArray(dailyLog)
+            ? dailyLog.findIndex(l =>
+                l.date === targetDateStr &&
+                (l.isMilestone === true || l.type === 'milestone' || l.icon === '🌸')
+            )
+            : -1;
         if (existingIdx > -1) {
             // 如果已有，直接无情覆盖更新它的文字
             dailyLog[existingIdx].title = flowerText;
@@ -13923,6 +13982,11 @@ function saveDailyPoster() {
         if (typeof renderLog === 'function') renderLog();
         if (typeof renderHistory === 'function') renderHistory();
         if (typeof renderHeatmap === 'function') renderHeatmap();
+
+        // 保持当前时光机画面，不回跳到今天，仅做局部刷新
+        if (typeof currentViewedPosterDay !== 'undefined' && typeof updatePosterDisplay === 'function') {
+            updatePosterDisplay(currentViewedPosterDay);
+        }
     }
 
     const imgEl   = document.getElementById('dailyPosterImg');
