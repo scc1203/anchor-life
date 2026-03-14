@@ -590,15 +590,20 @@
     margin-bottom: 4px;
 }
 
-/* 每日打卡图弹窗 */
+/* 👉 What & Why: 将海报层级提至 20000，确保在 10000 的新手引导遮罩之上 */
 .daily-poster-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.25);
-    display: none;              /* 默认隐藏 */
+    display: none;              
     align-items: center;
     justify-content: center;
-    z-index: 999;
+    z-index: 20000 !important; 
+}
+
+/* 👉 同步提权自定义密码框/提示框，防止在引导时被遮挡 */
+#modalOverlay, #harvestDialog, .cold-dialog-backdrop {
+    z-index: 20000 !important;
 }
 
 .daily-poster-card {
@@ -2516,8 +2521,8 @@ html.onboarding-lock {
   /* 高亮过渡：给元素赋予"被选中"的呼吸感 */
   transition: box-shadow 0.3s ease, border-radius 0.3s ease;
 
-  /* 【v6.9.3】防御性升级：高亮元素仅作视觉提示，不响应点击，事件交给全屏遮罩推进引导 */
-  pointer-events: none !important;
+  /* 👉 What: 移除 pointer-events: none */
+  /* 👉 Why: 允许用户在新手引导高亮期间，真正点击和输入内容（半交互沙盒） */
 }
 
 /* 浮动引导文案框：白底圆角，马卡龙色文字 */
@@ -2983,9 +2988,10 @@ body.immersive-locked {
         </div>
     </div>
 
-<div class="stats-and-candy-wrapper">
-    <!-- 念头计数器 -->
-    <div class="stats-bar">
+<!-- 👉 加上 id="onboardingCandyZone"，让展开的糖果舞台也能被点击 -->
+<div id="onboardingCandyZone" class="stats-and-candy-wrapper">
+    <!-- 念头计数器 (增加 onboarding ID) -->
+    <div id="onboardingStatsZone" class="stats-bar">
         <!-- 意志力 -->
         <div class="stat-btn willpower" onclick="incrementStat('willpower')">
             <span class="stat-label">🛡️ 意志力</span>
@@ -3396,7 +3402,8 @@ body.immersive-locked {
                 </div>
             </div>
         </div>
-        <div class="input-box">
+        <!-- 👉 加上 id="onboardingInputBox"，让聚光灯包住加号按钮 -->
+        <div id="onboardingInputBox" class="input-box">
     <textarea id="inpTitle"
       placeholder="智能识别输入任务类别与时长…&#10;例：！写导言30m / 整理书桌 / 看好东西…"
       oninput="autoTag()"
@@ -3448,7 +3455,7 @@ body.immersive-locked {
 
         <!-- 新增：智能输入指令词典 (弱化版) -->
         <!-- v6.9.5：分离输入区设计，建立任务组 (工厂区) -->
-        <div style="margin-top: 24px; border-top: 1px dashed #cfd8dc; padding-top: 18px; padding-bottom: 12px;">
+        <div id="onboardingGroupZone" style="margin-top: 24px; border-top: 1px dashed #cfd8dc; padding-top: 18px; padding-bottom: 12px;">
 
             <!-- 模块 B 对称标题与气泡 -->
             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; padding-left: 4px;">
@@ -4042,7 +4049,7 @@ body.immersive-locked {
             <summary>📡 数据方舟 (Sync & Backup)</summary>
             <div class="manual-content">
         <div style="font-size:0.8rem; color:#6B4A3B; margin-bottom:5px; font-weight:bold;">👤 本机身份标识 (为云端做准备)</div>
-        <div style="display:flex; gap:8px; margin-bottom:15px; align-items:center;">
+        <div id="onboardingUserZone" style="display:flex; gap:8px; margin-bottom:15px; align-items:center;">
           <input type="text" id="settingUsernameInp" placeholder="例如：SCC" maxlength="12" style="flex:1; padding:8px 12px; border:1px solid #e0e0e0; border-radius:8px; font-size:0.9rem; outline:none;">
           <button class="btn-file" style="padding:8px 16px;" onclick="saveUsername()">更新身份</button>
         </div>
@@ -13390,42 +13397,57 @@ function initOnboarding() {
    //      将来升级到 v7.x 时可以选择换 key，再次引导用户关注新功能。
     if (localStorage.getItem(ONBOARDING_VISITED_KEY)) return;
 
-    // --- 六步引导配置（v6.9.3） ---
+    // --- 互动式十步引导配置（v7.1.3 沙盒终极版） ---
     const steps = [
       {
-        // Step 1：认领数字身份
-        targetId: 'settingUsernameInp',
-        text: '🛂 <b>第 1 步：认领数字护照。</b><br>欢迎来到 Anchor。请先在这里输入一个<b>独一无二的代号</b>（如缩写、小名+生日）。它将作为你连接云端机房、找回数据的唯一凭证。'
+        // Step 1：认领数字身份 (Target 已经是父级 Zone)
+        targetId: 'onboardingUserZone',
+        text: '🛂 <b>第 1 步：认领数字护照。</b><br>试着点击高亮框，输入你的专属代号并点【更新身份】。这是你连接云端的钥匙。<br><span style="font-size:0.75rem; color:#888;">(设置好后，点击屏幕黑色背景进入下一步)</span>'
       },
       {
-        // Step 2：任务输入区
-        targetId: 'inpTitle',
-        text: '📍 <b>第 2 步：清空大脑。</b><br>把你脑子里的待办事项全写在这里存入任务库。<br><span style="font-size:0.8rem; color:#888;">(注：大项目可使用下方的📦「任务清单」)</span>'
+        // Step 2：云端存读
+        targetId: 'cloudSyncPanelInner',
+        text: '☁️ <b>第 2 步：云端存读。</b><br>有了身份后，每次使用完点击【推送进度】，你的数据就永远安全啦！<br><span style="font-size:0.75rem; color:#888;">(点击黑屏继续)</span>'
       },
       {
-        // Step 3 (新增)：高亮能量药丸与筛选区
-        targetId: 'filterSec',
-        text: '🔋 <b>第 3 步：调节状态。</b><br>可根据当下状态切换高能/蓄能胶囊；或展开「高级筛选」，只在限定的专属清单中抽取。'
+        // Step 3：散装单次任务 (Target 改为整个 InputBox，包含+号)
+        targetId: 'onboardingInputBox',
+        text: '📍 <b>第 3 步：清空大脑。</b><br>最近有什么想做的待办或想看很久的书/影/剧单吗？试着输入一个任务并点击【＋】号存入，系统会自动识别标签，右上角是智能识别的小抄！<br><span style="font-size:0.75rem; color:#888;">(随时点击黑屏跳过)</span>'
       },
       {
-        // Step 4：抽卡按钮
+        // Step 4：建立任务组
+        targetId: 'onboardingGroupZone', 
+        text: '📦 <b>第 4 步：建立任务组。</b><br>如果是【行李清单】或【每日待办】等复杂项目，可在此新建「清单/重复SOP」。抽卡时可以选择限定清单抽取！'
+      },
+      {
+        // Step 5：抽卡按钮
         targetId: 'mainBtn',
-        text: '🎲 <b>第 4 步：交出决定权。</b><br>不用纠结先做哪个，直接点这里。系统会像扭蛋一样，随机抽出一张当下的锚点卡片。'
+        text: '🎲 <b>第 5 步：交出决定权。</b><br>不用纠结先做哪个，直接点这里。系统会像扭蛋一样，随机抽出一张当下的锚点卡片。'
       },
       {
-        // Step 5：糖果按钮
+        // Step 6：情绪储蓄罐
+        targetId: 'onboardingStatsZone',
+        text: '🛡️/✨ <b>第 6 步：情绪储蓄罐。</b><br>注意：这不是 KPI！忍住了一次坏习惯点意志力，遇到小确幸点一下。给生活留点不费力的痕迹。'
+      },
+      {
+        // 👉 核心修改：目标重新对准唯一的糖果按钮，文案加入盲盒暗示
         targetId: 'candyButton',
-        text: '🍬 <b>紧急出口：吃颗糖。</b><br>如果此刻什么都不想做，先点这里「吃颗糖」（捏泡泡/涂鸦/听歌）。回血了，再出发。'
+        text: '🍬 <b>第 7 步：紧急出口。</b><br>如果此刻瘫住了，先点这里「吃颗糖」回血。每次都会随机掉落不同的小玩具（比如捏气泡、涂鸦板或八音盒）。<br><span style="font-size:0.75rem; color:#888;">(现在就点开看看，今天抽到了什么糖吧！)</span>'
       },
       {
-        // Step 6 (新增)：PWA 沉浸模式引导，指向底部隐形锚点
+        // Step 8：日签闭环 (v7.1.3 最新文案)
+        targetId: 'btnDailyPoster',
+        text: '🌁 <b>第 8 步：每日落幕。</b><br>一天结束时点击这里，生成你的专属数字海报，可选择镌刻每日投入时长与锚点任务数，还可以留下你给今天的一句话，总结或纪念~<br><span style="font-size:0.75rem; color:#888;">(你可以点击试试看！)</span>'
+      },
+      {
+        // Step 9：PWA 引导 (恢复)
         targetId: 'pwaHintTarget',
-        text: '📱 <b>最后 1 步：添加到主屏幕。</b><br>强烈建议：点击屏幕底部的「分享 <b>↑</b>」图标，选择「添加到主屏幕」。<br><span style="font-size:0.8rem; color:#888;">这样它就会变成一个独立的 App，没有浏览器边框，体验最沉浸！</span>'
+        text: '📱 <b>第 9 步：添加到主屏幕。</b><br>强烈建议：点击屏幕底部的「分享 <b>↑</b>」图标，选择「添加到主屏幕」。这样它就会变成一个独立的 App，体验最沉浸！'
       },
       {
-        // Step 7 (新增)：完结撒花，引导视线到 04 区用户手册
+        // Step 10：完结撒花
         targetId: 'manualCardWrapper',
-        text: '🎉 <b>恭喜通关！新手指引已完成。</b><br>关于标签、记忆和冷库的更多细节，详见这里的「用户手册与逻辑词典」。<br><span style="font-size:0.8rem; color:#888;">提示：想复习时，随时可点击本区的「👀 重看引导」。<br><br>👉 <b>现在点击屏幕，正式启航！</b></span>'
+        text: '🎉 <b>恭喜通关！</b><br>关于标签、记忆的具体玩法，随时可以来这里翻看「用户手册」。<br><span style="font-size:0.8rem; color:#888;">提示：想复习引导时，点击本区的「👀 重看引导」。<br><br>👉 <b>现在点击黑屏，正式启航！</b></span>'
       }
     ];
 
@@ -13564,11 +13586,21 @@ function initOnboarding() {
         lastTarget = target;
 
         // Step 2 额外高亮：输入框右上角的「✂️ 拆分为子步骤/清单」按钮
-        if (step.targetId === 'inpTitle') {
+        if (step.targetId === 'inpTitle' || step.targetId === 'onboardingInputBox') {
             const splitBtn = document.querySelector('.section-input .section-title span[onclick^=\"shortcutToNewPlaylist\"]');
             if (splitBtn && splitBtn.classList) {
                 splitBtn.classList.add('onboarding-highlight');
                 extraHighlightTargets.push(splitBtn);
+            }
+        }
+        // 👉 新增：Step 7 紧急出口，额外给糖果展开舞台打上聚光灯
+        if (step.targetId === 'candyButton') {
+            const candySec = document.getElementById('candySection');
+            if (candySec) {
+                // 虽然它一开始是 display:none 隐藏的，但先加上高亮类名
+                // 等用户点击糖果按钮展开它时，它就会自带光晕出现在遮罩上方
+                candySec.classList.add('onboarding-highlight');
+                extraHighlightTargets.push(candySec);
             }
         }
     }
@@ -13609,6 +13641,19 @@ function initOnboarding() {
             arrowOnTop = false; // 始终让箭头朝下
             const idealTop = Math.min(window.innerHeight * 0.7, rect.top - 80);
             top = Math.max(12, idealTop);
+        }
+
+        // 👉 核心修复：当引导到“建立任务组(SOP)”时，强制气泡跑到上方，防止挡住向下展开的输入框
+        if (step && step.targetId === 'onboardingGroupZone') {
+            top = rect.top - 120; // 强行把气泡推到目标上方 120px 处
+            if (top < 12) top = 12; // 触顶保护
+            arrowOnTop = false; // 箭头朝下，指向 SOP 区域
+        }
+
+        // 👉 第 7 步糖果：气泡稍下移，不挡住展开后可能出现的「开启音效」按钮
+        if (step && step.targetId === 'candyButton') {
+            top += 80;
+            if (top + 120 > window.innerHeight - 12) top = window.innerHeight - 132; // 触底保护
         }
 
         tooltip.innerHTML = `
