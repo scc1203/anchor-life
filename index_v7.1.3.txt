@@ -7647,30 +7647,11 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
             if (isDoneInCycle) li.classList.add('task-status-done');
 
             const seriesBadge = item.isSeries ? `<span class="list-badge">∞系列</span>` : '';
-            // 👉 视觉极致大一统：右侧统一状态栏。完成状态 (✅) 完美继承其所属周期的灵魂色彩
             let cycleBadge = '';
-            if (item.recurrence === 'long_term' || item.type === 'long_term') {
+            if (item.recurrence === 'long_term') {
                 cycleBadge = `<span class="list-badge">🚀</span>`;
             } else if (['daily', 'weekly', 'monthly'].includes(item.recurrence)) {
-                if (isDoneInCycle) {
-                    // 已完成状态：色彩与周期保持一致
-                    if (item.recurrence === 'daily') {
-                        cycleBadge = `<span class="list-badge" style="background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9;">${cycleBadgeText}</span>`;
-                    } else if (item.recurrence === 'weekly') {
-                        cycleBadge = `<span class="list-badge" style="background:#e3f2fd; color:#1565c0; border-color:#bbdefb;">${cycleBadgeText}</span>`;
-                    } else if (item.recurrence === 'monthly') {
-                        cycleBadge = `<span class="list-badge" style="background:#f3e5f5; color:#4527a0; border-color:#e1bee7;">${cycleBadgeText}</span>`;
-                    }
-                } else {
-                    // 未完成状态：马卡龙胶囊完全替代 🔄
-                    if (item.recurrence === 'daily') {
-                        cycleBadge = `<span class="list-badge" style="background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9;">日</span>`;
-                    } else if (item.recurrence === 'weekly') {
-                        cycleBadge = `<span class="list-badge" style="background:#e3f2fd; color:#1565c0; border-color:#bbdefb;">周</span>`;
-                    } else if (item.recurrence === 'monthly') {
-                        cycleBadge = `<span class="list-badge" style="background:#f3e5f5; color:#4527a0; border-color:#e1bee7;">月</span>`;
-                    }
-                }
+                cycleBadge = isDoneInCycle ? `<span class="list-badge">${cycleBadgeText}</span>` : `<span class="list-badge">🔄</span>`;
             }
 
             let extraBadges = "";
@@ -7705,7 +7686,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                              (item.totalMinutes && item.totalMinutes > 0) || 
                              (item.noteText && item.noteText.trim());
             const memoryDot = hasMemory ? '<span style="position:absolute;top:-2px;right:-8px;width:4px;height:4px;background:#6b9bd1;border-radius:50%;"></span>' : '';
-
+            
             let titleSpanHtml;
             if (isCold) {
                 // 冷库里只展示，不提供“直接完成”
@@ -7897,7 +7878,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         if (cntEl) cntEl.innerText = count;
     }
 
-    // v6.3-edit-buttons-enter & v6.9.X 升级：删除今日足迹记录（支持智能撤销时长与周期打卡状态）
+    // v6.3-edit-buttons-enter：删除今日足迹记录（支持智能撤销时长）
     function deleteLogEntry(idx) {
         if (idx < 0 || idx >= dailyLog.length) return;
         const log = dailyLog[idx];
@@ -7905,48 +7886,42 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         // 1. 第一层确认：是否删除足迹
         if (!confirm("确定从今日足迹删除这条记录吗？")) return;
 
-        // 👉 提权全域追踪：先去任务库找，找不到再去荣誉殿堂找真身
-        let targetTask = null;
-        if (log.taskId) {
-            targetTask = db.find(t => t.id === log.taskId) || archive.find(t => t.id === log.taskId);
-        }
+        // 2. 第二层智能拦截：如果这条足迹包含了新增时长，询问是否连带撤销
+        if (log.taskId && log.lastAddMinutes && log.lastAddMinutes > 0) {
+            const wantDeduct = confirm(`⚠️ 这条记录包含了 ⏱ ${log.lastAddMinutes} 分钟的投入时长。\n\n是否要同时从该任务的总时长中【撤销】这部分时间？\n\n[确定] = 连同总时长一起扣除\n[取消] = 仅删除足迹，保留总时长`);
 
-        if (targetTask) {
-            // 2. 第二层智能拦截 A：撤销专注时长
-            if (log.lastAddMinutes && log.lastAddMinutes > 0) {
-                const wantDeduct = confirm(`⚠️ 这条记录包含了 ⏱ ${log.lastAddMinutes} 分钟的投入时长。\n\n是否要同时从该任务的总时长中【撤销】这部分时间？\n\n[确定] = 连同总时长一起扣除\n[取消] = 仅删除足迹，保留总时长`);
-                if (wantDeduct) {
+            if (wantDeduct) {
+                // 全域追踪：先去任务库找
+                let targetTask = db.find(t => t.id === log.taskId);
+                let foundIn = 'db';
+
+                // 如果任务库找不到，去荣誉殿堂找（可能刚被归档）
+                if (!targetTask) {
+                    targetTask = archive.find(t => t.id === log.taskId);
+                    foundIn = 'archive';
+                }
+
+                if (targetTask) {
+                    // 执行撤销：总时长减去当次新增，确保不小于0
                     targetTask.totalMinutes = Math.max(0, (targetTask.totalMinutes || 0) - log.lastAddMinutes);
                     targetTask.totalUpdatedAt = Date.now();
-                    if (targetTask.lastAddMinutes === log.lastAddMinutes) targetTask.lastAddMinutes = 0;
                     if (typeof showToast === 'function') showToast(`↩️ 已撤销 ${log.lastAddMinutes} 分钟专注时长`);
-                }
-            }
 
-            // 3. 👉 新增智能拦截 B：撤销周期打卡状态 (v6.9.X)
-            // What & Why: 如果是周期任务，且最后一次打卡恰好是“今天”，允许用户吃后悔药，恢复未打卡状态。
-            const isCycleTask = ['daily', 'weekly', 'monthly'].includes(targetTask.recurrence);
-            const anchorTodayStr = typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString();
-
-            if (isCycleTask && targetTask.lastDone === anchorTodayStr) {
-                const wantRevokeCycle = confirm(`⚠️ 这是一个周期任务（${targetTask.recurrence === 'daily' ? '每日' : targetTask.recurrence === 'weekly' ? '每周' : '每月'}循环）。\n\n是否要同时【撤销】它今天的打卡完成状态？\n\n[确定] = 取消划线，并扣除 1 次累计打卡\n[取消] = 仅删除足迹，保持卡片已完成`);
-                if (wantRevokeCycle) {
-                    targetTask.lastDone = ''; // 擦除打卡印记，触发 UI 取消划线
-                    targetTask.completeCount = Math.max(0, (targetTask.completeCount || 1) - 1); // 扣除次数，保底不为负
-                    if (typeof showToast === 'function') showToast("↩️ 已撤销打卡状态，恢复未完成");
+                    // 如果当时是最后一次添加，撤销后可以把 lastAddMinutes 清空或减去，这里简单置空以防误导
+                    if (targetTask.lastAddMinutes === log.lastAddMinutes) {
+                        targetTask.lastAddMinutes = 0;
+                    }
                 }
             }
         }
 
-        // 4. 执行删除足迹与保存刷新
+        // 3. 执行删除足迹与保存刷新
         dailyLog.splice(idx, 1);
-
         if (typeof save === 'function') save();
         if (typeof renderLog === 'function') renderLog();
         if (typeof renderHistory === 'function') renderHistory();
-        if (typeof renderList === 'function') renderList(); // 🚨 必定触发 renderList，使得 isDoneInCycle 重新计算并取消划线
-        if (typeof renderArchive === 'function') renderArchive();
-        if (typeof renderHeatmap === 'function') renderHeatmap();
+        if (typeof renderList === 'function') renderList(); // 刷新主列表，更新可能的记忆小圆点
+        if (typeof renderArchive === 'function') renderArchive(); // 刷新荣誉殿堂（如果时间被扣除了）
     }
 
     function renderHistory() {
