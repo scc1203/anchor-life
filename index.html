@@ -7192,15 +7192,20 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                             <span style="flex:1; line-height:1.4; ${textStyle}">${item.text || item.title || '未知任务'}</span>
                         </div>`;
                         } else {
-                            // 👉 活跃状态：保持原有的 checkbox 交互
-                            const isChecked = item.done ? 'checked' : '';
-                            const textStyle = item.done ? 'text-decoration:line-through; color:#aaa;' : 'color:#555;';
+                            // 👉 活跃状态：支持「已完成 ✅」与「跳过 ⏭️」的柔性区分
+                            const isDone = item.done === true;
+                            const isSkipped = item.skipped === true;
+                            const checkedAttr = isDone ? 'checked' : '';
+                            let textStyle = 'color:#555;';
+                            if (isDone) textStyle = 'text-decoration:line-through; color:#aaa;';
+                            else if (isSkipped) textStyle = 'text-decoration:line-through; color:#ef9a9a; font-style:italic; opacity:0.8;';
+
                             plHtml += `
-                        <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; margin-bottom:8px; cursor:pointer;">
-                            <input type="checkbox" style="margin-top:2px;" ${isChecked}
-                                onchange="toggleCabinetItem(${pIdx}, ${iIdx}, this.checked, false)">
+                        <div style="display:flex; align-items:flex-start; gap:8px; font-size:0.85rem; margin-bottom:8px;">
+                            <input type="checkbox" ${checkedAttr} onchange="toggleCabinetItem(${pIdx}, ${iIdx}, this.checked, false)" style="margin-top:2px; width:16px; height:16px;">
                             <span style="flex:1; line-height:1.4; ${textStyle}">${item.text || item.title || '未知任务'}</span>
-                        </label>`;
+                            <span onclick="toggleSkipItem('${pl.id}', ${iIdx})" style="cursor:pointer; font-size:0.8rem; color:#bbb; padding:0 4px;" title="不需要/跳过">⏭️</span>
+                        </div>`;
                         }
                     });
                     plHtml += `</div>`;
@@ -7283,7 +7288,7 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
     }
 
     // 处理清单打钩：持久化 + 记入足迹
-    function toggleCabinetItem(pIdx, iIdx, isChecked, fromCard = false) {
+    function toggleCabinetItem(pIdx, iIdx, isChecked, fromCard = false, isSilentSkip = false) {
         if (!customPlaylists[pIdx]) return;
 
         let pl = customPlaylists[pIdx];
@@ -7320,15 +7325,18 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         const logTitle = `【${prefix}${customPlaylists[pIdx].title || customPlaylists[pIdx].name || '清单'}】${taskName}`;
 
         if (isChecked) {
-            dailyLog.unshift({
-                id: Date.now(), title: logTitle, icon: plIcon, timeStr: timeStr,
-                date: anchorDateStr, done: true, type: 'checklist_item',
-                playlistId: customPlaylists[pIdx].id
-            });
-            save(); renderLog();
-            if (typeof renderHistory === 'function') renderHistory();
+            // 👉 核心修补：如果是静默跳过触发的终局结算，跳过写入单条足迹！
+            if (!isSilentSkip) {
+                dailyLog.unshift({
+                    id: Date.now(), title: logTitle, icon: plIcon, timeStr: timeStr,
+                    date: anchorDateStr, done: true, type: 'checklist_item',
+                    playlistId: customPlaylists[pIdx].id
+                });
+                save(); renderLog();
+                if (typeof renderHistory === 'function') renderHistory();
+            }
 
-            const allDone = customPlaylists[pIdx].items.every(i => i && i.done);
+            const allDone = customPlaylists[pIdx].items.every(i => i && (i.done === true || i.skipped === true));
             if (allDone) {
                 showToast(`🎉 恭喜！「${customPlaylists[pIdx].title}」已全部完成！`);
 
@@ -7365,7 +7373,12 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
                         });
 
                         if (customPlaylists[pIdx].items) {
-                            customPlaylists[pIdx].items.forEach(item => item.done = false);
+                            customPlaylists[pIdx].items.forEach(item => {
+                                if (item) {
+                                    item.done = false;
+                                    item.skipped = false;
+                                }
+                            });
                         }
 
                         savePlaylists(); renderCabinet();
@@ -7607,6 +7620,63 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
         }
     };
 
+    // v7.1.4：清单子任务「跳过 ⏭️」柔性状态切换（与打钩物理互斥）
+    window.toggleSkipItem = function(playlistId, iIdx, fromCard = false) {
+        const pIdx = customPlaylists.findIndex(p => String(p.id) === String(playlistId));
+        if (pIdx < 0 || !customPlaylists[pIdx] || !Array.isArray(customPlaylists[pIdx].items) || !customPlaylists[pIdx].items[iIdx]) return;
+
+        const item = customPlaylists[pIdx].items[iIdx];
+        item.skipped = !item.skipped;
+        if (item.skipped) item.done = false; // 跳过与打钩物理互斥
+
+        if (typeof savePlaylists === 'function') savePlaylists();
+
+        // 计算弹性进度：已完成 ✅ 或已跳过 ⏭️ 都视为“处理过”
+        const allProcessed = customPlaylists[pIdx].items.every(i => i && (i.done === true || i.skipped === true));
+
+        if (allProcessed) {
+            // 触发彻底完结：优先走显式的 handlePlaylistCompletion 钩子
+            if (typeof handlePlaylistCompletion === 'function') {
+                handlePlaylistCompletion(pIdx, fromCard);
+            } else {
+                // 如果没有提取公用函数，借用 toggleCabinetItem 的结算链路，确保足迹与统计完全一致
+                const originalDone = item.done === true;
+                const originalSkipped = item.skipped === true;
+
+                item.skipped = false;
+                item.done = true; // 临时借用以骗过底层满格判定
+                toggleCabinetItem(pIdx, iIdx, true, fromCard, true); // 传递 isSilentSkip = true
+                // 立即恢复原始状态，并重新保存
+                item.done = originalDone;
+                item.skipped = originalSkipped;
+                if (typeof savePlaylists === 'function') savePlaylists();
+            }
+        } else {
+            if (item.skipped && typeof showToast === 'function') showToast("⏭️ 已跳过，本次免做");
+            if (typeof renderCabinet === 'function') renderCabinet();
+
+            // 👉 核心修复：直接在 Overlay 浮层上进行精准 DOM 操作，实现瞬间划淡红色红线
+            if (fromCard) {
+                const label = document.querySelector(`label[for="plStep_${iIdx}"]`);
+                const cb = document.getElementById(`plStep_${iIdx}`);
+                if (label) {
+                    if (item.skipped) {
+                        label.style.textDecoration = 'line-through';
+                        label.style.color = '#ef9a9a';
+                        label.style.fontStyle = 'italic';
+                        label.style.opacity = '0.8';
+                        if (cb) cb.checked = false; // 物理互斥：跳过时强制取消打钩
+                    } else {
+                        label.style.textDecoration = 'none';
+                        label.style.color = '#555';
+                        label.style.fontStyle = 'normal';
+                        label.style.opacity = '1';
+                    }
+                }
+            }
+        }
+    };
+
     function renderList() {
         const dailyList = document.getElementById('dailyList');
         const mediaList = document.getElementById('mediaList');
@@ -7838,21 +7908,9 @@ function drawColoringTemplate(ctx, w, h, regionColors) {
 
     // v6.9.5：历史/足迹视图去重工具 —— 隐藏“主任务 + 清单子任务”的视觉重复
     function dedupeChecklistTwins(logs) {
-        if (!Array.isArray(logs)) return [];
-        const result = [];
-        logs.forEach(log => {
-            if (log && log.type === 'checklist_item') {
-                const normTitle = (log.title || '').replace(/\s+/g, '');
-                const hasMainTwin = logs.some(other => {
-                    if (other === log) return false;
-                    const otherTitleNorm = (other.title || '').replace(/\s+/g, '');
-                    return otherTitleNorm === normTitle && (other.icon || '') !== '✅';
-                });
-                if (hasMainTwin) return; // 跳过这条 checklist_item
-            }
-            result.push(log);
-        });
-        return result;
+        // 🚨 核心修复：彻底废除过度智能的去重逻辑，保留所有子任务的真实打卡历史！
+        // 这样 SOP 在第 N 次循环时，所有的打钩足迹都能如实显示，不再被整体完成记录强行遮挡。
+        return logs;
     }
 
     function renderLog() {
@@ -9862,10 +9920,14 @@ function closePlaylistOverlay(isCompleted = false) {
             targetPl.tasks.forEach((t, i) => {
               const li = document.createElement('li');
               li.style.cssText = "display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; font-size:0.9rem;";
-              // 动态读取底层档案柜的完成状态
-              const isDone = (targetPl.items && targetPl.items[i] && targetPl.items[i].done) ? true : false;
+              // 动态读取底层档案柜的完成 / 跳过 状态
+              const baseItem = (targetPl.items && targetPl.items[i]) ? targetPl.items[i] : {};
+              const isDone = baseItem && baseItem.done === true;
+              const isSkipped = baseItem && baseItem.skipped === true;
               const checkedAttr = isDone ? 'checked' : '';
-              const textStyle = isDone ? 'text-decoration:line-through; color:#999;' : '';
+              let textStyle = '';
+              if (isDone) textStyle = 'text-decoration:line-through; color:#999;';
+              else if (isSkipped) textStyle = 'text-decoration:line-through; color:#ef9a9a; font-style:italic; opacity:0.8;';
 
               li.innerHTML = `
                 <input type="checkbox" class="pl-step-checkbox" id="plStep_${i}" data-task="${t.replace(/"/g, '&quot;')}"
@@ -9873,6 +9935,7 @@ function closePlaylistOverlay(isCompleted = false) {
                        onchange="toggleCardPlaylistItem('${targetPl.id}', ${i}, this.checked)"
                        style="margin-top:4px; width:16px; height:16px;">
                 <label for="plStep_${i}" style="cursor:pointer; flex:1; line-height:1.4; ${textStyle}">${t}</label>
+                <span onclick="toggleSkipItem('${targetPl.id}', ${i}, true)" style="cursor:pointer; font-size:0.8rem; color:#bbb; padding:0 4px;" title="不需要/跳过">⏭️</span>
               `;
               stepsUl.appendChild(li);
             });
@@ -9950,16 +10013,20 @@ function startPlaylist(playMode) {
   if (!targetPl) return;
   const sourceTasks = getPlaylistTaskTexts(targetPl);
 
-  // 👉 修复 2：只收集面板上没有被打钩的任务
-  const checkboxes = document.querySelectorAll('.pl-step-checkbox');
+  // 👉 v7.1.4：只收集「既未完成也未被跳过」的任务进入抽卡池
   const remainingTasks = [];
-  checkboxes.forEach(cb => {
-    if (!cb.checked) {
-      remainingTasks.push(cb.getAttribute('data-task'));
-    }
-  });
+  if (Array.isArray(targetPl.tasks)) {
+    targetPl.tasks.forEach((t, i) => {
+      const baseItem = (targetPl.items && targetPl.items[i]) ? targetPl.items[i] : {};
+      const isDone = baseItem && baseItem.done === true;
+      const isSkipped = baseItem && baseItem.skipped === true;
+      if (!isDone && !isSkipped) {
+        remainingTasks.push(t);
+      }
+    });
+  }
 
-  // 🚨 修复：如果全打钩了，直接阻断，绝对不准回退到源数据
+  // 🚨 修复：如果全处理完了（全部完成或跳过），直接阻断，绝对不准回退到源数据
   if (remainingTasks.length === 0) {
     if (typeof showToast === 'function') showToast("🎉 该清单已没有待办任务啦！");
     return;
@@ -10019,7 +10086,7 @@ function drawFromPlaylist() {
             type: 'playlist_done'
           });
           if (Array.isArray(pl.items)) {
-            pl.items.forEach(item => { if (item) item.done = false; });
+            pl.items.forEach(item => { if (item) { item.done = false; item.skipped = false; } });
           }
         }
 
@@ -10358,20 +10425,6 @@ function openRitual(type) {
                         const anchorDateStr = getAnchorDate().toDateString();
                         const rawText = (task.rawTaskText || '').toString();
                         const plTitle = pl.title || pl.name || '清单';
-
-                        // 1）为该子任务写入一条轻量足迹：清单图标 【清单名】子任务名
-                        if (rawText) {
-                            const subIcon = pl.icon || '📑';
-                            dailyLog.unshift({
-                                id: Date.now(),
-                                title: `【${plTitle}】${rawText}`,
-                                icon: subIcon,
-                                timeStr: subTimeStr,
-                                date: anchorDateStr,
-                                done: true,
-                                type: 'checklist_item'
-                            });
-                        }
 
                         // 2）同步到底层 customPlaylists.items 的 done 状态
                         let items = Array.isArray(pl.items) ? pl.items : null;
