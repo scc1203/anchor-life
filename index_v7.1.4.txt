@@ -11229,17 +11229,6 @@ function openRitual(type) {
 
                     // 👉 核心修复：补录完成后，立刻呼叫档案室大姐按时间线重新整理今日足迹
                     if (typeof sortDailyLogByTime === 'function') sortDailyLogByTime();
-                    // v7.1.4 补丁：补录时长时，同步更新周期任务的打卡钢印与计数
-if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence)) {
-    task.lastDone = getAnchorDate().toDateString();
-    task.completeCount = (task.completeCount || 0) + 1;
-    // 穿透回主数据库更新真实躯体
-    var updateIdx = db.findIndex(function(t) { return t.id === task.id; });
-    if (updateIdx > -1) {
-        db[updateIdx].lastDone = task.lastDone;
-        db[updateIdx].completeCount = task.completeCount;
-    }
-}
                 }
             }
         }
