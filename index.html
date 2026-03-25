@@ -2017,15 +2017,20 @@ body.variant-common .stat-btn.joy {
   overflow: hidden;
 }
 .tarot-front .t-btn {
-  background: var(--bg-pink);
+  background: linear-gradient(135deg, #FF9AA2, #FFB6B9);
   color: #fff;
   border: none;
-  padding: 8px 20px;
-  border-radius: 99px;
-  font-size: 0.85rem;
+  padding: 8px 24px;
+  border-radius: 999px;
+  font-size: 0.95rem;
   cursor: pointer;
   font-weight: bold;
-  box-shadow: 0 4px 10px rgba(255, 154, 162, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 154, 162, 0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.tarot-front .t-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(255, 154, 162, 0.3);
 }
 
 .tarot-card.reveal {
@@ -8845,12 +8850,12 @@ function renderResultCard(result) {
         return;
       }
 
-      // 👉 v6.9.7 核心修复：如果任务已开始进行且超过 10 秒，放弃时触发时长收割
+      // 👉 v6.9.7 核心修复：如果任务已开始进行且超过 5 秒，放弃时触发时长收割
       if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
         const elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
-        if (elapsedSecs >= 10) { 
+        if (elapsedSecs >= 5) { 
           let elapsedMins = Math.floor(elapsedSecs / 60);
-          if (elapsedSecs >= 10 && elapsedSecs < 60) elapsedMins = 1; // 满10秒保底1分钟
+          if (elapsedSecs >= 5 && elapsedSecs < 60) elapsedMins = 1; // 满10秒保底1分钟
 
           let harvestMins = 0;
           let newBookmark = null; // 🚨 提权：将变量声明移至安全作用域
@@ -10501,8 +10506,8 @@ function openRitual(type) {
         if (!silent && currentStatus === 'anchor' && anchorStartTime) {
             const elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
             let elapsedMins = Math.floor(elapsedSecs / 60);
-            // 容错：哪怕只专注了 10秒~59秒，只要点了完成，就给你算 1 分钟
-            if (elapsedSecs >= 10 && elapsedSecs < 60) {
+            // 容错：哪怕只专注了 5秒~59秒，只要点了完成，就给你算 1 分钟
+            if (elapsedSecs >= 5 && elapsedSecs < 60) {
                 elapsedMins = 1;
             }
             if (elapsedMins >= 1) {
