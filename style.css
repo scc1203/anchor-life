@@ -1,0 +1,2446 @@
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+/* 外层横向 Swiper：全屏，隐藏滚动条 */
+.outer-swiper {
+  width: 100vw;
+  height: 100vh;
+}
+.outer-swiper .swiper-slide {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 中心容器：内层纵向 Swiper 填满 */
+.slide-center {
+  height: 100%;
+  width: 100%;
+}
+.inner-swiper {
+  width: 100%;
+  height: 100%;
+}
+.inner-swiper .swiper-slide {
+  width: 100%;
+  height: 100vh;
+}
+
+/* 房间占位：全屏、居中文字，为后续真实 DOM 留坑位 */
+.room {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "PingFang SC", "Helvetica Neue", sans-serif;
+  font-size: clamp(1rem, 4vw, 1.5rem);
+  font-weight: 500;
+  color: #333;
+}
+.room.room-dark { color: #fff; }
+
+.room-00 {}
+.room-01 {}
+.room-02 {
+  background-color: #FDF6E3 !important;
+}
+.room-03 {}
+.room-04 {
+  background-color: #FBF7FF !important;
+}
+
+/* 房间物理边界：00/01 禁止内部滚动，02/03/04 允许独立上下滑动 */
+.room-00,
+.room-01 {
+  overflow: hidden !important;
+  -webkit-overflow-scrolling: auto;
+}
+/* 房间物理边界：00/01 禁止内部滚动，02/03/04 允许独立上下滑动 */ 
+.room-02, .room-03 { overflow-y: auto; overflow-x: hidden; padding-bottom: max(120px, env(safe-area-inset-bottom)); box-sizing: border-box; }
+.room-04 {
+  overflow-y: auto;
+  /* 👉 What & Why: 必须设为 hidden。
+     打碎 CSS 的强制 auto 陷阱，彻底抹杀原生横向滚动条。
+     这样不管怎么横向拉扯，房间内部都稳如泰山，而滑动指令会完美透传给外层 Swiper！ */
+  overflow-x: hidden;
+  padding-bottom: max(120px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.room-04,
+.section-footer-area {
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 03区：房间内部垂直滚动，不干扰左右 Swiper */
+.room-03 {
+  display: block;
+  padding: 1rem;
+}
+.room-03 .room-head { margin-bottom: 0.5rem; font-weight: 600; }
+.room-03 .room-scroll { margin: 0; }
+
+/* 00区：Z 轴浮层（不触发展开/收起的 Swiper 切页） */
+.room-00 {
+  position: relative;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.room-00 .btn-open-overlay {
+  padding: 0.4rem 1rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: #FFF0F5;
+  color: #333;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 6px;
+}
+.overlay-test {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  background: #fff;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: inherit;
+}
+.overlay-test.is-open { display: flex; }
+.overlay-test .overlay-close {
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+}
+
+/* 仪式与清单专属卡片质感 */
+.ritual-card {
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 26px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+    padding: 34px 26px;
+    box-sizing: border-box;
+    text-align: center;
+}
+.ritual-card .card-icon {
+    font-size: 4.4rem;
+    display: block;
+    margin-bottom: 12px;
+}
+.ritual-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #333;
+}
+.ritual-steps {
+  margin: 6px 0 16px;
+  list-style: none;
+  padding-left: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  /* 👉 v8.1 核心补充：清单列表的专属减震器与苹果丝滑滚动 */
+  overscroll-behavior: contain; 
+  -webkit-overflow-scrolling: touch;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  text-align: left;
+}
+.ritual-steps li {
+    margin-bottom: 4px;
+}
+.ritual-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+.ritual-actions button {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    font-weight: bold;
+}
+.ritual-btn-primary { background: #FF9AA2; color: #fff; }
+.ritual-btn-secondary { background: #f5f5f5; color: #666; }
+
+/* ========== 00 区 · 糖果引擎专属样式 ========== */
+.candy-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b4a3b;
+}
+
+.candy-subtitle {
+  font-size: 0.75rem;
+  color: #8c6f5a;
+  opacity: 0.9;
+}
+
+.candy-stage {
+  background: rgba(255,255,255,0.8);
+  border-radius: 12px;
+  padding: 10px;
+  border: 1px dashed rgba(0,0,0,0.05);
+  position: relative;
+}
+
+/* 音乐糖卡片样式 */
+.music-candy-card {
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.music-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b4a3b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.music-subtitle {
+  font-size: 0.75rem;
+  color: #8c6f5a;
+  opacity: 0.9;
+}
+
+.music-player-wrapper {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+.music-player-iframe {
+  width: 100%;
+  height: 90px;
+  border: 0;
+}
+
+.music-player-fallback {
+  margin-top: 4px;
+  font-size: 0.75rem;
+}
+
+.music-player-fallback a {
+  color: #6b4a3b;
+  text-decoration: underline;
+}
+
+.sound-enable-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 50;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: rgba(255,255,255,0.92);
+  color: rgba(0,0,0,0.72);
+  font-size: 13px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  backdrop-filter: blur(6px);
+}
+
+.bubble-hint,
+.music-hint {
+  font-size: 0.75rem;
+  color: #777;
+}
+
+/* 乐器糖（Kalimba） */
+.instrument-card{
+  background: rgba(255,255,255,0.86);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.05);
+}
+.instrument-title{
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.78);
+  margin-bottom: 6px;
+}
+.instrument-sub{
+  font-size: 12px;
+  color: rgba(0,0,0,0.55);
+  margin-bottom: 10px;
+}
+.kalimba-keys{
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  align-items: end;
+}
+.kalimba-key {
+  height: 90px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 220, 160, 0.7), rgba(255, 255, 255, 0.3));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.kalimba-key:active{
+  transform: translateY(1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.kalimba-num{
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.78);
+  line-height: 1.0;
+}
+.kalimba-note{
+  font-size: 10px;
+  color: rgba(0,0,0,0.52);
+  margin-top: 3px;
+}
+.instrument-actions{
+  display:flex;
+  gap:10px;
+  margin-top: 10px;
+}
+.instrument-actions button{
+  flex:1;
+  padding: 9px 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.94);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+  cursor: pointer;
+  color: rgba(0,0,0,0.72);
+  font-size: 13px;
+}
+.instrument-to-gacha{
+  margin-top: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+  cursor: pointer;
+  color: rgba(0,0,0,0.78);
+  font-size: 13px;
+}
+
+/* 乐器糖：模式切换 Tab + Chord Pad */
+.instrument-tabs{
+  display:flex;
+  gap:8px;
+  margin: 8px 0 10px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.03);
+}
+.instrument-tab{
+  flex:1;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: transparent;
+  cursor: pointer;
+  color: rgba(0,0,0,0.60);
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform .08s ease, box-shadow .12s ease, background .12s ease, color .12s ease, border-color .12s ease;
+}
+.instrument-tab:active{
+  transform: translateY(1px);
+}
+.instrument-tab.active{
+  border-color: rgba(0,0,0,0.14);
+  color: rgba(0,0,0,0.84);
+  background: rgba(255,255,255,0.98);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+}
+.chordpad-grid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.chordpad-pad{
+  height: 72px;
+  border-radius: 14px;
+  border: 1px solid rgba(0,0,0,0.06);
+  background: radial-gradient(130% 130% at 30% 25%, rgba(255,255,255,0.92), var(--pad, rgba(245,245,245,0.90)));
+  box-shadow: 0 10px 22px rgba(0,0,0,0.05);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.chordpad-pad:nth-child(1){ --pad: #F7D6E6; }
+.chordpad-pad:nth-child(2){ --pad: #FAD9C3; }
+.chordpad-pad:nth-child(3){ --pad: #F7F0C6; }
+.chordpad-pad:nth-child(4){ --pad: #D6F2E3; }
+.chordpad-pad:nth-child(5){ --pad: #D5ECFA; }
+.chordpad-pad:nth-child(6){ --pad: #E6D9FA; }
+.chordpad-pad:nth-child(7){ --pad: #F5E8D1; }
+.chordpad-pad:nth-child(8){ --pad: #D2F7F4; }
+.chordpad-pad:active{
+  transform: translateY(1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.05);
+  filter: saturate(1.08) brightness(1.02);
+}
+.chordpad-label{
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(0,0,0,0.78);
+  letter-spacing: 0.2px;
+}
+.chordpad-sub{
+  font-size: 10px;
+  color: rgba(0,0,0,0.50);
+}
+
+/* 捏气泡糖 */
+.bubble-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+  justify-items: center;
+  margin-bottom: 8px;
+}
+
+.bubble {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, #ffffff, #E0F7FA);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s, opacity 0.15s;
+}
+
+.bubble:active {
+  transform: scale(0.9);
+  box-shadow: none;
+}
+
+.bubble-popped {
+  background: #F1F1F1;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+  opacity: 0.7;
+}
+
+.bubble-to-gacha {
+  display: block;
+  margin: 8px auto 0;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.85rem;
+  background: #FFEBEE;
+  color: #AD1457;
+  cursor: pointer;
+}
+
+.bubble-to-gacha:active {
+  transform: scale(0.97);
+}
+
+/* 涂鸦 / 涂色糖 */
+.doodle-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.doodle-colors {
+  display: flex;
+  gap: 4px;
+}
+.doodle-linewidth-group {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.linewidth-btn {
+  border-radius: 999px;
+  border: none;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  background: #F4F4F4;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+  cursor: pointer;
+}
+
+.linewidth-active {
+  background: #E0E0E0;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.18);
+}
+
+.doodle-color {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.doodle-color-active {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.14);
+}
+
+.doodle-clear-btn {
+  border-radius: 999px;
+  border: none;
+  padding: 2px 10px;
+  font-size: 0.7rem;
+  background: #F8F8F8;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+  cursor: pointer;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.doodle-clear-btn:active {
+  transform: scale(0.96);
+}
+
+.doodle-canvas-wrapper {
+  background: #FFFFFF;
+  border-radius: 10px;
+  border: 1px dashed rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 6px;
+  position: relative;
+}
+
+#doodleCanvas,
+#coloringCanvas {
+  display: block;
+  width: 100%;
+  height: 180px;
+  touch-action: none;
+}
+
+.doodle-hint {
+  font-size: 0.75rem;
+  color: #777;
+  margin-bottom: 4px;
+}
+
+/* 烟花 / 星空糖 */
+.fireworks-canvas-wrap{
+  border-radius: 12px;
+  border: 1px dashed rgba(0,0,0,0.08);
+  overflow: hidden;
+  height: 180px;
+}
+
+.fireworks-canvas-wrap canvas{
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ========== 01 区 · 抽卡主舞台（马卡龙配色） ========== */
+:root {
+  --bg-blue: #D4F1F4;
+  --bg-pink: #FFE2E2;
+  --bg-sos: #E8DFF5;
+  --bg-wood: #FDF6E3;
+  --panel-soft: #F7FAFF;
+  --footprint-grey: #90A4AE;
+  --gold: #D4AF37;
+  --sport-green: #B5EAD7;
+  --cycle-purple: #C7CEEA;
+  --frog-green: #9CCC65;
+  --flash-yellow: #FFD54F;
+  --tarot-back: url("assets/images/tarot-back.png");
+}
+
+.room-01 {
+  display: block;
+  overflow: hidden;
+  padding: 0;
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.room-01 .hero-wrapper {
+  margin: 0;
+  padding: 8px 12px 16px;
+  min-height: 100%;
+  background: linear-gradient(to bottom, #fff 0%, var(--bg-pink) 82%);
+  border-radius: 0;
+}
+
+.room-01 .section-title {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 4px;
+}
+
+.room-01 .section-title.section-title-ritual {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.room-01 .ritual-icons { display: flex; gap: 4px; }
+.room-01 .ritual-icon-btn {
+  min-width: 40px; height: 22px; padding: 0 8px; border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.1); background: #fffaf5; font-size: 0.8rem;
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.75;
+}
+.room-01 .ritual-label { font-size: 0.8rem; color: #777; }
+
+.section-filter {
+  background: var(--bg-blue);
+  padding: 8px 14px 6px;
+  border-radius: 18px;
+  box-shadow: 0 6px 18px rgba(144, 202, 249, 0.25);
+  margin: 4px 6px 8px;
+  transition: background 0.4s, box-shadow 0.2s;
+  position: relative;
+  z-index: 10;
+}
+
+.energy-pill {
+  width: 100%; height: 50px;
+  background: linear-gradient(90deg, #FFB7B2, #A0E7E5);
+  border-radius: 999px; position: relative; margin-bottom: 10px;
+  overflow: hidden; transition: background 0.4s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex;
+}
+.energy-pill-zone { flex: 1; position: relative; cursor: pointer; z-index: 1; }
+.energy-pill.uptime { background: #FF9AA2; }
+.energy-pill.anchor { background: linear-gradient(90deg, #FFB7B2, #A0E7E5); }
+.energy-pill.downtime { background: #A0E7E5; }
+.energy-pill-slider {
+  position: absolute; top: 4px; width: calc(33.333% - 8px); height: calc(100% - 8px);
+  background: rgba(255,255,255,0.95); border-radius: 999px;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 600; color: #555;
+  z-index: 3; pointer-events: none;
+}
+.energy-pill.uptime .energy-pill-slider { left: 4px; }
+.energy-pill.anchor .energy-pill-slider { left: calc(33.333% + 2px); }
+.energy-pill.downtime .energy-pill-slider { left: calc(66.666%); }
+.energy-pill-labels {
+  position: absolute; width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+  font-size: 0.85rem; font-weight: 500; color: rgba(255,255,255,0.9);
+}
+.energy-pill.uptime .energy-pill-zone:first-child .label-text { opacity: 0; }
+.energy-pill.downtime .energy-pill-zone:last-child .label-text { opacity: 0; }
+.energy-hint { font-size: 0.75rem; color: #6b7a99; text-align: center; margin-bottom: 8px; min-height: 18px; }
+
+.filter-drawer-toggle {
+  font-size: 0.7rem; color: #90A4AE; cursor: pointer; text-align: center; margin-bottom: 8px; padding: 4px;
+  user-select: none;
+}
+.filter-drawer-toggle:hover { color: #607D8B; }
+.filter-drawer-toggle.breathing { animation: breathe 3s ease-in-out infinite; }
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+#filterDrawer { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+#filterDrawer.expanded { max-height: 500px; }
+.mode-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.mode-tab {
+  padding: 6px 14px; border-radius: 999px; font-size: 0.85rem; cursor: pointer;
+  background: rgba(255,255,255,0.55); transition: all 0.2s;
+}
+.mode-tab.active { background: #fff; font-weight: bold; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.control-group { display: flex; justify-content: space-between; align-items: stretch; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
+.select-wrapper { position: relative; flex: 1; }
+.section-filter select {
+  width: 100%; padding: 10px 40px 10px 16px; border-radius: 12px;
+  border: 1px solid #d6dde8; background: #fff !important; font-size: 0.95rem;
+  -webkit-appearance: none; -moz-appearance: none; appearance: none; color: #455A64;
+}
+.select-wrapper::after {
+  content: "⌃\A⌄"; white-space: pre; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 0.9rem; color: #90A4AE; pointer-events: none; line-height: 0.4;
+}
+
+.btn-main {
+  background-image: linear-gradient(135deg, #FF9AA2, #FFB6B9); color: #fff; font-weight: 600;
+  letter-spacing: 0.03em; font-size: 1.05rem; padding: 12px 44px; border: none; border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(255, 154, 162, 0.55); cursor: pointer;
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out; display: block; margin: 16px auto 6px;
+}
+.btn-main:active { transform: translateY(1px) scale(0.97); box-shadow: 0 5px 14px rgba(255, 154, 162, 0.45); }
+
+.section-display {
+  flex-grow: 1; background: transparent; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start; padding: 12px 22px 22px; min-height: 260px;
+  transition: background 0.4s; position: relative; border-radius: 0 0 16px 16px;
+}
+
+.card { 
+  background: #fff; 
+  padding: 34px 26px; 
+  border-radius: 26px; 
+  text-align: center; 
+  width: 100%; 
+  max-width: 560px; 
+  box-shadow: 0 16px 40px rgba(0,0,0,0.1); 
+  display: none; 
+  /* 👉 v8.1 新增：限制最高高度，开启卡片内部滑动 */
+  max-height: 75vh;
+  overflow-y: auto;
+  overscroll-behavior: contain; /* 👉 核心补充：防止卡片内部滑动触底时，穿透拉扯底层网页 */
+  -webkit-overflow-scrolling: touch;
+}
+/* 👉 v8.1 新增：隐藏卡片内部的滚动条，保持极其干净的视觉 */
+.card::-webkit-scrollbar { display: none; }
+.card-icon { font-size: 4.4rem; display: block; margin-bottom: 16px; }
+.card-title { font-size: 1.6rem; font-weight: bold; margin-bottom: 10px; color: #333; }
+.card-desc { font-size: 0.9rem; color: #777; line-height: 1.6; margin-bottom: 15px; }
+.card-time { display: inline-block; background: #f0f0f0; color: #888; padding: 2px 8px; border-radius: 8px; font-size: 0.75rem; margin-top: 5px; }
+.card-badge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; }
+.card-badge.bg-frog { background: #e8f5e9; color: #2e7d32; }
+.card-badge.bg-flash { background: #fff8e1; color: #f57f17; }
+#rStatus { font-size: 1rem; color: #FF8A65; font-weight: 700; margin-bottom: 6px; text-align: left; display: none; }
+#rIngPulse { font-size: 0.9rem; color: #FF8A65; font-weight: 600; margin-top: 8px; margin-bottom: 6px; text-align: center; display: none; animation: anchorPulse 1.6s ease-in-out infinite; }
+@keyframes anchorPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+@keyframes stripOpen { 0% { transform: scaleX(0.6); opacity: 0; } 40% { transform: scaleX(0.9); opacity: 1; } 100% { transform: scaleX(1); opacity: 1; } }
+.btn-card-action {
+  padding: 8px 20px; border-radius: 999px; font-size: 0.95rem; cursor: pointer; margin: 0 6px;
+  border: 1px solid rgba(0,0,0,0.08); background: #f5f5f5; color: #333;
+}
+.btn-card-action:hover { background: #eee; }
+.btn-memory { position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.9); border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer; padding: 6px 10px; color: #666; }
+
+/* 扭蛋机 */
+#gachaLayer {
+  position: absolute; inset: 0; display: none; align-items: center; justify-content: center; flex-direction: column;
+  background: radial-gradient(circle at top, rgba(255,255,255,0.95), rgba(255,255,255,0.78));
+  z-index: 20; opacity: 1;
+}
+.gacha-stage { position: relative; width: 260px; max-width: 90%; }
+#gachaImg { width: 100%; display: block; border-radius: 18px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); transform-origin: 50% 80%; transition: opacity 0.6s ease-out; }
+@keyframes machineShake {
+  0% { transform: translateY(0) rotate(0deg); } 20% { transform: translateY(-4px) rotate(-1deg); }
+  40% { transform: translateY(2px) rotate(1deg); } 60% { transform: translateY(-2px) rotate(-0.5deg); }
+  80% { transform: translateY(1px) rotate(0.5deg); } 100% { transform: translateY(0) rotate(0deg); }
+}
+.machine-shake { animation: machineShake 0.7s ease-out; }
+#eggOut { position: absolute; left: 77%; bottom: 88px; transform: translateX(-50%); width: 60px; height: 60px; opacity: 0; }
+@keyframes eggFly {
+  0% { left: 77%; bottom: 72px; transform: translateX(-50%) scale(0.7); opacity: 0; }
+  15% { left: 77%; bottom: 88px; transform: translateX(-50%) scale(0.9); opacity: 1; }
+  55% { left: 62%; bottom: 60%; transform: translateX(-50%) scale(1.15); opacity: 1; }
+  85% { left: 50%; bottom: 44%; transform: translateX(-50%) scale(1.3); opacity: 1; }
+  100% { left: 50%; bottom: 44%; transform: translateX(-50%) scale(1.25); opacity: 1; }
+}
+@keyframes eggBurst {
+  0% { transform: translateX(-50%) scale(1.25); opacity: 1; }
+  30% { transform: translateX(-50%) scale(1.6); opacity: 0.9; }
+  100% { transform: translateX(-50%) scale(2); opacity: 0; }
+}
+.gm-caption { margin-top: 8px; font-size: 0.75rem; color: #888; }
+
+/* 塔罗层 */
+#tarotLayer {
+  display: none; width: 100%; height: 100%; align-items: center; justify-content: flex-start; flex-direction: column;
+  gap: 10px; padding: 20px 10px; perspective: 1000px; position: relative; z-index: 50;
+}
+.tarot-caption { font-size: 0.95rem; color: #555; text-align: center; line-height: 1.45; margin-top: 10px; z-index: 60; pointer-events: none; }
+.tarot-subcaption { font-size: 0.8rem; color: #888; text-align: center; margin-bottom: 10px; pointer-events: none; }
+.tarot-skip { position: absolute; top: 15px; right: 20px; font-size: 0.78rem; color: #8a7f73; text-decoration: underline; cursor: pointer; z-index: 100; }
+.tarot-stage { position: relative; width: 100%; max-width: 420px; height: 280px; margin-top: 20px; overflow: visible; }
+.tarot-deck {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 140px; height: 220px;
+  border-radius: 12px; background-image: var(--tarot-back); background-size: cover; background-position: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2); cursor: pointer; z-index: 10; transition: opacity 0.3s;
+}
+.tarot-deck.shuffling { animation: tarotShuffle 0.9s ease-in-out 1; }
+@keyframes tarotShuffle {
+  0% { transform: translate(-50%, -50%) rotate(0deg); } 25% { transform: translate(-55%, -50%) rotate(-5deg); }
+  50% { transform: translate(-45%, -50%) rotate(5deg); } 75% { transform: translate(-52%, -50%) rotate(-3deg); }
+  100% { transform: translate(-50%, -50%) rotate(0deg); }
+}
+.tarot-cards { position: absolute; inset: 0; pointer-events: none; z-index: 20; }
+.tarot-card {
+  position: absolute; left: 50%; top: 50%; width: 140px; height: 220px;
+  transform: translate(-50%, -50%) scale(0.96); transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease; cursor: pointer; pointer-events: auto;
+  background: transparent; border: none; outline: none;
+}
+.tarot-card.dim { opacity: 0.2; filter: grayscale(0.5) blur(1px); pointer-events: none; }
+.tarot-card.selected { z-index: 200 !important; cursor: default; }
+.tarot-face { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px; backface-visibility: hidden; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.tarot-back { background-image: var(--tarot-back); background-size: cover; background-position: center; border: none; }
+.tarot-front { background: #fff; transform: rotateY(180deg); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 16px; text-align: center; border: 1px solid rgba(0,0,0,0.05); }
+.tarot-front .t-icon { font-size: 3.5rem; margin-bottom: 10px; display: block; }
+.tarot-front .t-title { font-weight: 800; font-size: 1.1rem; color: #333; margin-bottom: 6px; }
+.tarot-front .t-desc { font-size: 0.85rem; line-height: 1.5; color: #666; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tarot-front .t-btn {
+  background: linear-gradient(135deg, #FF9AA2, #FFB6B9);
+  color: #fff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(255, 154, 162, 0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.tarot-front .t-btn:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(255, 154, 162, 0.3);
+}
+.tarot-card.reveal { transform: translate(-50%, -50%) scale(1.1) rotateY(180deg) !important; }
+
+/* 竹筒 */
+.bamboo-stage { position: relative; width: 280px; height: 300px; margin-top: 30vh; display: flex; align-items: flex-end; justify-content: center; }
+.bamboo-stick {
+  position: absolute; bottom: 40px; width: 56px; height: 220px;
+  background: linear-gradient(to bottom, #F5DEB3, #E1C699); border-radius: 4px;
+  box-shadow: inset -2px 0 5px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; align-items: center; padding-top: 12px; z-index: 5; cursor: pointer;
+  transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+}
+.stick-stamp { color: #D32F2F; font-size: 1rem; font-weight: 900; writing-mode: vertical-rl; text-orientation: upright; white-space: nowrap; letter-spacing: 1px; border: 1px solid #D32F2F; padding: 6px 4px; border-radius: 3px; margin-bottom: 12px; opacity: 0.85; }
+.stick-text { color: #3e3222; font-size: 1rem; font-weight: 600; writing-mode: vertical-rl; letter-spacing: 0.8px; max-height: 140px; overflow: hidden; margin-top: auto; margin-bottom: auto; text-align: center; padding-bottom: 8px; }
+.bamboo-tube-img { width: 240px; z-index: 10; position: relative; transform-origin: center bottom; }
+.bamboo-caption { margin-top: 20px; font-size: 0.85rem; color: #888; text-align: center; }
+@keyframes bambooShake { 0% { transform: rotate(0deg); } 25% { transform: rotate(-8deg); } 50% { transform: rotate(6deg); } 75% { transform: rotate(-4deg); } 100% { transform: rotate(0deg); } }
+.bamboo-shaking { animation: bambooShake 0.5s ease-in-out infinite; }
+@keyframes stickFly { 0% { transform: translateY(0) scale(1); opacity: 1; z-index: 5; } 100% { transform: translateY(-240px) scale(1.4); opacity: 1; z-index: 20; } }
+.stick-fly-out { animation: stickFly 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; pointer-events: auto; }
+.stick-flip-reveal { transform: translateY(-240px) scale(1.8) rotateY(90deg) !important; opacity: 0 !important; }
+
+/* 沉浸暗场 */
+.immersive-overlay {
+  position: fixed; inset: 0; background: rgba(20, 20, 26, 0.91); z-index: 900;
+  opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+}
+.immersive-overlay.show { opacity: 1; pointer-events: auto; cursor: pointer; }
+.section-display.immersive-active { position: relative; z-index: 1000 !important; background: transparent !important; box-shadow: none !important; border-radius: 0; }
+.section-display.immersive-active #gachaLayer { background: transparent !important; }
+.section-display.immersive-active #gachaImg {
+  filter: drop-shadow(0 0 18px rgba(255, 220, 230, 0.35)) drop-shadow(0 0 40px rgba(255, 200, 210, 0.12));
+}
+.section-display.immersive-active #tarotLayer { filter: drop-shadow(0 0 15px rgba(230, 210, 255, 0.25)); }
+body.immersive-locked { overflow: hidden !important; }
+body.immersive-locked #resultCard { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 60px 10px rgba(255, 220, 235, 0.1) !important; }
+
+/* Toast */
+.toast-notification {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 10px 20px;
+  background: rgba(0,0,0,0.75); color: #fff; border-radius: 999px; font-size: 0.9rem;
+  z-index: 999999 !important; opacity: 0; pointer-events: none; transition: opacity 0.25s ease-out;
+}
+.toast-notification.show { opacity: 1; }
+
+/* ========== 02 区 · 新任务入库 ========== */
+.room-02 { display: block; overflow-y: auto; overflow-x: hidden; padding: 0; }
+.section-input { background-color: var(--bg-wood); padding: 20px; }
+.input-box {
+  background: #fff; padding: 5px; border-radius: 15px; display: flex; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px;
+}
+textarea#inpTitle {
+  border: none; padding: 10px; flex: 1; border-radius: 10px; outline: none; font-size: 16px; font-family: inherit; resize: none;
+  min-height: 36px; line-height: 1.4;
+}
+.btn-add { background: #B5EAD7; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; color: #555; cursor: pointer; }
+.input-options { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+.input-options-row2 { display: flex; justify-content: flex-start; align-items: center; gap: 10px; margin-top: 8px; }
+.input-options-row2 .time-select-small { margin-left: auto; }
+.tags-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag {
+  padding: 4px 10px; border-radius: 12px; font-size: 0.75rem; background: rgba(0,0,0,0.05);
+  cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
+}
+.tag.active { background: #C7CEEA; border-color: #989ec2; color: #333; }
+.tag[data-v="sport"].active { background: var(--sport-green); border-color: #99cbb9; }
+.switch-container { display: flex; gap: 8px; margin-left: 0; }
+.switch-btn {
+  font-size: 0.85rem; color: #555; display: flex; align-items: center; gap: 6px; cursor: pointer;
+  background: rgba(255,255,255,0.7); padding: 6px 20px; border-radius: 12px; border: 1px solid transparent; transition: all 0.2s;
+}
+.switch-btn.active-cycle { background: var(--cycle-purple); color: #fff; font-weight: bold; border-color: var(--cycle-purple); }
+.switch-btn.active-flash { background: var(--flash-yellow); color: #555; font-weight: bold; border-color: #FBC02D; }
+.time-select-small {
+  font-size: 16px; padding: 6px 14px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.06);
+  background: #fff; color: #666; transition: opacity 0.3s;
+}
+.time-select-small.disabled { opacity: 0.3; pointer-events: none; }
+.btn-outline { background: #fff; border: 1px solid #bbb; color: #555; padding: 8px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+.btn-file { background: #e1eefd; border: 1px solid #bbd4f0; color: #1565C0; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: bold; }
+
+/* ========== 03 区 · 任务库 & 记录 ========== */
+.room-03 { display: block; overflow-y: auto; overflow-x: hidden; padding: 0; }
+.section-list { background-color: var(--panel-soft); padding: 16px; padding-bottom: 20px; }
+.section-list-title { font-size: 0.95rem; font-weight: bold; color: #555; margin-bottom: 4px; }
+.section-list-subtitle { font-size: 0.75rem; color: #777; margin-bottom: 8px; }
+.list-panels { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 8px; }
+.list-panel {
+  background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+  padding: 10px 10px 6px; display: flex; flex-direction: column; min-height: 150px;
+}
+.panel-header { display: flex; flex-direction: column; gap: 2px; }
+.panel-header-top { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
+.panel-title { font-size: 0.95rem; font-weight: bold; color: #555; }
+.panel-title-footprint { color: var(--footprint-grey); }
+.panel-title-archive { color: var(--gold); }
+.panel-count { font-size: 0.75rem; color: #999; }
+.panel-subtitle { font-size: 0.75rem; color: #aaa; }
+.task-list { list-style: none; padding: 0; margin: 6px 0 0 0; }
+.task-list.panel-list { max-height: 200px; overflow-y: auto; }
+.task-item {
+  display: flex; justify-content: space-between; align-items: center; padding: 8px 4px;
+  border-bottom: 1px solid #f0f1f5; font-size: 0.85rem;
+}
+.task-status-done { opacity: 0.4; text-decoration: line-through; }
+.list-badge { font-size: 0.6rem; padding: 1px 4px; border-radius: 4px; margin-left: 5px; border: 1px solid #eee; color: #888; }
+.lb-frog { color: var(--frog-green); border-color: var(--frog-green); font-weight: bold; }
+.lb-flash { color: #FBC02D; border-color: #FBC02D; }
+.footprint-time { font-size: 0.7rem; color: #aaa; margin-right: 10px; font-family: monospace; }
+.footprint-item { color: #666; font-size: 0.85rem; }
+.archive-item {
+  padding: 5px 0; display: flex; gap: 10px; border-bottom: 1px dashed #f3f3f3; font-size: 0.8rem;
+  align-items: center; justify-content: space-between;
+}
+.archive-date { font-family: monospace; color: #ccc; }
+.archive-del { cursor: pointer; color: #ccc; font-size: 0.75rem; }
+.archive-del:hover { color: #e57373; }
+.cabinet-summary { list-style: none !important; }
+.cabinet-summary::-webkit-details-marker, .cabinet-summary::marker { display: none !important; content: none !important; }
+.cabinet-summary::after, .cabinet-summary::before { display: none !important; content: none !important; }
+.section-cold { margin-top: 8px; }
+.section-cold details { background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,0.04); margin-bottom: 0; }
+.section-cold summary {
+  padding: 10px 8px; font-weight: 600; font-size: 0.85rem; color: #444;
+  display: flex; justify-content: flex-start; align-items: center;
+}
+.section-cold summary span:last-child { margin-left: auto; }
+.section-cold .manual-content { border-top: 1px solid #eee; padding: 6px 8px 10px; font-size: 0.8rem; }
+.section-cold summary::after { position: relative; top: -1px; }
+.details summary { padding: 15px; font-weight: bold; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; color: #444; }
+.details summary::after { content: '+'; font-size: 1.2rem; font-weight: normal; color: #999; }
+.details[open] summary::after { content: '-'; }
+.manual-content { padding: 0 15px 20px 15px; border-top: 1px solid #eee; font-size: 0.85rem; }
+.manual-tag { background: #eee; color: #666; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin: 0 2px; }
+.cold-dialog-backdrop {
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.08); z-index: 999;
+}
+.cold-dialog {
+  background: #fff; border-radius: 18px; padding: 14px 16px; box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+  width: 86%; max-width: 320px; box-sizing: border-box; font-size: 0.85rem;
+}
+.cold-dialog-title { margin-bottom: 10px; font-weight: 600; }
+.cold-dialog-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap; /* 👉 核心防御：允许长按钮自动换行，绝不溢出弹窗 */
+  margin-top: 15px;
+}
+.cold-dialog-buttons button {
+  flex: 1 1 auto; /* 允许按钮根据文字宽度自由伸缩 */
+  min-width: 80px;
+  white-space: nowrap; /* 防止按钮内部文字断行 */
+  padding: 6px 8px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.cold-btn-delete { background: #ffecec; }
+.cold-btn-cold { background: #e7f4ff; }
+.cold-btn-cancel { background: #f5f5f5; }
+.backup-btn-overwrite { background: #ffecec; }
+.backup-btn-merge { background: #e7f4ff; }
+.backup-btn-cancel { background: #f5f5f5; }
+.section-history { margin-top: 8px; }
+.section-history details { background: #fff; border-radius: 16px; box-shadow: 0 3px 10px rgba(0,0,0,0.04); margin-bottom: 0; }
+.section-history summary { padding: 10px 8px; font-weight: 600; font-size: 0.85rem; color: #444; display: flex; justify-content: space-between; align-items: center; }
+.section-history .manual-content { border-top: 1px solid #eee; padding: 6px 8px 10px; font-size: 0.8rem; }
+.heatmap-card {
+  background: #fff; border-radius: 16px; padding: 16px 14px; margin-top: 12px; margin-bottom: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+}
+.heatmap-header { font-size: 0.95rem; font-weight: bold; color: #555; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.heatmap-body { display: flex; gap: 8px; align-items: flex-start; }
+.heatmap-y-axis { display: flex; flex-direction: column; justify-content: space-between; font-size: 0.6rem; color: #999; height: 94px; padding-top: 0; }
+.heatmap-scroll { flex: 1; overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; scrollbar-width: none; }
+.heatmap-scroll::-webkit-scrollbar { display: none; }
+.heatmap-grid {
+  display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; gap: 4px; height: 94px;
+}
+.heatmap-cell {
+  width: 10px; height: 10px; border-radius: 2px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s, border-color 0.1s;
+  border: 1px solid transparent;
+}
+.heatmap-cell:hover { transform: scale(1.2); }
+.heatmap-cell.selected { transform: scale(1.2); border-color: rgba(0,0,0,0.25); box-shadow: 0 0 0 1px rgba(0,0,0,0.08); }
+.heatmap-cell.level-0 { background: #f0f2f5; }
+.heatmap-cell.level-1 { background: #C8E6C9; }
+.heatmap-cell.level-2 { background: #81C784; }
+.heatmap-cell.level-3 { background: #4CAF50; }
+.heatmap-cell.level-4 { background: #2E7D32; }
+.heatmap-legend { display: flex; justify-content: flex-end; align-items: center; gap: 4px; font-size: 0.7rem; color: #999; margin-top: 4px; }
+.heatmap-projector { margin-top: 12px; padding-top: 12px; border-top: 1px dashed #eee; }
+.hm-proj-title { font-size: 0.85rem; font-weight: bold; color: #555; margin-bottom: 8px; }
+.hm-proj-list { font-size: 0.85rem; color: #666; line-height: 1.6; max-height: 120px; overflow-y: auto; }
+
+/* 👉 v8.X 战略工程室：表面卡片美学 */
+.project-surface-card {
+  position: relative;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 12px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  border: 1px solid #f0f1f5;
+  overflow: hidden;
+}
+.project-surface-card:active {
+  transform: scale(0.98);
+}
+.project-surface-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+}
+/* 三大哲学定位的侧边发光与色彩体系 */
+.proj-type-infinite::before { background: linear-gradient(to bottom, #A5D6A7, #81C784); }
+.proj-type-infinite { border-color: #e8f5e9; }
+
+.proj-type-finite::before { background: linear-gradient(to bottom, #90CAF9, #64B5F6); }
+.proj-type-finite { border-color: #e3f2fd; }
+
+.proj-type-deadline::before { background: linear-gradient(to bottom, #EF9A9A, #E57373); }
+.proj-type-deadline { border-color: #ffebee; }
+
+.proj-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.proj-icon { font-size: 1.4rem; }
+.proj-title { font-size: 1rem; font-weight: bold; color: #444; flex: 1; }
+.proj-meta {
+  font-size: 0.8rem;
+  color: #777;
+  background: #f8f9fa;
+  padding: 6px 10px;
+  border-radius: 8px;
+  display: inline-block;
+}
+.proj-highlight { font-weight: bold; color: #333; }
+
+/* ========== 全局悬浮层（Toast / 任务弹窗 / 记忆面板 / 冷库弹窗） ========== */
+#toast.toast-notification { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 10050; }
+.global-dialog-wrap {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#taskActionDialog.global-dialog-wrap,
+#historyTaskDialog.global-dialog-wrap { align-items: center; justify-content: center; }
+.task-dialog-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+.task-dialog-box {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  animation: dialogFadeIn 0.2s ease-out;
+}
+@keyframes dialogFadeIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.task-dialog-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.task-dialog-message {
+  font-size: 0.95rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.task-dialog-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.task-dialog-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.task-dialog-btn-edit { background: #cfe8ff; color: #2f5d90; }
+.task-dialog-btn-edit:hover { background: #b9dbff; }
+.task-dialog-btn-complete { background: #d3f3d6; color: #2d6a3a; }
+.task-dialog-btn-complete:hover { background: #bff0c4; }
+.task-dialog-btn-memory { background: #e8d5ff; color: #6b4a7c; }
+.task-dialog-btn-memory:hover { background: #d8c5ef; }
+
+/* 记忆面板（底部滑出） */
+#memoryPanel {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.memory-panel-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+.memory-panel-content {
+  position: relative;
+  background: #fff;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 24px 30px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 2;
+  animation: memoryPanelSlideUp 0.3s ease-out;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+@keyframes memoryPanelSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.memory-panel-handle {
+  width: 40px; height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  margin: 0 auto 16px;
+  cursor: pointer;
+}
+.memory-panel-title { font-size: 1.1rem; font-weight: bold; color: #333; margin-bottom: 20px; text-align: center; }
+.memory-panel-row1 { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+.memory-input-bookmark {
+  flex: 1;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 2px solid #e0e0e0;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+  max-width: 160px;
+}
+.memory-input-bookmark:focus { border-bottom-color: #75B79E; }
+.memory-separator { font-size: 0.9rem; color: #999; padding: 0 2px; white-space: nowrap; margin: 0 2px; }
+.memory-time-picker { display: flex; align-items: center; gap: 2px; }
+.memory-time-select {
+  padding: 8px 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  min-width: 70px;
+}
+.memory-time-select:focus { border-color: #75B79E; }
+.memory-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 16px;
+}
+.memory-textarea:focus { border-color: #75B79E; }
+.memory-panel-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+.memory-btn-save, .memory-btn-clear {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+.memory-btn-save { background: #75B79E; color: #fff; }
+.memory-btn-save:hover { background: #65a78e; }
+.memory-btn-clear { background: #f0f0f0; color: #666; }
+.memory-btn-clear:hover { background: #e0e0e0; }
+
+/* 备注按钮呼吸动画 */
+@keyframes memoryBtnBreathe {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 0.85; }
+}
+
+/* Emoji 粉色呼吸光晕 */
+@keyframes pulseEmojiBorder {
+  0% { box-shadow: 0 0 0 0 rgba(248, 168, 200, 0.6); }
+  70% { box-shadow: 0 0 0 6px rgba(248, 168, 200, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(248, 168, 200, 0); }
+}
+.emoji-input-hint {
+  animation: pulseEmojiBorder 2s infinite;
+}
+.emoji-input-hint:focus {
+  animation: none;
+}
+
+/* 全局 coldDialog 固定定位（与房间内样式共用 .cold-dialog-backdrop） */
+#coldDialog.cold-dialog-backdrop {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 10005;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#playlistOverlay.global-dialog-wrap { align-items: center; justify-content: center; }
+
+/* 清单/青蛙完成时彩纸 */
+@keyframes confettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(200px) rotate(360deg); opacity: 0; }
+}
+.quiet-confetti {
+  position: fixed;
+  pointer-events: none;
+  z-index: 9999;
+}
+.quiet-confetti--square {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+.quiet-confetti--triangle {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 10px solid currentColor;
+  background: transparent !important;
+}
+
+/* 04 区折叠卡片样式（与 v7.1.3 对齐） */
+/* 👉 v8.1 修复：强行撑满房间宽度防止萎缩，并开启垂直弹性盒子为页脚沉底做准备 */
+.section-footer-area {
+  background: #FBF7FF !important; 
+  border-radius: 16px;
+  padding: 14px 16px 22px;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%; 
+}
+.section-footer-area .section-manual,
+.section-footer-area .section-updates,
+.section-footer-area .section-settings {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(0,0,0,0.06) !important;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04) !important;
+  margin-bottom: 14px;
+  width: 100% !important;
+   box-sizing: border-box !important;
+}
+.section-footer-area summary,
+.section-footer-area .settings-title {
+  font-size: 0.95rem;
+}
+.section-footer-area summary {
+  padding: 10px 4px;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #444;
+  cursor: pointer;
+  list-style: none;
+}
+.section-footer-area summary::-webkit-details-marker {
+  display: none;
+}
+.section-footer-area .manual-content {
+  padding: 0 4px 10px 4px;
+  border-top: 1px solid #eee;
+  font-size: 0.85rem;
+}
+.section-footer-area summary::after {
+  content: '+';
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #9a9a9a;
+  margin-left: 10px;
+}
+.section-footer-area details[open] > summary::after {
+  content: '-';
+}
+
+/* 👉 v8.1 核心魔法：利用 margin-top: auto 与动态视口，打造全设备自适应沉底 */
+.footer-note {
+  margin-top: auto !important; 
+  font-size: 0.75rem;
+  color: #999; /* 稍微调淡一点，显得更隐秘高级 */
+  text-align: center;
+  
+  /* 👉 终极自适应魔法：动态视口高度 (Dynamic Viewport Height) */
+  /* What: 取“80像素”和“35%实时屏幕高度”中的最大值 */
+  /* Why: 完美抹平 PWA全屏(更长) 和 Safari带地址栏(较短) 的物理高度落差，且防挤压 */
+  padding-top: max(80px, 43dvh); 
+  
+  padding-bottom: 20px;
+  line-height: 1.6;
+}
+
+/* 04 区 · 用户手册 & 数据方舟（在 room-04 内） */
+/* 00 区 · 糖果避风港 */
+.candy-section {
+  padding: 16px;
+  box-sizing: border-box;
+  /* 👉 给糖果舞台增加物理限制，内部自由滑动，防止撑爆全页 */
+  max-height: 65vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.candy-section::-webkit-scrollbar { display: none; }
+
+
+/* 04 区数据方舟详情内部滚动（防止误触外层 Swiper） */
+#settingSec details .manual-content {
+  /* 👉 What & Why: 砸碎数据方舟内部的“玻璃天花板”！
+     废除内部局限滚动，让卡片高度自然舒展。
+     将其垂直滚动权完美归还给 04 房间大地板，与“用户手册”等卡片的交互心流绝对统一。 */
+  /* max-height: 55vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch; */
+}
+
+/* 00 区顶部三按钮：意志力 / 吃糖 / 小确幸 */
+.stat-btn {
+  flex: 1;
+  margin: 0 5px;
+  padding: 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+  user-select: none;
+  border: 1px solid rgba(0,0,0,0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* 👉 视觉降噪与层级复原：恢复 v7.1.3 的精致仪表盘质感 */
+.stat-btn.willpower,
+.stat-btn.joy {
+  background: rgba(255, 245, 235, 0.6) !important; /* 极度轻盈的底色，不抢戏 */
+  border: 1px solid rgba(0,0,0,0.03) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.stat-label {
+  font-size: 0.75rem !important;
+  color: #888 !important;
+  margin-right: 8px !important;
+  font-weight: 400 !important;
+}
+.stat-count {
+  font-size: 1.15rem !important;
+  color: #444 !important;
+  font-family: 'Courier New', Courier, monospace !important; /* 核心：机械数字感 */
+  font-weight: 800 !important;
+}
+.stat-btn.candy {
+  flex: 0;
+  margin: 0 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+.stat-btn.candy .candy-emoji {
+  font-size: 2.1rem;
+  line-height: 1;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+/* 👉 v8.3.5 天窗星星呼吸动画 */
+.twinkling-star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px 1px rgba(255,255,255,0.8);
+  animation: starTwinkle 3s infinite ease-in-out;
+}
+@keyframes starTwinkle {
+  0%, 100% { opacity: 0.1; transform: scale(0.6); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* 00 区 · 船长静室画框与花房 */
+.sanctuary-glass-frame {
+  padding: 14px 14px 16px;
+  border-radius: 16px;
+  background: rgba(240, 248, 245, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.sanctuary-shell {
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+/* 👉 v8.0 空间美学：给 00 区铺满晨雾薄荷绿底色，烘托玻璃框的高级感 */
+.sanctuary-shell, #room-00 {
+  background: linear-gradient(to bottom, #F4F9F6 0%, #E8F5E9 100%) !important;
+  width: 100%;
+  height: 100%;
+}
+.sanctuary-stats-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 4px 10px;
+}
+.sanctuary-center-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sanctuary-flower-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 0.9rem;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.sanctuary-flower-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12);
+}
+.sanctuary-flower-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.sanctuary-flower-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 2px 2px;
+}
+.sanctuary-flower-input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(209, 213, 219, 0.9);
+  font-size: 0.8rem;
+  outline: none;
+  background: rgba(255, 255, 255, 0.9);
+}
+.sanctuary-flower-input:focus {
+  border-color: #75B79E;
+}
+.sanctuary-flower-save {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.78rem;
+  cursor: pointer;
+  background: #75B79E;
+  color: #fff;
+}
+.sanctuary-timeline {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.3);
+}
+.sanctuary-timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sanctuary-timeline-latest {
+  font-size: 0.78rem;
+  color: #4b5563;
+}
+.sanctuary-timeline-toggle {
+  border: none;
+  background: transparent;
+  font-size: 0.72rem;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.sanctuary-timeline-toggle:hover {
+  color: #6b7280;
+}
+.sanctuary-timeline-list {
+  margin-top: 8px;
+  padding-left: 10px;
+  border-left: 1px dashed rgba(148, 163, 184, 0.5);
+  max-height: 160px;
+  overflow-y: auto;
+}
+.sanctuary-timeline-item {
+  position: relative;
+  padding: 4px 0 4px 10px;
+  font-size: 0.75rem;
+  color: #4b5563;
+}
+
+/* --- 🔭 升级版：中央幽灵星盘 (Center Ghost Astrolabe) --- */
+.spatial-astrolabe {
+  position: fixed;
+  /* 👉 移至底部正中央 */
+  left: 50%;
+  bottom: 40px; /* 避开全面屏底部的横条 */
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px; /* 稍微拉开行间距 */
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 10px 12px; /* 放大胶囊体积 */
+  border-radius: 16px; /* 更圆润的胶囊 */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  /* v8.X 降维：纯视觉指示器，不拦截指针（index.html 内联样式亦用 !important 加固） */
+  pointer-events: none;
+  cursor: default;
+
+  /* 默认隐形态：不仅透明、缩小，还要稍微往下沉一点点 */
+  opacity: 0;
+  /* 必须保留 translateX(-50%) 才能保持绝对居中 */
+  transform: translateX(-50%) translateY(15px) scale(0.85);
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.spatial-astrolabe.show {
+  opacity: 1;
+  /* 浮现态：回到原位并放大到 100% */
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+/* v8.0 新手引导 Overlay & Tooltip（简化版） */
+body.onboarding-lock {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+body.onboarding-lock html,
+html.onboarding-lock {
+  overflow: hidden !important;
+}
+
+.onboarding-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  /* v8.1：确保黑幕为深色背景，而不是全透明 */
+  background: rgba(0, 0, 0, 0.65) !important;
+  z-index: 10000;
+  cursor: pointer;
+  pointer-events: none !important; /* 自身不挡住交互，由追光灯和高亮元素接管 */
+}
+
+.onboarding-tooltip {
+  position: fixed;
+  z-index: 10002;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  max-width: 500px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.10);
+  color: #5a4a6a;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+/* 气泡小箭头（修复箭头丢失 Bug） */
+.onboarding-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+}
+/* 箭头朝上（挂在顶部） */
+.onboarding-tooltip[data-arrow-dir="up"]::before {
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom: 8px solid #fff;
+}
+/* 箭头朝下（挂在底部） */
+.onboarding-tooltip[data-arrow-dir="down"]::before {
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top: 8px solid #fff;
+}
+.onboarding-tooltip[data-arrow-dir="none"]::before {
+  display: none;
+}
+/* 气泡小箭头水平对齐控制 */
+.onboarding-tooltip[data-arrow-align="right"]::before {
+  left: auto !important;
+  right: 24px !important;
+  transform: none !important;
+}
+.onboarding-tooltip[data-arrow-align="left"]::before {
+  left: 24px !important;
+  right: auto !important;
+  transform: none !important;
+}
+.onboarding-tooltip[data-arrow-align="center"]::before {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+}
+/* v8.0 新手引导 · 终极聚光灯（中间透明，四周散发黑幕） */
+.onboarding-spotlight {
+  position: fixed;
+  z-index: 10001;
+  pointer-events: none;
+  border-radius: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.95),
+              0 0 24px 8px rgba(255, 255, 255, 0.5),
+              0 0 0 9999px rgba(0, 0, 0, 0.65);
+}
+.onboarding-spotlight.show {
+  opacity: 1;
+  visibility: visible;
+}
+.onboarding-spotlight.fullscreen {
+  top: 50% !important;
+  left: 50% !important;
+  width: 0 !important;
+  height: 0 !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+}
+
+/* v8.1：高亮元素提权 + 发光边框，防止被黑幕吞没 */
+.onboarding-highlight {
+  position: relative !important;
+  z-index: 10001 !important;
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.9), 0 0 24px 8px rgba(255,255,255,0.45) !important;
+  border-radius: 12px !important;
+  pointer-events: auto !important; /* 允许真实交互 */
+}
+
+.astro-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px; /* 拉开左右间距 */
+}
+
+.astro-dot {
+  /* 👉 放大圆点尺寸 */
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* 隐形占位点规则：放过原版和克隆版的中轴点 */
+.astro-row:nth-child(1) .astro-dot:not(#dot-00):not(#clone-dot-00),
+.astro-row:nth-child(3) .astro-dot:not(#dot-04):not(#clone-dot-04) {
+  visibility: hidden;
+}
+
+/* 👉 5 个房间的专属灵魂色彩映射（包含克隆体） */
+#dot-00.active,
+#clone-dot-00.active { background: #81C784; transform: scale(1.4); box-shadow: 0 0 6px rgba(129, 199, 132, 0.6); } /* 00区：治愈抹茶绿 */
+#dot-01.active,
+#clone-dot-01.active { background: #FFB7B2; transform: scale(1.4); box-shadow: 0 0 6px rgba(255, 183, 178, 0.6); } /* 01区：高能珊瑚粉 */
+#dot-02.active,
+#clone-dot-02.active { background: #FFDAC1; transform: scale(1.4); box-shadow: 0 0 6px rgba(255, 218, 193, 0.6); } /* 02区：晨曦黄 */
+#dot-03.active,
+#clone-dot-03.active { background: #A0E7E5; transform: scale(1.4); box-shadow: 0 0 6px rgba(160, 231, 229, 0.6); } /* 03区：沉淀蓝 */
+#dot-04.active,
+#clone-dot-04.active { background: #C7CEEA; transform: scale(1.4); box-shadow: 0 0 6px rgba(199, 206, 234, 0.6); } /* 04区：极客紫 */
+
+/* 新手引导专属星图克隆体：强制突破 3D 限制，悬浮于黑幕之上 */
+.onboarding-astro-clone {
+  opacity: 1 !important;
+  visibility: visible !important;
+  z-index: 10005 !important;
+  transform: translateX(-50%) translateY(0) scale(1) !important; /* 恢复1:1绝对真实尺寸 */
+  pointer-events: none !important;
+}
+
+/* --- ✨ v8.0 空间呼吸边缘 (Spatial Edge Glow) --- */
+.room-01 .hero-wrapper { position: relative; }
+.spatial-edge-glow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 160px;
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  pointer-events: none; /* 绝对隐形，不阻挡任何按钮点击 */
+  animation: edgeBreathe 3s ease-in-out infinite;
+}
+.spatial-edge-glow::before {
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  font-family: monospace;
+}
+.spatial-edge-left {
+  left: 0;
+  /* 透出 02 区的晨曦黄 */
+  background: linear-gradient(to right, rgba(255, 218, 193, 0.35), transparent);
+  border-radius: 0 100px 100px 0;
+}
+.spatial-edge-left::before { content: '‹'; margin-right: 4px; }
+
+.spatial-edge-right {
+  right: 0;
+  /* 透出 03 区的沉淀蓝 */
+  background: linear-gradient(to left, rgba(160, 231, 229, 0.35), transparent);
+  border-radius: 100px 0 0 100px;
+}
+.spatial-edge-right::before { content: '›'; margin-left: 4px; }
+
+@keyframes edgeBreathe {
+  0%, 100% { opacity: 0.2; transform: translateY(-50%) scaleX(1); }
+  50%      { opacity: 0.8; transform: translateY(-50%) scaleX(1.3); }
+}
+
+/* --- 🌀 02/03 区：空间虫洞路标专属样式 --- */
+/* 👉 What & Why: 透出对面房间的灵魂色，并使用竖排文字，暗示空间的连通性 */
+.section-input,
+.section-list { position: relative; }
+.wormhole-left {
+  left: 0;
+  background: linear-gradient(to right, rgba(160, 231, 229, 0.35), transparent); /* 借用 03 区的沉淀蓝 */
+  border-radius: 0 100px 100px 0;
+  width: 32px; /* 稍微加宽以容纳文字 */
+}
+.wormhole-right {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 218, 193, 0.35), transparent); /* 借用 02 区的晨曦黄 */
+  border-radius: 100px 0 0 100px;
+  width: 32px;
+}
+.wormhole-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  /* 抵消继承可能带来的影响 */
+  font-family: sans-serif;
+  margin: auto;
+}
+
+/* --- v8.0 日签暗房 (Daily Poster Overlay) --- */
+.daily-poster-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.25);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000 !important;
+}
+#modalOverlay, #harvestDialog, .cold-dialog-backdrop {
+  z-index: 20000 !important;
+}
+
+/* 👉 1. 外层卡片：变成弹性画框，限制最高 90vh，禁止整体越界 */
+.daily-poster-card {
+  background: transparent;
+  border-radius: 0;
+  padding: 0 18px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh; /* 确保画框永远在屏幕内 */
+  margin: auto;
+}
+
+/* 👉 2. 海报图片区：发免死金牌 (flex-shrink: 0)，保持原本气场 */
+.daily-poster-image {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: #000;
+  flex-shrink: 0; /* 绝对禁止被底部的按钮挤压变小！ */
+  /* 🚨 核心修复 1：删除了自作主张的 max-height: 65vh，砸碎天花板，让图片恢复 100% 原始尺寸！ */
+}
+
+/* 原有配置保持原汁原味 */
+.daily-poster-photo {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+.daily-poster-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 12px;
+  background: linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.0));
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.daily-poster-day { font-size: 0.85rem; font-weight: 600; }
+.daily-poster-subline { font-size: 0.7rem; opacity: 0.9; }
+
+/* 👉 3. 底部操作区：赋予独立滚动特权与终极抗压能力 */
+.daily-poster-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1; /* 占据剩下的全部空间 */
+  min-height: 0; /* 🚨 核心修复 2：必须加这个魔法！打破 Flex 默认的最小高度限制，强制把所有空间挤压的压力转移给这里的滚动条，绝对保护上方图片！ */
+  overflow-y: auto; /* 核心魔法：只在这里产生上下滑动 */
+  overscroll-behavior: contain; /* 防止滑动穿透到底层 */
+  padding-bottom: 12px; /* 底部稍微留点呼吸感 */
+}
+
+/* 隐藏滚动条让视觉更干净 (Chrome/Safari) */
+.daily-poster-actions::-webkit-scrollbar {
+  display: none;
+}
+
+/* --- 下方的按钮样式全部保持你现有的不变 --- */
+.poster-btn-primary, .poster-btn-secondary, .poster-btn-tertiary {
+  padding: 6px 0;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0; /* 保证按钮本身不被压扁 */
+}
+.poster-btn-primary { background: #81C784; color: #fff; }
+.poster-btn-secondary { background: #fff; color: #555; border: 1px solid rgba(0,0,0,0.05); }
+.poster-btn-tertiary { background: transparent; color: #777; }
+
+.poster-save-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  padding: 5px 12px;
+  min-height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.poster-save-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.72);
+}
+.poster-save-btn:active {
+  transform: scale(0.97);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.poster-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.08);
+  color: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  z-index: 20;
+  backdrop-filter: blur(4px);
+  transition: all 0.3s ease;
+}
+.poster-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+.poster-prev { left: 8px; }
+.poster-next { right: 8px; }
+
+#inpSoulFlower::placeholder {
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+}
+
+/* 👉 v8.0 极简全屏玄关 (The Minimalist Lobby) — 层级 800 */
+.anchor-lobby {
+  position: fixed;
+  inset: 0;
+  z-index: 800; /* 必须高于 Swiper 层，低于打卡图弹窗 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease, visibility 0.5s;
+}
+.anchor-lobby.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.lobby-morning { background: linear-gradient(135deg, #F0F4F8, #E3EDF7); color: #5D5C61; }
+.lobby-afternoon { background: linear-gradient(135deg, #FFF7F0, #FFEFE0); color: #6b4a3b; }
+.lobby-night {
+  background: linear-gradient(135deg, #6B5F78 0%, #52485C 50%, #443C50 100%);
+  color: #F5EEFA;
+}
+.lobby-content {
+  width: 80%;
+  max-width: 320px;
+  text-align: center;
+}
+.lobby-greeting {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+.lobby-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.lobby-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #5D5C61;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+}
+.lobby-btn:active { transform: scale(0.96); background: rgba(255, 255, 255, 0.85); }
+.lobby-night .lobby-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  color: #EDE6F5;
+}
+.lobby-night .lobby-btn:active { background: rgba(255, 255, 255, 0.15); }
+.lobby-escape {
+  margin-top: 40px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@keyframes tooltipPop {
+  from { opacity: 0; transform: scale(0.88) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* 👉 v8.1 灵魂日记本 3D 物理模型 */
+.journal-book-container {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  perspective: 1500px; /* 3D 视距 */
+  margin-bottom: 20px;
+}
+.journal-book {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); /* 丝滑翻书动画 */
+  border-radius: 4px 12px 12px 4px;
+  box-shadow: 2px 2px 4px rgba(0,0,0,0.05), 5px 5px 12px rgba(0,0,0,0.08);
+}
+.journal-book.is-open {
+  transform: rotateY(-180deg);
+}
+.journal-book.is-open .journal-cover {
+  pointer-events: none; /* 翻开后封面失去物理碰撞体积，不再遮挡内页滑动 */
+}
+
+/* 👉 极其精致的手账本材质：羊皮纸渐变 + 莫兰迪书脊 + 多层纸张边缘 */
+.journal-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden; 
+  /* 奶黄色底带极微弱的暖光渐变，模拟真实光照漫反射 */
+  background: linear-gradient(135deg, #FFFDF8 0%, #F5EFE6 100%);
+  border-radius: 4px 12px 12px 4px;
+  /* 莫兰迪浅咖色书脊 */
+  border-left: 14px solid #C4A78A;
+  box-sizing: border-box;
+  padding: 20px 18px;
+  /* 核心精致感：纸张叠层厚度阴影 + 封皮内压痕高光 */
+  box-shadow: inset 1px 0 0 rgba(255,255,255,0.8),
+              inset 6px 0 10px rgba(0,0,0,0.03),
+              2px 2px 0 #EBE3D5,
+              3px 3px 0 #FFFDF8,
+              4px 4px 0 #EBE3D5,
+              6px 6px 12px rgba(0,0,0,0.08);
+}
+
+/* 👉 增加书脊处的真实物理压痕线 */
+.journal-page::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: -14px;
+  width: 3px;
+  background: rgba(0,0,0,0.08);
+  box-shadow: 1px 0 1px rgba(255,255,255,0.3);
+}
+
+/* 👉 气质拉满的彩蛋：给封面底部加一条优雅的勃艮第红丝带书签 */
+.journal-cover::after {
+  content: '';
+  position: absolute;
+  bottom: -6px; left: 30px;
+  width: 12px; height: 26px;
+  background: #9A5B5B;
+  border-radius: 0 0 2px 2px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.2);
+  z-index: -1;
+}
+.journal-cover {
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+.journal-inside {
+  transform: rotateY(180deg); /* 初始翻转藏在背面 */
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+}
+/* 👉 翘起的翻页折角 */
+.page-curl {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #FFFDF8 0%, #f0e9df 45%, #d1c5b4 50%, #FFFDF8 55%);
+  box-shadow: -2px -2px 5px rgba(0,0,0,0.1);
+  border-radius: 0 0 12px 0;
+  cursor: pointer;
+  transition: width 0.2s, height 0.2s;
+}
+.page-curl:hover {
+  width: 45px;
+  height: 45px;
+}
+.page-curl-text {
+  position: absolute;
+  bottom: 12px;
+  right: 45px;
+  font-size: 0.7rem;
+  color: #9A8A7B;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* 👉 04 区星盘引擎与内部视口 (v8.2 终极解封版) */
+#sec04 {
+  display: flex;
+  flex-direction: column;
+  /* 🚨 核心修复：砸碎玻璃墙，允许 3D 星云光环冲出边界！ */
+  overflow: visible; 
+  /* (注：已删除了历史遗留的 max-height 和 hidden，让卡片和星云自由延展) */
+}
+
+/* 👉 04 区全息星盘引擎 (修复 3D 穿模) */
+.astrolabe-container {
+  flex-shrink: 0;
+  position: relative;
+  width: 260px;
+  height: 260px;
+  margin: 15px auto 45px; 
+  border-radius: 50%;
+  transform: perspective(1000px) rotateX(60deg);
+  transform-style: preserve-3d;
+  /* 👉 核心修复：移除容器自身的背景，防止切断 3D 子元素 */
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 👉 将深紫星云推向 Z 轴深处，绝对居中，边缘完美融化，绝不错位 */
+.astrolabe-container::before {
+  content: '';
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  width: 180%; /* 足够大，保证边缘完全融化 */
+  height: 180%;
+  transform: translate(-50%, -50%) translateZ(-40px); /* 居中并沉入深空，不挡前端 */
+  border-radius: 50%;
+  /* 极致柔和的渐变，从中心深紫平滑过渡到全透明，绝无硬边缘 */
+  background: radial-gradient(circle at center, rgba(50, 40, 65, 0.95) 0%, rgba(65, 55, 80, 0.4) 35%, transparent 60%);
+  pointer-events: none;
+  box-shadow: none; /* 移除会导致边缘的阴影 */
+  /* 👉 强制开启独立图层，防止 3D 重绘时的深度冲突 */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* 👉 浑天仪外围星云光环 (终极防弹版) */
+.astro-halo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none; /* 防误触 */
+  border-radius: 50%;
+  z-index: 1;
+}
+
+/* 🪐 星轨 A：薄荷绿 */
+.astro-halo-1 {
+  width: 380px;  /* 采用绝对物理尺寸，绝不坍缩 */
+  height: 380px;
+  
+  /* 👉 核心修正 1：增加物理质量。线宽加粗至 2.5px，透明度提至 0.95，使其在深紫星云中绝对清晰 */
+  border: 1.5px dashed rgba(160, 231, 229, 0.85);
+  
+  /* 👉 核心修正 2：增强能量辐射。同步放大外发光（40px）与内发光，让星轨显得立体且发光 */
+  box-shadow: 
+    0 0 40px rgba(160, 231, 229, 0.45), 
+    inset 0 0 25px rgba(160, 231, 229, 0.25);
+    
+  animation: haloSpin1 35s linear infinite;
+}
+
+/* 🪐 星轨 B：提速流光溢彩 */
+.astro-halo-2 {
+  width: 340px;  
+  height: 340px;
+  border-radius: 50%;
+  border: none; 
+  box-shadow: none;
+  animation: haloSpin2 12s linear infinite; /* 👉 提速到 12s，增强流星动能 */
+  transform-style: preserve-3d;
+}
+
+/* 👉 粒子拖尾魔法：缩短步长，让粒子更紧密 */
+.comet-cluster {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform: rotate(calc(var(--i) * 7.5deg)); /* 减小角度步长，拖尾更连贯 */
+}
+
+/* 👉 散落的微小星尘：减缓透明度衰减，拖尾更长 */
+.comet-cluster .star {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  width: 4.5px; /* 稍微加大一点基础粒子 */
+  height: 4.5px;
+  background: #FFFDE7;
+  border-radius: 50%;
+  /* 减缓透明度衰减速度 (0.06)，让拖尾延绵不绝 */
+  opacity: calc(1 - var(--i) * 0.06);
+  transform: translate(calc(-50% + var(--dx, 0px)), var(--dy, 0px)) scale(calc(1 - var(--i) * 0.04));
+  box-shadow: 0 0 8px 2px rgba(255, 235, 155, 0.7);
+}
+
+/* 👉 流星的主星核保持高亮 */
+.comet-cluster .star.core {
+  width: 7px;
+  height: 7px;
+  top: -3px;
+  box-shadow: 0 0 15px 4px rgba(255, 235, 155, 0.9), 0 0 30px 10px rgba(217, 136, 80, 0.4);
+  z-index: 10;
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.comet-tail.scatter::before {
+  /* 若有旧的散落逻辑，保持不干预，我们主要靠 HTML 控制 */
+}
+
+/* 👉 终极魔法：将 3D 倾斜、Z轴防遮挡、2D 自转，全部强行锁死在动画帧里，绝不丢失！ */
+@keyframes haloSpin1 {
+  0%   { transform: translate(-50%, -50%) translateZ(-5px) rotateX(15deg) rotateY(25deg) rotateZ(0deg); }
+  100% { transform: translate(-50%, -50%) translateZ(-5px) rotateX(15deg) rotateY(25deg) rotateZ(360deg); }
+}
+
+/* 保留用户完美调校的 -90度 垂直切入角，逆时针旋转让拖尾完美跟在星核后面 */
+@keyframes haloSpin2 {
+  0%   { transform: translate(-50%, -50%) translateZ(-30px) rotateX(-90deg) rotateY(45deg) rotateZ(0deg); }
+  100% { transform: translate(-50%, -50%) translateZ(-30px) rotateX(-90deg) rotateY(45deg) rotateZ(-360deg); }
+}
+
+
+
+/* 外层星轨与中层刻度（继承 3D 空间） */
+.astro-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(217, 136, 80, 0.3);
+  box-shadow: inset 0 0 15px rgba(255,255,255,0.4);
+  transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-style: preserve-3d;
+}
+.astro-ring::before {
+  content: ''; position: absolute; inset: -8px; border-radius: 50%;
+  border: 1px dashed rgba(160, 231, 229, 0.8);
+  animation: astrolabeSpinReverse 20s linear infinite;
+}
+@keyframes astrolabeSpinReverse { 100% { transform: rotateZ(-360deg); } }
+
+.astro-ring-inner {
+  inset: 35px;
+  border: 1px dotted rgba(217, 136, 80, 0.4);
+  background: radial-gradient(circle, rgba(255,255,255,0.1), transparent);
+}
+
+/* 核心中枢（底层机房的心脏） */
+.astro-ring-center {
+  position: absolute;
+  inset: 90px;
+  background: radial-gradient(circle, #fff, rgba(255,246,227,0.7));
+  border: 1px solid rgba(217, 136, 80, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 4px 15px rgba(217, 136, 80, 0.3);
+  display: flex; justify-content: center; align-items: center;
+  font-size: 0.9rem; letter-spacing: 2px; color: #D98850; font-weight: 900;
+  
+  /* 👉 核心修复：拔高 15px 彻底悬浮于星轨之上，根除 3D 穿模；同时抵消 60 度倾斜 */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+  transform: translateZ(12px) rotateX(-60deg);
+}
+
+/* 👉 节点升级：无边框的全息 3D 星球 (Planetary Bodies) */
+.astro-node {
+  position: absolute;
+  width: 56px;
+  height: 56px;
+  /* 👉 核心修正：彻底拆除实体边框，融入星空 */
+  border: none;
+  /* 👉 3D 体积光：光源从左上方 30% 处打下来，右下角融入暗场 */
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.15));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 50%;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  cursor: pointer;
+  /* 👉 星球大气层：向外的柔和星光 + 向内的球体高光压痕 */
+  box-shadow: 
+    0 10px 25px rgba(0,0,0,0.3), 
+    0 0 20px rgba(255, 255, 255, 0.45), 
+    inset -4px -4px 10px rgba(0,0,0,0.1), 
+    inset 4px 4px 12px rgba(255,255,255,0.9);
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 10;
+  /* 保持抗重力直立机制 */
+  transform: rotateZ(0deg) rotateX(-60deg);
+  /* 👉 终极防闪装甲：避免毛玻璃在 :active 状态下被 GPU 压扁降级 */
+  transform-style: preserve-3d;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+  /* 用极其微弱的 Z 轴位移强行拔高图层，彻底断绝与星云底幕的穿模风险 */
+  transform: translateZ(15px) rotateZ(0deg) rotateX(-60deg); 
+}
+
+.astro-node:active { 
+  transform: scale(0.9) rotateX(-60deg); 
+  /* 点击时爆发出耀眼的超新星光芒 */
+  background: radial-gradient(circle at 30% 30%, rgba(255, 249, 196, 0.98), rgba(255, 249, 196, 0.35)); 
+  box-shadow: 0 0 35px rgba(255, 249, 196, 0.9), inset 0 0 15px rgba(255, 255, 255, 0.9);
+}
+
+.astro-node-icon { 
+  font-size: 1.3rem; 
+  line-height: 1; 
+  margin-bottom: 2px; 
+}
+
+/* 确保文字在发光的星球上绝对清晰 */
+.astro-node-text { 
+  font-size: 0.65rem; 
+  color: #333; 
+  font-weight: 900; 
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.95), 0 0 8px rgba(255, 255, 255, 0.8);
+}
+/* 5 个节点的精密定位 (基于 260px 容器，CSS 3D引擎会自动将它们投影成椭圆轨迹) */
+.an-1 { left: 102px; top: -28px; }
+.an-2 { left: 226px; top: 63px; }
+.an-3 { left: 179px; top: 208px; }
+.an-4 { left: 24px; top: 208px; }
+.an-5 { left: -22px; top: 63px; }
+
+
+
+/* 内部视口：拆除铁笼，允许卡片自由延展，把滚动权交还给 04 区大房间 */
+.sec04-viewport {
+  width: 100%;
+  /* 👉 核心修复 1：向下无限舒展，彻底覆盖底部所有的空白区域 */
+  flex-grow: 1; 
+  /* 👉 核心修复 2：将底部的防挡呼吸区转移到结界内部，确保摸到底部也是安全的 */
+  padding-bottom: 120px; 
+}
+.sec04-viewport::-webkit-scrollbar {
+  display: none;
+}
