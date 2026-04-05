@@ -1767,6 +1767,11 @@ html.onboarding-lock {
   pointer-events: auto !important; /* 允许真实交互 */
 }
 
+/* 👉 v8.4 核按钮防弹罩：仅在引导至「界面定制」卡片时，剥夺点击权，防止误触导致生态重构坍缩 */
+#panel-prefs.onboarding-highlight {
+  pointer-events: none !important;
+}
+
 .astro-row {
   display: flex;
   justify-content: center;

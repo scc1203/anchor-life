@@ -167,7 +167,6 @@
   let coloringBgImgLoaded = false;
   const BUBBLE_POP_URL = 'assets/audio/bubble-pop-short.mp3';
   const FIREWORK_POP_URL = 'assets/audio/firework-pop.wav';
-  const STAR_SHINE_URL  = 'assets/audio/star-shinning.mp3';
   const BUBBLE_POP_FALLBACK_DATA = 'data:audio/wav;base64,UklGRl4RAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YToRAADgCvgQzhm/JWQ0mD1iPu9Br0eNXGxgY2GEaE1t225ldGp1onyYeXN6v30Le5h/hXwqcIBv1m38bNxgyF91WcpSdUpHSCY+2ixgKAMkyxVmCygDDf/19J3tUue02eTQ5MGYwJK5Z7IHpsGcwppjmXSWYZlAkYKSnpBFjEyQPY1ljTCSdJEgl5iX+aFbo/qqPrWTsNC55skGzarZfeH+6fXyw/bZ/BwJDhd/HhAgEy54MDA82UV2Sx5IZlhZXBVgiWT5aVxlX287amBzXG3Ha/FsL2E8Zm5Zx2EZX+xTaEoBRWhAaDRDJ/Urvh/CG1QNBALC/PTzgOvx46Dc+M3W0XjIrL/qtF60b65Hp5ehxp+toXGcR56slhGcnpwOnQecUJ+soQqnxql+tUm6WMTLx5zHhtRj21Hf6uqn9Ir+dQPkDHQXIyH/KqEzsTTnNso/jENHTcZRYk/NW8hcDlzKYeZguF8VZIldxF2gV7dW6E67T39HZD6UP0Y31i4iMHofbhhKB+YOdAFZ+UbklOWK3U7WUdQEz0DCS70DuvK3grM9qi2om6W+pO2g6aY6o+KlVatMqtOvCK/xuGPBzcK7yY7OpdXj2oDlJ/By84H6pQNFCrIXqhvtJP4sNTNyNjs+5EOBSHdLwFGsT9pPYlOKVYNW01Y6VchVvlFpToxHj0pcO049kDNYLeYmXCDNFhkNdQmhAAP3ivX85zjjRd3L04LMPsyawjG6PLuGurCwwawirmatA6wJtkax/rTits+1Wby3wXTDFsvVzRvXndyc54jn9/SO+KoBHgdEDPwWgR7/IkkslDBYMuA8Sj6bQ7pF7UtjTiBMWk6gSUtNd0htSOZGcUAjPYc+ojRNM4knxSFgGxAVFQoTBm/9'; // 截断版，足够触发后备机制
 
   coloringBgImg.src = '/assets/images/coloring_bg.png';
@@ -460,19 +459,23 @@
         },
         {
           targetId: 'onboardingUserZone',
-          text: '🛂 <b>罗盘中枢 (1/4)：认领数字护照。</b><br>给你的船起个名字吧（作为云端的唯一标识）。设定后，你的足迹将真正属于你。'
+          text: '🛂 <b>罗盘中枢 (1/5)：认领数字护照。</b><br>给你的船起个名字吧（作为云端的唯一标识）。设定后，你的足迹将真正属于你。'
         },
         {
           targetId: 'newCustomTagInp',
-          text: '🏷️ <b>罗盘中枢 (2/4)：自定义标签。</b><br>系统自带的分类不够用？在这里造一个你专属的底层标签（比如：🎧 听播客）。'
+          text: '🏷️ <b>罗盘中枢 (2/5)：自定义标签。</b><br>系统自带的分类不够用？在这里造一个你专属的底层标签（比如：🎧 听播客）。'
         },
         {
           targetId: 'newCustomFilterInp',
-          text: '🗂️ <b>罗盘中枢 (3/4)：组装专属筛选。</b><br>把几个标签打包成一个“专属抽屉”（比如限定只抽：室内+读书）。以后抽卡时，可以指定只抽这一个抽屉。'
+          text: '🗂️ <b>罗盘中枢 (3/5)：组装专属筛选。</b><br>把几个标签打包成一个“专属抽屉”（比如限定只抽：室内+读书）。以后抽卡时，可以指定只抽这一个抽屉。'
         },
-        { 
-          targetId: 'dayStartOffset', 
-          text: '🕰️ <b>罗盘中枢 (4/4)：专属时区。</b><br>夜猫子也有权定义自己的一天！在这里设定新一天的起点，凌晨打卡也会乖乖算作昨天。<br><span style="font-size:0.75rem; color:#888;">(点击黑屏继续)</span>' 
+        {
+          targetId: 'dayStartOffset',
+          text: '🕰️ <b>罗盘中枢 (4/5)：专属时区。</b><br>夜猫子也有权定义自己的一天！在这里设定新一天的起点，凌晨打卡也会乖乖算作昨天。'
+        },
+        {
+          targetId: 'panel-prefs',
+          text: '⚙️ <b>罗盘中枢 (5/5)：界面定制。</b><br>如果觉得功能太多，可在此开启「极简麻瓜模式」，隐藏复杂选项，打造纯净的单屏工作台。<br><span style="font-size:0.75rem; color:#888;">(点击黑屏继续)</span>'
         },
         {
           targetId: 'manualCardWrapper',
@@ -540,7 +543,6 @@
           targetId: 'soulFlowerZone',
           text: '🌸 <b>船长静室 (3/4)：灵魂锚点。</b><br>镌刻今天最触动你的一句话，或是【记一次撑住】的至暗时刻。它会成为你生命图谱中最浪漫的星河。'
         },
-        // 👉 新增：引导观星窗（星尘与黑洞）
         {
           targetId: 'observationWindowZone',
           text: '🔭 <b>船长静室 (4/4)：观星窗。</b><br><br>左侧 🌌「星尘」安放暂不落地的念头<br><span style="font-size:0.75rem; color:#888;">（如超预算但看着开心的购物单、不曾说出口的梦想）；</span><br><br>右侧 🕳️「黑洞」是灵魂的单向信箱<br><span style="font-size:0.75rem; color:#888;">（将无法消解的情绪写下，寄给无法收信的人）。</span><br><br>这里脱离因果，绝对私密，不留任何足迹。'
@@ -692,13 +694,18 @@ if (String(obCurrentRoomId) === '1') {
       else if (step.targetId === 'newCustomTagInp' || step.targetId === 'newCustomFilterInp') {
         if (typeof spinAstrolabe === 'function') spinAstrolabe(3, '⚙️ 偏好');
       }
-      // 3. 如果目标是夜猫子时钟，强制星盘转到【⚙️ 偏好】(索引3)
-      else if (step.targetId === 'dayStartOffset') {
+      // 3. 夜猫子时钟 / 界面定制：星盘转到【⚙️ 偏好】(索引3)
+      else if (step.targetId === 'dayStartOffset' || step.targetId === 'panel-prefs') {
         if (typeof spinAstrolabe === 'function') spinAstrolabe(3, '⚙️ 偏好');
       }
       // 4. 如果目标是用户手册大卡片，强制星盘转到【📖 手册】(索引0)
       else if (step.targetId === 'manualCardWrapper' || step.targetId === 'sec04Title') {
         if (typeof spinAstrolabe === 'function') spinAstrolabe(0, '📖 手册');
+      }
+
+      if (step.targetId === 'panel-prefs') {
+        var ecoEngineDetailsOb = document.getElementById('details-ecology-engine');
+        if (ecoEngineDetailsOb) ecoEngineDetailsOb.open = true;
       }
 
       // 👉 核心修复：如果是深层折叠元素，强制展开其父级 details，防止高度为 0 导致定位失败黑屏
@@ -765,7 +772,7 @@ if (String(obCurrentRoomId) === '1') {
       const noScrollRooms = ['0', '1'];
       const isProtectedRoom = noScrollRooms.includes(String(obCurrentRoomId));
       if (!isProtectedRoom && step.targetId !== 'onboardingUserZone') {
-        if (step.targetId === 'manualCardWrapper') {
+        if (step.targetId === 'manualCardWrapper' || step.targetId === 'panel-prefs') {
           // 👉 核心修复：彻底解决嵌套滚动（俄罗斯套娃）导致的顶穿天花板
           // 强行把外层房间和内层视口同时归零，绝对静止在顶部！
           const room04 = document.querySelector('.room-04');
