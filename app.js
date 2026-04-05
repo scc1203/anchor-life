@@ -4049,21 +4049,39 @@ window.toggleSettingTimer = function(checked) {
     
     // v8.0 补齐：把 activePlaylist 一并刻入墙壁，防止刷新后失去连抽上下文
     if (typeof KEY_LIVE_STATE !== 'undefined') {
-      localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
+      var liveAnchorPayload = {
         task: currentTask,
         startTime: (typeof anchorStartTime !== 'undefined' ? anchorStartTime : null),
         activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
-      }));
+      };
+      if (typeof isTaskPaused !== 'undefined' && isTaskPaused) {
+        liveAnchorPayload.isPaused = true;
+        liveAnchorPayload.pausedElapsed = typeof pausedTimeElapsed !== 'undefined' ? pausedTimeElapsed : Math.floor((Date.now() - anchorStartTime) / 1000);
+      }
+      localStorage.setItem(KEY_LIVE_STATE, JSON.stringify(liveAnchorPayload));
     }
     var btnChangeEl = document.getElementById('btnChange');
     if (btnChangeEl) btnChangeEl.style.display = 'inline-block';
     var btnPause = document.getElementById('btnPause');
     if (btnPause) {
       btnPause.style.display = 'inline-block';
-      btnPause.innerText = '⏸️ 暂停';
-      isTaskPaused = false;
+      // 👉 核心修复：如果是动能继承（如修改时间引起的重绘），必须绝对尊重当前的暂停状态！
+      if (keepTime && typeof isTaskPaused !== 'undefined' && isTaskPaused) {
+        btnPause.innerText = '▶️ 继续';
+      } else {
+        btnPause.innerText = '⏸️ 暂停';
+        if (typeof isTaskPaused !== 'undefined') isTaskPaused = false;
+      }
     }
-    startLiveTimer();
+    // 👉 核心修复：如果是暂停状态，冻结动画且绝不启动定时器！
+    if (typeof isTaskPaused !== 'undefined' && isTaskPaused) {
+      if (ingEl) {
+        ingEl.style.animation = 'none';
+        ingEl.style.opacity = '0.6';
+      }
+    } else {
+      if (typeof startLiveTimer === 'function') startLiveTimer();
+    }
   }
 
   function openHarvestDialogAsync(defaultMins, task) {
@@ -4801,7 +4819,11 @@ window.toggleSettingTimer = function(checked) {
       pausedTimeElapsed = Math.floor((Date.now() - anchorStartTime) / 1000);
       if (btn) btn.innerText = '▶️ 继续';
       if (ingEl) {
-        ingEl.innerText = '⏸️ 已暂停 ' + (Math.floor(pausedTimeElapsed / 60)).toString().padStart(2, '0') + ':' + (pausedTimeElapsed % 60).toString().padStart(2, '0');
+        var hPause = Math.floor(pausedTimeElapsed / 3600);
+        var mPause = Math.floor((pausedTimeElapsed % 3600) / 60).toString().padStart(2, '0');
+        var sPause = (pausedTimeElapsed % 60).toString().padStart(2, '0');
+        var timeStrPause = hPause > 0 ? hPause + ':' + mPause + ':' + sPause : mPause + ':' + sPause;
+        ingEl.innerText = '⏸️ 已暂停 ' + timeStrPause;
         ingEl.style.animation = 'none';
         ingEl.style.opacity = '0.6';
       }
@@ -11670,11 +11692,26 @@ window.toggleTaskHistoryScroll = function() {
     if (totalInput) totalInput.value = task.bookmarkTotal || '';
     if (noteTextarea) noteTextarea.value = task.noteText || '';
 
-    var hhmm = new Date().getHours().toString().padStart(2, '0') + ':' + new Date().getMinutes().toString().padStart(2, '0');
     var tStart = document.getElementById('memoryTimeStart');
     var tEnd = document.getElementById('memoryTimeEnd');
-    if (tStart) tStart.value = hhmm;
-    if (tEnd) tEnd.value = hhmm;
+    // 👉 v8.X 修复：判断当前是否是舞台上的 ING 任务
+    var isCurrentlyTicking = typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id;
+
+    var startH = new Date().getHours();
+    var startM = new Date().getMinutes();
+
+    if (isCurrentlyTicking && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
+      var stDate = new Date(anchorStartTime);
+      startH = stDate.getHours();
+      startM = stDate.getMinutes();
+    }
+
+    var startHHMM = startH.toString().padStart(2, '0') + ':' + startM.toString().padStart(2, '0');
+    var endNow = new Date();
+    var endHHMM = endNow.getHours().toString().padStart(2, '0') + ':' + endNow.getMinutes().toString().padStart(2, '0');
+
+    if (tStart) tStart.value = startHHMM;
+    if (tEnd) tEnd.value = endHHMM;
     if (hoursSelect) {
       hoursSelect.innerHTML = '';
       for (var h = 0; h <= 23; h++) hoursSelect.appendChild(new Option(h + 'h', h));
@@ -11687,16 +11724,15 @@ window.toggleTaskHistoryScroll = function() {
     }
     if (hoursSelect) hoursSelect.value = '0';
     if (minutesSelect) minutesSelect.value = '0';
-    var isCurrentlyTicking = typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id;
     if (hoursSelect) hoursSelect.disabled = isCurrentlyTicking;
     if (minutesSelect) minutesSelect.disabled = isCurrentlyTicking;
-    // 修复：连同时段输入框一起物理锁死，防止专注期间篡改
+    // ING 时允许改「开始时间」拨回秒表；结束时间仍对应当前时刻，保持只读
     var timeStartInp = document.getElementById('memoryTimeStart');
     var timeEndInp = document.getElementById('memoryTimeEnd');
-    if (timeStartInp) timeStartInp.disabled = isCurrentlyTicking;
+    if (timeStartInp) timeStartInp.disabled = false;
     if (timeEndInp) timeEndInp.disabled = isCurrentlyTicking;
     var lockHint = document.getElementById('memoryTimeLockHint');
-    if (lockHint) lockHint.style.display = isCurrentlyTicking ? 'inline-block' : 'none';
+    if (lockHint) lockHint.style.display = 'none';
     if (clearBtn) clearBtn.style.display = ((task.bookmarkText && task.bookmarkText.trim()) || (task.noteText && task.noteText.trim())) ? 'block' : 'none';
     panel.style.display = 'flex';
   }
@@ -11771,6 +11807,76 @@ if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence))
       }
     }
     save();
+
+    var isCurrentlyTicking = typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof currentTask !== 'undefined' && currentTask && currentTask.id === task.id;
+    var hasChanges = false;
+
+    // 👉 v8.X 时光机引擎：如果正在计时中，允许用户通过修改“开始时间”来拨回秒表
+    if (isCurrentlyTicking && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
+      var sEl = document.getElementById('memoryTimeStart');
+      if (sEl && sEl.value) {
+        var parts = sEl.value.split(':');
+        var newH = parseInt(parts[0], 10);
+        var newM = parseInt(parts[1], 10);
+        if (!isNaN(newH) && !isNaN(newM)) {
+          var newStartDate = new Date(anchorStartTime);
+          if (!isNaN(newStartDate.getTime())) {
+            newStartDate.setHours(newH, newM, 0, 0);
+
+            if (newStartDate.getTime() <= Date.now()) {
+              if (newStartDate.getTime() !== anchorStartTime) {
+                var timeShiftSecs = Math.floor((anchorStartTime - newStartDate.getTime()) / 1000);
+
+                if (typeof isTaskPaused !== 'undefined' && isTaskPaused) {
+                  if (pausedTimeElapsed + timeShiftSecs < 0) {
+                    if (typeof showToast === 'function') showToast('⚠️ 修改时间将导致专注时长变为负数，请重新调整');
+                    return;
+                  }
+                  pausedTimeElapsed += timeShiftSecs;
+                }
+
+                anchorStartTime = newStartDate.getTime();
+
+                if (typeof KEY_LIVE_STATE !== 'undefined') {
+                  var stateObj = {
+                    task: currentTask,
+                    startTime: anchorStartTime,
+                    activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
+                  };
+                  if (typeof isTaskPaused !== 'undefined' && isTaskPaused) {
+                    stateObj.isPaused = true;
+                    stateObj.pausedElapsed = pausedTimeElapsed;
+                  }
+                  localStorage.setItem(KEY_LIVE_STATE, JSON.stringify(stateObj));
+                }
+
+                hasChanges = true;
+
+                if (typeof isTaskPaused !== 'undefined' && isTaskPaused) {
+                  var ingElTz = document.getElementById('rIngPulse');
+                  if (ingElTz) {
+                    var hTz = Math.floor(pausedTimeElapsed / 3600);
+                    var mTz = Math.floor((pausedTimeElapsed % 3600) / 60).toString().padStart(2, '0');
+                    var sTz = (pausedTimeElapsed % 60).toString().padStart(2, '0');
+                    var timeStrTz = hTz > 0 ? hTz + ':' + mTz + ':' + sTz : mTz + ':' + sTz;
+                    ingElTz.innerText = '⏸️ 已暂停 ' + timeStrTz;
+                  }
+                  if (typeof showToast === 'function') showToast('⏸️ 起跑线已修正，冻结时间已同步');
+                } else {
+                  if (typeof showToast === 'function') showToast('⏱️ 起跑线已修正，秒表已同步');
+                }
+              }
+            } else {
+              if (typeof showToast === 'function') showToast('⚠️ 开始时间不能晚于当前时间');
+            }
+          }
+        }
+      }
+    }
+
+    if (hasChanges && typeof isTaskPaused !== 'undefined' && !isTaskPaused && typeof startLiveTimer === 'function') {
+      startLiveTimer();
+    }
 
     // 👉 v8.X 核心修复：智能寻根引擎。不论是单次任务还是子任务，都能准确找到最终的项目归属
     var isSubtask = currentMemoryTask && (currentMemoryTask.isPlaylist === true || currentMemoryTask.type === 'playlist');
@@ -11977,7 +12083,11 @@ if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence))
           btnPauseRestore.innerText = '▶️ 继续';
         }
         if (ingEl) {
-          ingEl.innerText = '⏸️ 已暂停 ' + (Math.floor(pausedTimeElapsed / 60)).toString().padStart(2, '0') + ':' + (pausedTimeElapsed % 60).toString().padStart(2, '0');
+          var hR = Math.floor(pausedTimeElapsed / 3600);
+          var mR = Math.floor((pausedTimeElapsed % 3600) / 60).toString().padStart(2, '0');
+          var sR = (pausedTimeElapsed % 60).toString().padStart(2, '0');
+          var timeStrR = hR > 0 ? hR + ':' + mR + ':' + sR : mR + ':' + sR;
+          ingEl.innerText = '⏸️ 已暂停 ' + timeStrR;
           ingEl.style.animation = 'none';
           ingEl.style.opacity = '0.6';
         }
