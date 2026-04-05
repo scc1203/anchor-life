@@ -17,126 +17,6 @@
   const ONBOARDING_VISITED_KEY = 'anchor_visited_v8_0_spatial';
   let isSanctuaryVisible = localStorage.getItem('anchor_sanctuary_visible') !== 'false';
 
-  // 👉 v8.4 生态模式一键预设与中枢引擎
-  window.setEcologyMode = function (mode) {
-    var cbs = {
-      hide02adv: document.getElementById('eco_hide02adv'),
-      hide02groups: document.getElementById('eco_hide02groups'),
-      hide01filter: document.getElementById('eco_hide01filter'),
-      hide01rituals: document.getElementById('eco_hide01rituals'),
-      hide01pill: document.getElementById('eco_hide01pill'),
-      hide03cabinet: document.getElementById('eco_hide03cabinet'),
-      hide03heatmap: document.getElementById('eco_hide03heatmap'),
-      hide03cold: document.getElementById('eco_hide03cold'),
-      hide00window: document.getElementById('eco_hide00window'),
-      hide00journal: document.getElementById('eco_hide00journal')
-    };
-
-    if (mode === 'standard') {
-      Object.keys(cbs).forEach(function (k) {
-        var cb = cbs[k];
-        if (cb) cb.checked = false;
-      });
-      if (typeof showToast === 'function') showToast('⚖️ 已切换至标准航海模式');
-    } else if (mode === 'muggle') {
-      if (cbs.hide02adv) cbs.hide02adv.checked = true;
-      if (cbs.hide02groups) cbs.hide02groups.checked = true;
-      if (cbs.hide01filter) cbs.hide01filter.checked = true;
-      if (cbs.hide01rituals) cbs.hide01rituals.checked = false;
-      if (cbs.hide01pill) cbs.hide01pill.checked = true;
-      if (cbs.hide03cabinet) cbs.hide03cabinet.checked = true;
-      if (cbs.hide03heatmap) cbs.hide03heatmap.checked = true;
-      if (cbs.hide03cold) cbs.hide03cold.checked = true;
-      if (cbs.hide00window) cbs.hide00window.checked = true;
-      if (cbs.hide00journal) cbs.hide00journal.checked = false;
-      if (typeof showToast === 'function') showToast('🧩 已切换至极简麻瓜模式');
-    } else if (mode === 'sanctuary') {
-      Object.keys(cbs).forEach(function (k) {
-        var cb = cbs[k];
-        if (cb) cb.checked = true;
-      });
-      if (typeof showToast === 'function') showToast('🩸 已开启避风港模式');
-    }
-    if (typeof toggleEcology === 'function') toggleEcology();
-
-    if (mode === 'muggle' || mode === 'sanctuary') {
-      document.body.classList.add('muggle-dashboard');
-      if (typeof anchorSwiper !== 'undefined' && anchorSwiper) anchorSwiper.slideTo(1, 300);
-      setTimeout(function () {
-        if (typeof outerSwiper !== 'undefined' && outerSwiper && typeof outerSwiper.disable === 'function') outerSwiper.disable();
-        if (typeof innerSwiper !== 'undefined' && innerSwiper && typeof innerSwiper.disable === 'function') innerSwiper.disable();
-      }, 350);
-    } else {
-      document.body.classList.remove('muggle-dashboard');
-      if (typeof outerSwiper !== 'undefined' && outerSwiper && typeof outerSwiper.enable === 'function') outerSwiper.enable();
-      if (typeof innerSwiper !== 'undefined' && innerSwiper && typeof innerSwiper.enable === 'function') innerSwiper.enable();
-    }
-
-    try {
-      if (mode === 'muggle' || mode === 'sanctuary') {
-        localStorage.setItem('anchor_ecology_dashboard', mode);
-      } else if (mode === 'standard') {
-        localStorage.removeItem('anchor_ecology_dashboard');
-      }
-    } catch (eDash) {}
-  };
-
-  window.toggleEcology = function () {
-    var prefs = {};
-    document.querySelectorAll('.eco-cb').forEach(function (cb) {
-      prefs[cb.id] = cb.checked;
-      document.body.classList.toggle('eco-' + cb.id, cb.checked);
-    });
-
-    var is02Empty = prefs.eco_hide02adv && prefs.eco_hide02groups;
-    document.body.classList.toggle('eco-center-02', is02Empty);
-
-    try {
-      localStorage.setItem('anchor_ecology_prefs', JSON.stringify(prefs));
-    } catch (e) {}
-  };
-
-  window.initEcology = function () {
-    try {
-      var saved = JSON.parse(localStorage.getItem('anchor_ecology_prefs') || '{}');
-      document.querySelectorAll('.eco-cb').forEach(function (cb) {
-        if (saved[cb.id]) cb.checked = true;
-      });
-      if (typeof toggleEcology === 'function') toggleEcology();
-
-      try {
-        var dash = localStorage.getItem('anchor_ecology_dashboard');
-        if (dash === 'muggle' || dash === 'sanctuary') {
-          document.body.classList.add('muggle-dashboard');
-          if (typeof anchorSwiper !== 'undefined' && anchorSwiper) anchorSwiper.slideTo(1, 0);
-          setTimeout(function () {
-            if (typeof outerSwiper !== 'undefined' && outerSwiper && typeof outerSwiper.disable === 'function') outerSwiper.disable();
-            if (typeof innerSwiper !== 'undefined' && innerSwiper && typeof innerSwiper.disable === 'function') innerSwiper.disable();
-          }, 350);
-        }
-      } catch (eDashInit) {}
-    } catch (e) {}
-  };
-
-  window.openMuggleRecord = function () {
-    if (typeof renderList === 'function') renderList();
-    if (typeof renderHistory === 'function') renderHistory();
-
-    var destPending = document.getElementById('mugglePendingList');
-    var srcDaily = document.getElementById('dailyList');
-    var srcMedia = document.getElementById('mediaList');
-    if (destPending) {
-      destPending.innerHTML = (srcDaily ? srcDaily.innerHTML : '') + (srcMedia ? srcMedia.innerHTML : '');
-    }
-
-    var destHistory = document.getElementById('muggleHistoryList');
-    var srcHistory = document.getElementById('historyListContainer');
-    if (destHistory && srcHistory) destHistory.innerHTML = srcHistory.innerHTML;
-
-    var recModal = document.getElementById('muggleRecordModal');
-    if (recModal) recModal.style.display = 'flex';
-  };
-
   var DAILY_POSTER_IMAGES = (function () {
     var arr = [];
     for (var i = 1; i <= 97; i++) {
@@ -1369,10 +1249,6 @@ skipBtn.style.display = 'block';
       console.error('糖果渲染崩溃:', e);
       stage.innerHTML = "<div style='padding:20px; color:#d65a64; font-size:0.8rem;'>⚠️ 糖果引擎卡住了:<br>" + e.message + "</div>";
     }
-
-    if (document.body.classList.contains('muggle-dashboard') && section) {
-      document.body.appendChild(section);
-    }
   }
 
   function closeCandyEngine() {
@@ -1381,17 +1257,6 @@ skipBtn.style.display = 'block';
     if (section) section.style.display = 'none';
     if (wrapper) wrapper.classList.remove('candy-open');
     restoreSoulFlowerZone();
-
-    if (document.body.classList.contains('muggle-dashboard') && section) {
-      var zone = document.getElementById('onboardingCandyZone');
-      var stats = document.getElementById('onboardingStatsZone');
-      if (zone && stats) {
-        zone.insertBefore(section, stats);
-      } else {
-        var shell = document.querySelector('.sanctuary-shell');
-        if (shell) shell.appendChild(section);
-      }
-    }
   }
 
   var _openUniverseImpl = function (type) {
@@ -1702,23 +1567,24 @@ skipBtn.style.display = 'block';
     return false;
   }
 
-  // 👉 核心修复：不再使用游离的 new Audio()，直接抓取 DOM 物理标签，跟随页面销毁而强制释放硬件管道
-  const bubblePopAudio = document.getElementById('domAudioBubble');
-  if (bubblePopAudio) {
-    bubblePopAudio.volume = 1.0;
-    bubblePopAudio.addEventListener('error', function () {
-      try {
-        bubblePopAudio.src = BUBBLE_POP_FALLBACK_DATA;
-        bubblePopAudio.load();
-      } catch (e) {}
-    });
-  }
+  const bubblePopAudio = new Audio(BUBBLE_POP_URL);
+  bubblePopAudio.preload = 'auto';
+  bubblePopAudio.volume = 1.0;
+  bubblePopAudio.addEventListener('error', function () {
+    try {
+      bubblePopAudio.src = BUBBLE_POP_FALLBACK_DATA;
+      bubblePopAudio.load();
+    } catch (e) {}
+  });
 
-  const fireworkPopAudio = document.getElementById('domAudioFirework');
-  if (fireworkPopAudio) fireworkPopAudio.volume = 1.0;
+  const fireworkPopAudio = new Audio(FIREWORK_POP_URL);
+  fireworkPopAudio.preload = 'auto';
+  fireworkPopAudio.volume = 1.0;
 
-  const starShineAudio = document.getElementById('domAudioStar');
-  if (starShineAudio) starShineAudio.volume = 0.65;
+  const starShineAudio = new Audio(STAR_SHINE_URL);
+  starShineAudio.preload = 'auto';
+  starShineAudio.loop = true;
+  starShineAudio.volume = 0.65;
 
   let soundUnlocked = false;
   let currentCandyNeedsSound = false;
@@ -1734,64 +1600,40 @@ skipBtn.style.display = 'block';
     }
   }
 
-  // 👉 v8.4 终极音效引擎：iOS PWA 物理重载与全域同步解锁
-  window.unlockAllCandySounds = function() {
+  // 👉 What & Why: 统一解锁机制。用户点一次按钮，强行用 0 秒播放唤醒 iOS Safari 的所有 Audio 实例和 WebAudio 上下文
+  async function unlockAllCandySounds() {
     var btn = document.getElementById('candySoundBtn');
-    var ctx = getCandyAudioCtx();
 
-    // 1. 苹果铁律：同步状态下直接 resume
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(function () {});
-    }
+    // 尝试唤醒 WebAudio（作为兜底）
+    try { getCandyAudioCtx(); } catch (e) {}
 
-    // 2. Web Audio 空炮：打通内存合成音通道 (乐器糖)
+    // 逐个尝试强行唤醒，不要因为某个失败就中断
     try {
-      if (ctx) {
-        var osc = ctx.createOscillator();
-        var gain = ctx.createGain();
-        gain.gain.value = 0;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(0);
-        osc.stop(ctx.currentTime + 0.01);
-      }
-    } catch (e) {
-      console.warn('空音频唤醒失败', e);
-    }
+      bubblePopAudio.currentTime = 0;
+      await bubblePopAudio.play();
+      bubblePopAudio.pause();
+    } catch (e) {}
 
-    // 3. 核心修复：模拟「切出再切回」的硬件重置 (Hardware Reload)
-    function hardReloadAndKick(audioEl) {
-      if (!audioEl) return;
-      try {
-        audioEl.load();
-        var playPromise = audioEl.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(function () {
-              audioEl.pause();
-              audioEl.currentTime = 0;
-            })
-            .catch(function () {});
-        }
-      } catch (e) {}
-    }
+    try {
+      fireworkPopAudio.currentTime = 0;
+      await fireworkPopAudio.play();
+      fireworkPopAudio.pause();
+    } catch (e) {}
 
-    // 4. 对所有需要 HTML5 播放的实例执行硬件重载
-    if (typeof bubblePopAudio !== 'undefined') hardReloadAndKick(bubblePopAudio);
-    if (typeof fireworkPopAudio !== 'undefined') hardReloadAndKick(fireworkPopAudio);
-    if (typeof starShineAudio !== 'undefined') hardReloadAndKick(starShineAudio);
+    try {
+      starShineAudio.currentTime = 0;
+      await starShineAudio.play();
+      starShineAudio.pause();
+    } catch (e) {}
 
-    // 5. 状态同步与 UI 隐藏
+    // 不管实际是否发声，只要走到这里，就认为用户已经“尝试开启”并拿到了苹果的通行证
     soundUnlocked = true;
-    if (btn) btn.style.display = 'none';
-
-    // 6. UI 更新（如果有该函数的话）
     if (typeof updateCandySoundButton === 'function') {
-      updateCandySoundButton(typeof currentCandyNeedsSound !== 'undefined' ? currentCandyNeedsSound : false);
+      updateCandySoundButton(currentCandyNeedsSound);
     }
-
-    if (typeof showToast === 'function') showToast('🎵 全域音效引擎已重载并就绪');
-  };
+  }
+  // 👉 v8.0 核心修复：将音效解锁重新暴露给 HTML 按钮调用（防止 Undo 丢失）
+  window.unlockAllCandySounds = unlockAllCandySounds;
 
   var _candyAudioCtx = null;
   function getCandyAudioCtx() {
@@ -1809,31 +1651,6 @@ skipBtn.style.display = 'block';
     }
     return _candyAudioCtx;
   }
-
-  // pagehide 时由文件末尾的全局监听器调用；必须挂 window 才能访问 IIFE 内的 _candyAudioCtx 与 HTML5 实例
-  window._anchorReleaseCandyAudioForPagehide = function () {
-    try {
-      if (typeof _candyAudioCtx !== 'undefined' && _candyAudioCtx && _candyAudioCtx.state !== 'closed') {
-        if (typeof _candyAudioCtx.close === 'function') {
-          _candyAudioCtx.close().catch(function () {});
-        }
-      }
-      _candyAudioCtx = null;
-
-      var releaseHardwareAudio = function (audioEl) {
-        if (audioEl) {
-          audioEl.pause();
-          audioEl.removeAttribute('src');
-          audioEl.load();
-        }
-      };
-      if (typeof bubblePopAudio !== 'undefined') releaseHardwareAudio(bubblePopAudio);
-      if (typeof fireworkPopAudio !== 'undefined') releaseHardwareAudio(fireworkPopAudio);
-      if (typeof starShineAudio !== 'undefined') releaseHardwareAudio(starShineAudio);
-    } catch (e) {
-      console.warn('音频锁释放异常', e);
-    }
-  };
 
   function playWebPop(f, dur) {
     if (f === void 0) f = 260;
@@ -2230,22 +2047,20 @@ skipBtn.style.display = 'block';
 
   function playBubblePopSound() {
     if (isStandaloneMode() && !soundUnlocked) return;
-    if (!bubblePopAudio) return;
-    try {
-      bubblePopAudio.currentTime = 0;
-      var p = bubblePopAudio.play();
-      if (p && typeof p.catch === 'function') p.catch(function() {});
-    } catch(e) {}
+    safePlayAudio(bubblePopAudio, BUBBLE_POP_FALLBACK_DATA).then(function (ok) {
+      if (!ok) {
+        try { playWebPop(260, 0.10); } catch (e) {}
+      }
+    });
   }
 
   function playFireworkPopSound() {
     if (isStandaloneMode() && !soundUnlocked) return;
-    if (!fireworkPopAudio) return;
-    try {
-      fireworkPopAudio.currentTime = 0;
-      var p = fireworkPopAudio.play();
-      if (p && typeof p.catch === 'function') p.catch(function() {});
-    } catch(e) {}
+    safePlayAudio(fireworkPopAudio, null).then(function (ok) {
+      if (!ok) {
+        try { playWebPop(180, 0.12); } catch (e) {}
+      }
+    });
   }
 
   function startStarShineSound() {
@@ -2261,23 +2076,17 @@ skipBtn.style.display = 'block';
 
   function stopStarShineSound() {
     try {
-      if (starShineAudio) starShineAudio.pause();
+      starShineAudio.pause();
     } catch (e) {}
   }
 
-  function onCandySoundBtnClick(ev) {
-    if (ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-    }
-    unlockAllCandySounds();
-  }
-
+  // 👉 What & Why: 初始化按钮点击神经，必须在 DOM 加载后立刻通电
   function initCandySoundButton() {
     var btn = document.getElementById('candySoundBtn');
     if (!btn) return;
-    btn.removeEventListener('click', onCandySoundBtnClick);
-    btn.addEventListener('click', onCandySoundBtnClick, false);
+    // 防止重复绑定，先解绑再绑定
+    btn.removeEventListener('click', unlockAllCandySounds);
+    btn.addEventListener('click', unlockAllCandySounds);
   }
 
   // 确保在页面加载后通电
@@ -2316,7 +2125,6 @@ skipBtn.style.display = 'block';
     var toGachaBtn = stageEl.querySelector('#bubbleToGachaBtn');
     bubbles.forEach(function (btn) {
       btn.addEventListener('click', function () {
-        try { var _ac = getCandyAudioCtx(); if (_ac && _ac.state === 'suspended') _ac.resume(); } catch (_) {}
         if (btn.dataset.popped === '1') return;
         btn.dataset.popped = '1';
         btn.classList.add('bubble-popped');
@@ -3209,7 +3017,6 @@ skipBtn.style.display = 'block';
     }
     canvas.addEventListener('pointerdown', function (e) {
       try {
-        try { var _ac = getCandyAudioCtx(); if (_ac && _ac.state === 'suspended') _ac.resume(); } catch (_) {}
         isDown = true;
         startedAt = startedAt || Date.now();
         try { if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId); } catch (_) {}
@@ -3291,16 +3098,6 @@ skipBtn.style.display = 'block';
 
   let currentUsername = localStorage.getItem(KEY_USERNAME) || 'Anchor';
   let currentPassword = localStorage.getItem(KEY_PASSWORD) || '';
-
-  function updateUsernameUI() {
-    var displayName = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : '你';
-    var posterUname = document.getElementById('dailyPosterUname');
-    if (posterUname) posterUname.textContent = displayName;
-    const muggleTop = document.getElementById('muggleTopUname');
-    if (muggleTop) {
-      muggleTop.textContent = (typeof currentUsername !== 'undefined' && currentUsername && currentUsername !== 'Anchor') ? currentUsername : 'Anchor';
-    }
-  }
 
   const defaultDB = [
     { id: 1, title: '听一张喜欢的黑胶', type: 'vinyl', desc: '音乐时间', time: 0 },
@@ -4270,9 +4067,9 @@ window.toggleSettingTimer = function(checked) {
       btnPause.style.display = 'inline-block';
       // 👉 核心修复：如果是动能继承（如修改时间引起的重绘），必须绝对尊重当前的暂停状态！
       if (keepTime && typeof isTaskPaused !== 'undefined' && isTaskPaused) {
-        btnPause.innerText = '▶️';
+        btnPause.innerText = '▶️ 继续';
       } else {
-        btnPause.innerText = '⏸️';
+        btnPause.innerText = '⏸️ 暂停';
         if (typeof isTaskPaused !== 'undefined') isTaskPaused = false;
       }
     }
@@ -4374,7 +4171,7 @@ window.toggleSettingTimer = function(checked) {
         isTaskPaused = false;
         pausedTimeElapsed = 0;
         var btnPauseSos = document.getElementById('btnPause');
-        if (btnPauseSos) { btnPauseSos.style.display = 'none'; btnPauseSos.innerText = '⏸️'; }
+        if (btnPauseSos) { btnPauseSos.style.display = 'none'; btnPauseSos.innerText = '⏸️ 暂停'; }
         var statusElSos = document.getElementById('rStatus');
         var ingElSos = document.getElementById('rIngPulse');
         if (statusElSos) statusElSos.style.display = 'none';
@@ -4563,7 +4360,7 @@ window.toggleSettingTimer = function(checked) {
       isTaskPaused = false;
       pausedTimeElapsed = 0;
       var btnPauseFull = document.getElementById('btnPause');
-      if (btnPauseFull) { btnPauseFull.style.display = 'none'; btnPauseFull.innerText = '⏸️'; }
+      if (btnPauseFull) { btnPauseFull.style.display = 'none'; btnPauseFull.innerText = '⏸️ 暂停'; }
 
       if (typeof save === 'function') save();
       if (typeof renderLog === 'function') renderLog();
@@ -4717,7 +4514,7 @@ window.toggleSettingTimer = function(checked) {
     try { localStorage.removeItem(KEY_LIVE_STATE); } catch (e) {}
     if (liveTimerId) { clearInterval(liveTimerId); liveTimerId = null; }
     var btnPauseComplete = document.getElementById('btnPause');
-    if (btnPauseComplete) { btnPauseComplete.style.display = 'none'; btnPauseComplete.innerText = '⏸️'; }
+    if (btnPauseComplete) { btnPauseComplete.style.display = 'none'; btnPauseComplete.innerText = '⏸️ 暂停'; }
     if (typeof renderLog === 'function') renderLog();
     if (typeof renderHistory === 'function') renderHistory();
     // 👉 核心修复 2：只有当前完成的任务是"清单子任务"时，才允许触发清单连抽
@@ -4845,7 +4642,7 @@ window.toggleSettingTimer = function(checked) {
     if (ingEl) ingEl.style.display = 'none';
     if (btnPauseReset) {
       btnPauseReset.style.display = 'none';
-      btnPauseReset.innerText = '⏸️';
+      btnPauseReset.innerText = '⏸️ 暂停';
     }
   }
 
@@ -4974,7 +4771,7 @@ window.toggleSettingTimer = function(checked) {
               if (ingFb) ingFb.style.display = 'none';
               if (btnPauseFb) {
                 btnPauseFb.style.display = 'none';
-                btnPauseFb.innerText = '⏸️';
+                btnPauseFb.innerText = '⏸️ 暂停';
               }
             }
             currentTask = null;
@@ -5020,7 +4817,7 @@ window.toggleSettingTimer = function(checked) {
       isTaskPaused = true;
       if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
       pausedTimeElapsed = Math.floor((Date.now() - anchorStartTime) / 1000);
-      if (btn) btn.innerText = '▶️';
+      if (btn) btn.innerText = '▶️ 继续';
       if (ingEl) {
         var hPause = Math.floor(pausedTimeElapsed / 3600);
         var mPause = Math.floor((pausedTimeElapsed % 3600) / 60).toString().padStart(2, '0');
@@ -5039,7 +4836,7 @@ window.toggleSettingTimer = function(checked) {
       }));
     } else {
       isTaskPaused = false;
-      if (btn) btn.innerText = '⏸️';
+      if (btn) btn.innerText = '⏸️ 暂停';
       anchorStartTime = Date.now() - (pausedTimeElapsed * 1000);
       if (ingEl) {
         ingEl.style.animation = 'anchorPulse 1.6s ease-in-out infinite';
@@ -5745,9 +5542,6 @@ window.toggleSettingTimer = function(checked) {
 
     // v8.0 一日三季玄关挂载
     if (window.initLobby) window.initLobby();
-
-    if (typeof initEcology === 'function') initEcology();
-    if (typeof updateUsernameUI === 'function') updateUsernameUI();
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', runBoot);
@@ -10156,8 +9950,6 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
   // 无损一键回库
   function resurrectHistoryTask() {
     if (!currentResurrectItem) return;
-    var muggleModal = document.getElementById('muggleRecordModal');
-    if (muggleModal) muggleModal.style.display = 'none';
     const dlg = document.getElementById('historyTaskDialog');
     if (dlg) dlg.style.display = 'none';
 
@@ -10439,8 +10231,6 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
   // 触发唤起弹窗进行编辑（万能任务锻造舱，避免跳转 02 区丢失上下文）
   function handleTaskEdit() {
     if (!currentDialogTask) return;
-    var muggleModal = document.getElementById('muggleRecordModal');
-    if (muggleModal) muggleModal.style.display = 'none';
     var task = currentDialogTask;
     closeTaskActionDialog();
     editingTaskId = task.id;
@@ -10566,13 +10356,6 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
       var swFlashN = document.getElementById('modalFlashSwitch');
       if (swFlashN) swFlashN.classList.remove('active-flash');
       toggleTimeInputForModal('indoor');
-    }
-
-    var modalInp = document.getElementById('modalInpTitle');
-    if (modalInp) {
-      modalInp.placeholder = document.body.classList.contains('eco-eco_hide02adv')
-        ? '随便写点什么...系统会自动帮你分类...'
-        : '输入任务描述...';
     }
 
     modal.style.display = 'flex';
@@ -10991,8 +10774,6 @@ window.toggleModalFlash = function(forceState, isUserAction) {
   }
   function handleTaskComplete() {
     if (!currentDialogTask) return;
-    var muggleModal = document.getElementById('muggleRecordModal');
-    if (muggleModal) muggleModal.style.display = 'none';
     if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor') {
       // 👉 UX 回滚：恢复为原版的明确指引文案，告诉用户具体要点哪里
       if (typeof showToast === 'function') {
@@ -11493,9 +11274,7 @@ window.lobbyEnter = function(action) {
 
   setTimeout(() => {
       if (action === 'candy') {
-          if (!document.body.classList.contains('muggle-dashboard') && typeof anchorSwiper !== 'undefined') {
-            anchorSwiper.slideTo(0);
-          }
+          if (typeof anchorSwiper !== 'undefined') anchorSwiper.slideTo(0);
           if (typeof openCandyEngine === 'function') openCandyEngine();
       } else if (action === 'gacha') {
           if (typeof anchorSwiper !== 'undefined') anchorSwiper.slideTo(1);
@@ -12301,7 +12080,7 @@ if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence))
         pausedTimeElapsed = typeof parsed.pausedElapsed === 'number' ? parsed.pausedElapsed : 0;
         if (btnPauseRestore) {
           btnPauseRestore.style.display = 'inline-block';
-          btnPauseRestore.innerText = '▶️';
+          btnPauseRestore.innerText = '▶️ 继续';
         }
         if (ingEl) {
           var hR = Math.floor(pausedTimeElapsed / 3600);
@@ -12316,7 +12095,7 @@ if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence))
         isTaskPaused = false;
         if (btnPauseRestore) {
           btnPauseRestore.style.display = 'inline-block';
-          btnPauseRestore.innerText = '⏸️';
+          btnPauseRestore.innerText = '⏸️ 暂停';
         }
         if (typeof startLiveTimer === 'function') startLiveTimer();
       }
@@ -13785,21 +13564,6 @@ document.addEventListener('DOMContentLoaded', function () {
     setTimeout(function () {
         if (typeof processCloudInbox === 'function') processCloudInbox();
     }, 1500);
-});
-
-// ============================================================
-// 👉 v8.4 PWA 终极救星：页面刷新前的「释放硬件锁」(Garbage Collection)
-// 解决 iOS Safari/PWA 刷新不释放 AudioContext 导致并发配额耗尽的静音 Bug
-// 实际释放逻辑在 IIFE 内 window._anchorReleaseCandyAudioForPagehide（可访问闭包变量）
-// ============================================================
-window.addEventListener('pagehide', function () {
-    try {
-        if (typeof window._anchorReleaseCandyAudioForPagehide === 'function') {
-            window._anchorReleaseCandyAudioForPagehide();
-        }
-    } catch (e) {
-        console.warn('音频锁释放异常', e);
-    }
 });
 
 //触发部署到
