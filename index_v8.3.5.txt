@@ -244,163 +244,6 @@
       pointer-events: none !important;
       cursor: default !important;
     }
-
-    /* 👉 v8.4 全息视图与生态降噪引擎 */
-    body.eco-eco_hide02adv .input-options,
-    body.eco-eco_hide02adv .input-options-row2,
-    body.eco-eco_hide02adv #endpointZone,
-    body.eco-eco_hide02adv .select-wrapper:has(#inpProject),
-    body.eco-eco_hide02adv #btnToggleEndpoint { display: none !important; }
-
-    /* 👉 终极麻瓜模式：万能锻造舱降维为“极简树洞” */
-    body.eco-eco_hide02adv #modalTagsRow,
-    body.eco-eco_hide02adv #modalInpRecurrence,
-    body.eco-eco_hide02adv #modalFlashSwitch,
-    body.eco-eco_hide02adv #modalInpTime,
-    body.eco-eco_hide02adv #modalInpDeadline,
-    body.eco-eco_hide02adv #modalInpTarget,
-    body.eco-eco_hide02adv #modalInpProject {
-      display: none !important;
-    }
-
-    body.eco-eco_hide02adv #taskEditorModal .task-dialog-box > div:nth-child(4),
-    body.eco-eco_hide02adv #taskEditorModal .task-dialog-box > div:nth-child(5) {
-      display: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      background: transparent !important;
-    }
-
-    body.eco-eco_hide02groups #onboardingGroupZone { display: none !important; }
-
-    /* 👉 修复：02 区极简麻瓜悬浮美学 */
-    /* 1. 房间保持撑满，不改变原本结构 */
-    body.eco-center-02 .section-input {
-      display: flex;
-      flex-direction: column;
-      min-height: 100%;
-    }
-    /* 2. 赋予输入框盒子隐形弹簧，绝对居中，同时不影响左上角的标题 */
-    body.eco-center-02 #onboardingSingleTaskZone {
-      margin-top: auto;
-      margin-bottom: auto;
-      transform: translateY(-5vh);
-    }
-
-    body.eco-eco_hide01filter #filterDrawerToggle,
-    body.eco-eco_hide01filter #filterDrawer { display: none !important; }
-
-    body.eco-eco_hide01rituals .ritual-icon-btn[data-ritual] { display: none !important; }
-
-    body.eco-eco_hide03cabinet #cabinetDetails { display: none !important; }
-    body.eco-eco_hide03heatmap #heatmapCard { display: none !important; }
-    body.eco-eco_hide03cold #coldDetails { display: none !important; }
-
-    body.eco-eco_hide00window #observationWindowZone { display: none !important; }
-    body.eco-eco_hide00journal .journal-book-container { display: none !important; }
-
-    /* 👉 当 02 区居中时，彻底隐藏副标题和智能小抄，保持绝对纯净 */
-    body.eco-center-02 #zone02Header { display: none !important; }
-
-    /* 👉 03 区空间释放：当档案柜或热力图隐藏时，释放任务列表的高度，展示更多内容 */
-    body.eco-eco_hide03cabinet .task-list.panel-list,
-    body.eco-eco_hide03heatmap .task-list.panel-list {
-      max-height: 280px !important;
-    }
-
-    body.eco-eco_hide01pill .energy-pill-zone,
-    body.eco-eco_hide01pill #energyHint { display: none !important; }
-
-    /* 👉 v8.4 终极麻瓜工作台专属结界 */
-    body.muggle-dashboard #muggleTabBar {
-      display: flex !important;
-      flex-direction: row;
-      align-items: center;
-    }
-    /* 隐藏 04区罗盘、药丸、以及底部的全息悬浮星盘（防止和 Tab 打架） */
-    body.muggle-dashboard .astrolabe-container,
-    body.muggle-dashboard #energyPillZone,
-    body.muggle-dashboard #energyPill,
-    body.muggle-dashboard #spatialAstrolabe {
-      display: none !important;
-    }
-    body.muggle-dashboard .room-01 {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    /* 👉 终极麻瓜美学：极简平面题头 (Flat Header) */
-    body.muggle-dashboard #muggleTopBar {
-      display: flex !important;
-      position: absolute !important;
-      top: 6px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      width: 96% !important;
-      max-width: 600px !important;
-      border-radius: 12px !important;
-      background: var(--bg-blue, #D4F1F4) !important;
-      border: none !important;
-      padding: 8px 16px !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
-    }
-
-    /* 👉 彻底查杀 01 区的视觉残影（蓝线、旧容器） */
-    body.muggle-dashboard .section-filter,
-    body.muggle-dashboard .mode-tabs,
-    body.muggle-dashboard .section-title-ritual {
-      display: none !important;
-    }
-
-    /* 👉 空间魔法：实心白弹窗 + 用超大 box-shadow 做暗场（杜绝 ::before 负 z-index 在 transform 层叠下污染底色） */
-    body.muggle-dashboard #candySection {
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      transform: translate(-50%, -50%) !important;
-      width: 90% !important;
-      max-width: 360px !important;
-      z-index: 20005 !important;
-      margin: 0 !important;
-      isolation: isolate !important;
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-      -webkit-backdrop-filter: none !important;
-      backdrop-filter: none !important;
-      border: 1px solid rgba(0,0,0,0.06) !important;
-      box-shadow:
-        0 0 0 9999px rgba(0,0,0,0.62),
-        0 24px 60px rgba(0,0,0,0.45) !important;
-    }
-    body.muggle-dashboard #candyStage,
-    body.muggle-dashboard #candyStageInner {
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-      -webkit-backdrop-filter: none !important;
-      backdrop-filter: none !important;
-    }
-    body.muggle-dashboard #candySoundBtn.sound-enable-btn,
-    body.muggle-dashboard #candySoundBtn {
-      z-index: 20006 !important;
-      pointer-events: auto !important;
-      touch-action: manipulation !important;
-      background: #ffffff !important;
-      background-color: #ffffff !important;
-      -webkit-backdrop-filter: none !important;
-      backdrop-filter: none !important;
-    }
-
-    /* 👉 给主舞台增加顶部内边距，避开蓝色的实体 Top Bar */
-    body.muggle-dashboard .room-01 .hero-wrapper {
-      padding-top: 80px !important;
-      justify-content: center !important;
-    }
-
-    /* 👉 将抽取任务按钮稍微下移，拉开呼吸感 */
-    body.muggle-dashboard #mainBtn {
-      margin-top: 20px !important;
-    }
   </style>
 </head>
 <body>
@@ -425,7 +268,7 @@
               <div class="wormhole-text">‹ 03 岁月档案</div>
             </div>
             <div class="section-title" style="margin-bottom: 16px;">02 · 新任务入库</div>
-            <div id="zone02Header" style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; padding-left: 4px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; padding-left: 4px;">
               <div style="font-size: 0.85rem; color: #555; font-weight: bold;">✍🏻 散装单次任务</div>
               <div style="position:relative;">
                 <span id="cheatSheetToggle" style="font-size:0.7rem; color:#90A4AE; cursor:pointer; text-decoration:underline; text-underline-offset:2px;">💡 智能小抄</span>
@@ -755,17 +598,14 @@
 
                     <!-- 中部：糖果舞台 -->
                     <div id="candySection" class="candy-section" style="display: none; width: 100%; background: rgba(255,255,255,0.6); border-radius: 12px; padding: 4px; margin: 3px 0; box-sizing: border-box;">
-                      <!-- 👉 修复溢出悖论：将操作按钮置于标题栏右上角，增加换一个功能 -->
-                      <div class="candy-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed rgba(0,0,0,0.05); padding-bottom: 6px;">
-                        <div class="candy-title" style="font-size:0.85rem; font-weight:bold; color:#555;">🍬 休息补给站</div>
-                        <div style="display: flex; gap: 8px;">
-                          <div onclick="if(typeof openCandyEngine === 'function') openCandyEngine()" style="font-size: 0.75rem; color: #999; cursor: pointer; background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; transition: all 0.2s;">🔄 换一个</div>
-                          <div onclick="if(typeof closeCandyEngine === 'function') closeCandyEngine()" style="font-size: 0.75rem; color: #999; cursor: pointer; background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px; transition: all 0.2s;">︿ 收起</div>
-                        </div>
-                      </div>
+                      <!-- 👉 修复溢出悖论：将关闭按钮置于标题栏右上角，永不被长糖果淹没 -->
+          <div class="candy-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <div class="candy-title" style="font-size:0.85rem; font-weight:bold; color:#555;">00 · 吃一颗糖再出发</div>
+            <div onclick="if(typeof closeCandyEngine === 'function') closeCandyEngine()" style="font-size: 0.75rem; color: #999; cursor: pointer; background: rgba(0,0,0,0.04); padding: 4px 10px; border-radius: 12px;">︿ 收起</div>
+          </div>
                       <div id="candyStage" class="candy-stage">
                         <!-- 👉 恢复防吞事件的 PWA 音效双保险 -->
-                        <button id="candySoundBtn" class="sound-enable-btn" type="button" style="display:none;">开启音效</button>
+                        <button id="candySoundBtn" class="sound-enable-btn" type="button" style="display:none;" onclick="if(window.unlockAllCandySounds) window.unlockAllCandySounds();" ontouchstart="if(window.unlockAllCandySounds) window.unlockAllCandySounds();">开启音效</button>
                         <div id="candyStageInner"></div>
                       </div>
                     </div>
@@ -791,13 +631,6 @@
             <div class="swiper-slide">
               <div class="room room-01">
                 <div class="hero-wrapper">
-                  <!-- 👉 v8.4 麻瓜工作台专属实体天花板 (Top Bar) -->
-                  <div id="muggleTopBar" style="display:none; position:absolute; top:0; left:0; width:100%; padding:14px 20px; box-sizing:border-box; justify-content:space-between; align-items:center; z-index:100; background: linear-gradient(135deg, #f0f4f8 0%, #eef5ff 100%); border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                    <div style="font-size:1.1rem; font-weight:800; color:#555; letter-spacing:1px; display:flex; align-items:center; gap:6px;">
-                      ⚓️ <span id="muggleTopUname">Anchor</span>
-                    </div>
-                    <button type="button" onclick="if(typeof openDailyPosterManual === 'function') openDailyPosterManual()" style="background:transparent; border:none; font-size:1.3rem; cursor:pointer; padding:0; opacity:0.85; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🌁</button>
-                  </div>
                   <!-- 👉 空间呼吸边缘 (Spatial Edge Glow) -->
                   <div class="spatial-edge-glow spatial-edge-left"></div>
                   <div class="spatial-edge-glow spatial-edge-right"></div>
@@ -936,7 +769,7 @@
                       <div id="rIngPulse">正在进行中 · · ·</div>
                       <div style="margin-top:15px;">
                         <button class="btn-card-action" type="button" id="btnChange">换一个</button>
-                        <button class="btn-card-action" type="button" onclick="if(typeof togglePauseTask === 'function') togglePauseTask()" id="btnPause" style="display:none; padding: 8px 14px;">⏸️</button>
+                        <button class="btn-card-action" type="button" onclick="if(typeof togglePauseTask === 'function') togglePauseTask()" id="btnPause" style="display:none;">⏸️ 暂停</button>
                         <button class="btn-card-action" type="button" id="btnPrimary">就它啦</button>
                       </div>
                       <!-- 👉 补齐微启动 UI：温柔的退路 -->
@@ -1410,58 +1243,6 @@
         <details>
           <summary>⚙️ 偏好与时钟</summary>
           <div class="manual-content">
-            <details id="details-ecology-engine" style="margin-top: 16px; background: #f9fafb; border: 1px solid #eee; border-radius: 12px; padding: 4px 10px;">
-              <summary style="font-size: 0.85rem; color: #555; font-weight: bold; cursor: pointer; outline: none; display:flex; align-items:center; padding: 6px 0;">
-                👁️ 界面定制 (极简模式开关)
-              </summary>
-              <div style="padding-top: 10px; padding-bottom: 10px; border-top: 1px dashed #e0e0e0; margin-top: 4px;">
-                <!-- 三大生态一键切换 -->
-                <div style="display:flex; gap:8px; margin-bottom:16px;">
-                  <button class="btn-outline" style="flex:1; padding:8px 4px; font-size:0.75rem; background:#f0f7ff; color:#1565C0; border-color:#90CAF9;" onclick="setEcologyMode('standard')">⚖️ 标准模式</button>
-                  <button class="btn-outline" style="flex:1; padding:8px 4px; font-size:0.75rem; background:#e8f5e9; color:#2E7D32; border-color:#A5D6A7;" onclick="setEcologyMode('muggle')">🧩 极简麻瓜</button>
-                  <button class="btn-outline" style="flex:1; padding:8px 4px; font-size:0.75rem; background:#ffebee; color:#C62828; border-color:#EF9A9A;" onclick="setEcologyMode('sanctuary')">🩸 避风港</button>
-                </div>
-                <div style="font-size:0.75rem; color:#999; margin-bottom:10px;">(或在下方手动微调你想隐藏的积木块)</div>
-                <!-- 扩充的积木开关列表 -->
-                <div style="display:flex; flex-direction:column; gap:10px;" id="ecologyToggles">
-                  <!-- 02 区隐藏项 -->
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide02adv" class="eco-cb" onchange="toggleEcology()"> <span>✂️ 隐藏 02区 进阶参数 (仅留纯净输入框)</span>
-                  </label>
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide02groups" class="eco-cb" onchange="toggleEcology()"> <span>📦 隐藏 02区 建立任务组 (清单/SOP)</span>
-                  </label>
-                  <!-- 01 区隐藏项 -->
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide01filter" class="eco-cb" onchange="toggleEcology()"> <span>🔽 隐藏 01区 高级筛选抽屉</span>
-                  </label>
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide01rituals" class="eco-cb" onchange="toggleEcology()"> <span>🌅 隐藏 01区 晨起/睡前</span>
-                  </label>
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide01pill" class="eco-cb" onchange="toggleEcology()"> <span>💊 隐藏 01区 能量药丸 (强锁混合态)</span>
-                  </label>
-                  <!-- 03 区隐藏项 -->
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide03cabinet" class="eco-cb" onchange="toggleEcology()"> <span>🗄️ 隐藏 03区 档案柜 (项目与清单)</span>
-                  </label>
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide03heatmap" class="eco-cb" onchange="toggleEcology()"> <span>🟩 隐藏 03区 岁月热力图</span>
-                  </label>
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide03cold" class="eco-cb" onchange="toggleEcology()"> <span>🧊 隐藏 03区 冷库</span>
-                  </label>
-                  <!-- 00 区隐藏项 -->
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide00window" class="eco-cb" onchange="toggleEcology()"> <span>🔭 隐藏 00区 观星窗 (保留手账与糖果)</span>
-                  </label>
-                  <label style="font-size:0.8rem; color:#555; display:flex; align-items:center; gap:6px; cursor:pointer;">
-                    <input type="checkbox" id="eco_hide00journal" class="eco-cb" onchange="toggleEcology()"> <span>📜 隐藏 00区 岁月手账长卷</span>
-                  </label>
-                </div>
-              </div>
-            </details>
-
             <!-- 👉 v6.9.6：自定义标签与专属筛选兵工厂 -->
             <!-- 👉 v8.2.X：自定义标签与专属筛选兵工厂 (保留原版色彩与ID) -->
             <!-- 👉 UI 美化：赋予内嵌卡片质感，不再像干瘪的一行字 -->
@@ -1773,7 +1554,7 @@
       <div class="lobby-buttons">
         <button class="lobby-btn" onclick="if(window.lobbyEnter) window.lobbyEnter('candy')">🍬 先玩会儿</button>
         <button class="lobby-btn" onclick="if(window.lobbyEnter) window.lobbyEnter('gacha')">🔮 直接抽卡</button>
-        <button class="lobby-btn" onclick="if(document.body.classList.contains('eco-eco_hide02adv')) { var _lob=document.getElementById('anchorLobby'); if(_lob){ _lob.style.opacity='0'; _lob.style.visibility='hidden'; _lob.style.pointerEvents='none'; _lob.classList.add('hidden'); } if(window.openTaskEditorModal) window.openTaskEditorModal(); } else { if(window.lobbyEnter) window.lobbyEnter('input'); }">🧺 任务入库</button>
+        <button class="lobby-btn" onclick="if(window.lobbyEnter) window.lobbyEnter('input')">🧺 任务入库</button>
         </div>
         <!-- 👉 What & Why: 找回被 Cursor 粗暴删掉的逃生门，点击后进入 03 区 -->
         <div class="lobby-escape" onclick="if(window.lobbyEnter) window.lobbyEnter('escape')">直接进入后台管理 →</div>
@@ -2667,51 +2448,6 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </div>
-
-<!-- 👉 v8.4 终极麻瓜工作台：底部导航栏 (仅在麻瓜模式显示) -->
-<div id="muggleTabBar" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.85); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid rgba(255,255,255,0.6); box-shadow:0 10px 30px rgba(0,0,0,0.08); border-radius:999px; padding:8px 16px; z-index:10000; gap:16px;">
-  <button type="button" onclick="if(window.openTaskEditorModal) window.openTaskEditorModal()" style="background:transparent; border:none; padding:8px 16px; font-size:1rem; font-weight:bold; color:#555; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-    <span style="font-size:1.3rem;">➕</span><span style="font-size:0.65rem;">入库</span>
-  </button>
-  <button type="button" onclick="if(window.openMuggleRecord) window.openMuggleRecord()" style="background:transparent; border:none; padding:8px 16px; font-size:1rem; font-weight:bold; color:#555; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-    <span style="font-size:1.3rem;">🗂️</span><span style="font-size:0.65rem;">记录</span>
-  </button>
-  <button type="button" onclick="document.getElementById('mugglePrefsModal').style.display='flex'" style="background:transparent; border:none; padding:8px 16px; font-size:1rem; font-weight:bold; color:#555; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;">
-    <span style="font-size:1.3rem;">⚙️</span><span style="font-size:0.65rem;">偏好</span>
-  </button>
-</div>
-
-<!-- 👉 麻瓜专属弹窗：综合库房 (待办 + 历史) -->
-<div id="muggleRecordModal" class="global-dialog-wrap" style="display:none; z-index:10005; background:rgba(0,0,0,0.6); align-items:flex-end;">
-  <div class="task-dialog-box" style="width:100%; max-width:600px; border-radius:24px 24px 0 0; padding:24px; max-height:85vh; overflow-y:auto; margin:0 auto; animation: memoryPanelSlideUp 0.3s ease-out; position:relative;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; position:sticky; top:0; background:#fff; z-index:10; padding-bottom:8px; border-bottom:1px solid #eee;">
-      <div style="font-size:1.2rem; font-weight:bold; color:#333;">🗂️ 综合库房</div>
-      <button type="button" onclick="document.getElementById('muggleRecordModal').style.display='none'" style="background:#f5f5f5; border:none; padding:6px 12px; border-radius:999px; font-size:0.8rem; cursor:pointer; font-weight:bold;">关闭</button>
-    </div>
-    <div style="font-size:0.85rem; font-weight:bold; color:#1565C0; margin-bottom:8px;">📌 当前待办 (点击可直接操作)</div>
-    <ul id="mugglePendingList" class="task-list" style="margin-bottom:20px; font-size:0.9rem; line-height:1.6;"></ul>
-    <div style="font-size:0.85rem; font-weight:bold; color:#6b7a99; margin-bottom:8px;">📅 历史记录</div>
-    <div id="muggleHistoryList" style="font-size:0.9rem; line-height:1.6;"></div>
-  </div>
-</div>
-
-<!-- 👉 麻瓜专属弹窗：生态偏好切换 -->
-<div id="mugglePrefsModal" class="global-dialog-wrap" style="display:none; z-index:10005; background:rgba(0,0,0,0.6);">
-  <div class="task-dialog-box" style="width:85%; max-width:320px;">
-    <div style="font-size:1.1rem; font-weight:bold; color:#333; margin-bottom:20px; text-align:center;">切换生态模式</div>
-    <div style="display:flex; flex-direction:column; gap:12px;">
-      <button type="button" class="btn-outline" style="padding:12px; background:#f0f7ff; color:#1565C0; border-color:#90CAF9; font-weight:bold;" onclick="document.getElementById('mugglePrefsModal').style.display='none'; if(window.setEcologyMode) window.setEcologyMode('standard')">⚖️ 返回标准大平层</button>
-      <button type="button" class="btn-outline" style="padding:12px; background:#e8f5e9; color:#2E7D32; border-color:#A5D6A7; font-weight:bold;" onclick="document.getElementById('mugglePrefsModal').style.display='none'; if(window.setEcologyMode) window.setEcologyMode('muggle')">🧩 保持极简麻瓜</button>
-      <button type="button" class="btn-outline" style="padding:12px; background:#ffebee; color:#C62828; border-color:#EF9A9A; font-weight:bold;" onclick="document.getElementById('mugglePrefsModal').style.display='none'; if(window.setEcologyMode) window.setEcologyMode('sanctuary')">🩸 进入避风港/SOS</button>
-    </div>
-    <button type="button" onclick="document.getElementById('mugglePrefsModal').style.display='none'" style="width:100%; margin-top:16px; background:#f5f5f5; border:none; padding:10px; border-radius:8px; font-size:0.9rem; cursor:pointer;">取消</button>
-  </div>
-</div>
-
-<!-- 👉 物理音频锚点：依赖 DOM 生命周期强制释放 iOS 硬件管道 -->
-<audio id="domAudioBubble" src="assets/audio/bubble-pop-short.mp3" preload="auto"></audio>
-<audio id="domAudioFirework" src="assets/audio/firework-pop.wav" preload="auto"></audio>
-<audio id="domAudioStar" src="assets/audio/star-shinning.mp3" preload="auto" loop></audio>
 
 </body>
 </html>
