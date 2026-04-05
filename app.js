@@ -1761,9 +1761,10 @@ skipBtn.style.display = 'block';
   window.toggleSanctuaryVisibility = function(checked) {
     isSanctuaryVisible = checked;
     localStorage.setItem('anchor_sanctuary_visible', checked);
-    if (window.renderLog) renderLog();
-    if (window.renderHistory) renderHistory();
-    if (window.renderHeatmap) renderHeatmap();
+    // 👉 强制通知 03 区更新岁月痕迹
+    if (typeof renderLog === 'function') renderLog();
+    if (typeof renderHistory === 'function') renderHistory();
+    if (typeof renderHeatmap === 'function') renderHeatmap();
   };
 
   window.toggleSanctuaryFlowerInput = function() {
@@ -3197,6 +3198,7 @@ skipBtn.style.display = 'block';
   })();
   var currentTask = null;
   var currentStatus = 'idle';
+  window.isChangingTask = false;
   var gachaAnimating = false;
   var filterDrawerExpanded = false;
   var customPlaylists = (function () {
@@ -3206,6 +3208,8 @@ skipBtn.style.display = 'block';
   var lastDrawnTaskId = null;
   var anchorStartTime = null;
   var liveTimerId = null;
+  var isTaskPaused = false;
+  var pausedTimeElapsed = 0;
   // 👉 补齐微启动状态机变量
   var trailerTimer = null;
   var trailerTimeElapsed = 0;
@@ -3857,6 +3861,8 @@ skipBtn.style.display = 'block';
       if (statusEl) statusEl.style.display = 'none';
       if (ingEl) ingEl.style.display = 'none';
       if (changeBtn) changeBtn.style.display = 'none';
+      var btnPauseEmpty = document.getElementById('btnPause');
+      if (btnPauseEmpty) btnPauseEmpty.style.display = 'none';
       if (primaryBtn) primaryBtn.style.display = 'none';
       if (progressEl) progressEl.innerHTML = '';
     } else {
@@ -3952,6 +3958,8 @@ skipBtn.style.display = 'block';
       if (statusEl) statusEl.style.display = 'none';
       if (ingEl) ingEl.style.display = 'none';
       if (changeBtn) changeBtn.style.display = 'inline-block';
+      var btnPauseSuggest = document.getElementById('btnPause');
+      if (btnPauseSuggest) btnPauseSuggest.style.display = 'none';
       if (primaryBtn) {
         primaryBtn.style.display = 'inline-block';
         primaryBtn.innerText = result.type === 'sos' ? '去完成' : '就它啦';
@@ -3971,7 +3979,8 @@ skipBtn.style.display = 'block';
     
     var newTimerId = setInterval(function () {
         if (typeof currentStatus === 'undefined' || currentStatus !== 'anchor' || typeof anchorStartTime === 'undefined' || !anchorStartTime) return;
-        
+        if (typeof isTaskPaused !== 'undefined' && isTaskPaused) return;
+
         var ingEl = document.getElementById('rIngPulse');
         if (!ingEl) return;
         
@@ -4045,6 +4054,14 @@ window.toggleSettingTimer = function(checked) {
         startTime: (typeof anchorStartTime !== 'undefined' ? anchorStartTime : null),
         activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
       }));
+    }
+    var btnChangeEl = document.getElementById('btnChange');
+    if (btnChangeEl) btnChangeEl.style.display = 'inline-block';
+    var btnPause = document.getElementById('btnPause');
+    if (btnPause) {
+      btnPause.style.display = 'inline-block';
+      btnPause.innerText = '⏸️ 暂停';
+      isTaskPaused = false;
     }
     startLiveTimer();
   }
@@ -4133,6 +4150,10 @@ window.toggleSettingTimer = function(checked) {
         if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
         try { localStorage.removeItem(KEY_LIVE_STATE); } catch (e) {}
         if (typeof liveTimerId !== 'undefined' && liveTimerId) { clearInterval(liveTimerId); liveTimerId = null; }
+        isTaskPaused = false;
+        pausedTimeElapsed = 0;
+        var btnPauseSos = document.getElementById('btnPause');
+        if (btnPauseSos) { btnPauseSos.style.display = 'none'; btnPauseSos.innerText = '⏸️ 暂停'; }
         var statusElSos = document.getElementById('rStatus');
         var ingElSos = document.getElementById('rIngPulse');
         if (statusElSos) statusElSos.style.display = 'none';
@@ -4160,9 +4181,11 @@ window.toggleSettingTimer = function(checked) {
     /// 时间收割机：5 秒起步算 1 分钟
     var harvestMins = 0;
     if (!silent && typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
-      var elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
+      var elapsedSecs = (typeof isTaskPaused !== 'undefined' && isTaskPaused)
+        ? (typeof pausedTimeElapsed !== 'undefined' ? pausedTimeElapsed : 0)
+        : Math.floor((Date.now() - anchorStartTime) / 1000);
       var elapsedMins = Math.floor(elapsedSecs / 60);
-      if (elapsedSecs >= 5 && elapsedSecs < 60) elapsedMins = 1; // 10秒容错
+      if (elapsedSecs >= 5 && elapsedSecs < 60) elapsedMins = 1; // 5秒容错
       
       if (elapsedMins >= 1 && typeof openHarvestDialogAsync === 'function') {
         try {
@@ -4316,6 +4339,10 @@ window.toggleSettingTimer = function(checked) {
       if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
       try { localStorage.removeItem(typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state'); } catch(e){}
       if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
+      isTaskPaused = false;
+      pausedTimeElapsed = 0;
+      var btnPauseFull = document.getElementById('btnPause');
+      if (btnPauseFull) { btnPauseFull.style.display = 'none'; btnPauseFull.innerText = '⏸️ 暂停'; }
 
       if (typeof save === 'function') save();
       if (typeof renderLog === 'function') renderLog();
@@ -4464,8 +4491,12 @@ window.toggleSettingTimer = function(checked) {
     currentTask = null;
     currentStatus = 'idle';
     anchorStartTime = null;
+    isTaskPaused = false;
+    pausedTimeElapsed = 0;
     try { localStorage.removeItem(KEY_LIVE_STATE); } catch (e) {}
     if (liveTimerId) { clearInterval(liveTimerId); liveTimerId = null; }
+    var btnPauseComplete = document.getElementById('btnPause');
+    if (btnPauseComplete) { btnPauseComplete.style.display = 'none'; btnPauseComplete.innerText = '⏸️ 暂停'; }
     if (typeof renderLog === 'function') renderLog();
     if (typeof renderHistory === 'function') renderHistory();
     // 👉 核心修复 2：只有当前完成的任务是"清单子任务"时，才允许触发清单连抽
@@ -4573,122 +4604,229 @@ window.toggleSettingTimer = function(checked) {
     }
 }
 
-  async function changeTask() {
-    if (trailerTimer) { clearInterval(trailerTimer); trailerTimer = null; }
-    // 1. 退出沉浸模式
-    exitImmersiveMode();
-
-    var discardedTaskId = (typeof currentTask !== 'undefined' && currentTask) ? currentTask.id : null;
-
-    // 2. 清单模式的退回逻辑（保持与 v8 现有实现一致）
-    if (typeof activePlaylist !== 'undefined' && activePlaylist) {
-      if (!Array.isArray(activePlaylist.tasks)) activePlaylist.tasks = [];
-      if (activePlaylist.tasks.length > 0) {
-        var discardedText = currentTask ? currentTask.rawTaskText : null;
-        var card = document.getElementById('resultCard');
-        if (card) {
-          card.style.animation = 'none';
-          card.style.opacity = 0;
-        }
-        setTimeout(function () {
-          if (typeof drawFromPlaylist === 'function') drawFromPlaylist();
-          if (discardedText) activePlaylist.tasks.push(discardedText);
-        }, 80);
-      } else {
-        if (typeof showToast === 'function') showToast("清单里只剩这一个啦，一鼓作气做完它吧！");
-      }
-      return;
-    }
-
-    // 非清单模式下，可能需要记录一次「勇敢的尝试」足迹
-    if (!currentTask) {
-      if (typeof draw === 'function') draw(discardedTaskId);
-      return;
-    }
-
-    // v6.9.7 核心修复：如果任务已开始进行且超过 5 秒，放弃时触发时长收割与足迹记录
-    if (typeof currentStatus !== 'undefined' && currentStatus === 'anchor' && typeof anchorStartTime !== 'undefined' && anchorStartTime) {
-      var elapsedSecs = Math.floor((Date.now() - anchorStartTime) / 1000);
-      if (elapsedSecs >= 5) {
-        var elapsedMins = Math.floor(elapsedSecs / 60);
-        if (elapsedSecs >= 5 && elapsedSecs < 60) elapsedMins = 1;
-
-        var harvestMins = 0;
-        var newBookmark = null;
-
-        if (elapsedMins >= 1 && elapsedMins <= 180) {
-          if (typeof openHarvestDialogAsync === 'function') {
-            var harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
-            if (harvestResult) {
-              harvestMins = harvestResult.mins;
-              newBookmark = harvestResult.bookmark;
-            }
-          }
-        } else if (elapsedMins > 180) {
-          var ans = prompt('似乎挂机了 ' + Math.floor(elapsedMins / 60) + ' 小时😅\n如果只是中途放弃，请手动输入实际尝试了多少分钟 (0为不记录)：', String(elapsedMins));
-          harvestMins = parseInt(ans, 10) || 0;
-        }
-
-        // 在最外层确立原任务对象，防止 ReferenceError 导致程序猝死
-        var taskInDb = db.find(function (t) { return t.id === currentTask.id; }) || currentTask;
-
-        // 更新进度书签
-        if (newBookmark !== null && newBookmark !== taskInDb.bookmarkText) {
-          taskInDb.bookmarkText = newBookmark;
-          taskInDb.bookmarkUpdatedAt = Date.now();
-        }
-
-        // 更新累计时间
-        if (harvestMins > 0) {
-          taskInDb.totalMinutes = (taskInDb.totalMinutes || 0) + harvestMins;
-          taskInDb.lastAddMinutes = harvestMins;
-          taskInDb.totalUpdatedAt = Date.now();
-        }
-
-        // 生成时间跨度
-        var startDt = new Date(anchorStartTime);
-        var startStr = startDt.getHours().toString().padStart(2, '0') + ':' + startDt.getMinutes().toString().padStart(2, '0');
-        var now = new Date();
-        var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        if (startStr !== timeStr) timeStr = startStr + ' - ' + timeStr;
-
-        // 写入今日足迹 (done: false 表示这是一次未完成的尝试)
-        dailyLog.unshift({
-          id: Date.now(),
-          title: taskInDb.title,
-          icon: taskInDb.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(taskInDb) : ''),
-          timeStr: timeStr,
-          date: typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString(),
-          done: false,
-          taskId: taskInDb.id,
-          bookmarkSnapshot: taskInDb.bookmarkText || '',
-          noteSnapshot: taskInDb.noteText || '',
-          lastAddMinutes: harvestMins
-        });
-
-        if (typeof save === 'function') save();
-        if (typeof renderLog === 'function') renderLog();
-        if (typeof renderHistory === 'function') renderHistory();
-        if (typeof showToast === 'function') showToast('🐾 已记录一次勇敢的尝试');
-      }
-    }
-
-    // 3. 彻底清空状态，恢复 UI，重新抽卡
-    currentTask = null;
-    if (typeof currentStatus !== 'undefined') currentStatus = 'idle';
-    if (typeof anchorStartTime !== 'undefined') anchorStartTime = null;
+  function clearAnchorLiveArmorFromWall() {
     try { localStorage.removeItem(KEY_LIVE_STATE); } catch (e) {}
-    if (typeof liveTimerId !== 'undefined' && liveTimerId) { clearInterval(liveTimerId); liveTimerId = null; }
-
+    if (typeof liveTimerId !== 'undefined' && liveTimerId) {
+      clearInterval(liveTimerId);
+      liveTimerId = null;
+    }
+    if (typeof window._anchorTimerId !== 'undefined' && window._anchorTimerId) {
+      clearInterval(window._anchorTimerId);
+      window._anchorTimerId = null;
+    }
+    anchorStartTime = null;
+    isTaskPaused = false;
+    pausedTimeElapsed = 0;
     var statusEl = document.getElementById('rStatus');
     var ingEl = document.getElementById('rIngPulse');
+    var btnPauseReset = document.getElementById('btnPause');
     if (statusEl) statusEl.style.display = 'none';
     if (ingEl) ingEl.style.display = 'none';
+    if (btnPauseReset) {
+      btnPauseReset.style.display = 'none';
+      btnPauseReset.innerText = '⏸️ 暂停';
+    }
+  }
 
-    if (typeof draw === 'function') draw(discardedTaskId);
+  async function tryHarvestOnAbandonAnchor() {
+    if (typeof currentStatus === 'undefined' || currentStatus !== 'anchor' || typeof anchorStartTime === 'undefined' || !anchorStartTime || !currentTask) return;
+    var elapsedSecs = (typeof isTaskPaused !== 'undefined' && isTaskPaused)
+      ? (typeof pausedTimeElapsed !== 'undefined' ? pausedTimeElapsed : 0)
+      : Math.floor((Date.now() - anchorStartTime) / 1000);
+    if (elapsedSecs < 5) return;
 
-    // 物联网联动：状态重置时自动静默通知云端
-    if (typeof syncToCloud === 'function') syncToCloud(true);
+    var elapsedMins = Math.floor(elapsedSecs / 60);
+    if (elapsedSecs >= 5 && elapsedSecs < 60) elapsedMins = 1;
+
+    var harvestMins = 0;
+    var newBookmark = null;
+
+    if (elapsedMins >= 1 && elapsedMins <= 180) {
+      if (typeof openHarvestDialogAsync === 'function') {
+        var harvestResult = await openHarvestDialogAsync(elapsedMins, currentTask);
+        if (harvestResult) {
+          harvestMins = harvestResult.mins;
+          newBookmark = harvestResult.bookmark;
+        }
+      }
+    } else if (elapsedMins > 180) {
+      var ans = prompt('似乎挂机了 ' + Math.floor(elapsedMins / 60) + ' 小时😅\n如果只是中途放弃，请手动输入实际尝试了多少分钟 (0为不记录)：', String(elapsedMins));
+      harvestMins = parseInt(ans, 10) || 0;
+    }
+
+    var taskInDb = db.find(function (t) { return t.id === currentTask.id; }) || currentTask;
+
+    if (newBookmark !== null && newBookmark !== taskInDb.bookmarkText) {
+      taskInDb.bookmarkText = newBookmark;
+      taskInDb.bookmarkUpdatedAt = Date.now();
+    }
+
+    if (harvestMins > 0) {
+      taskInDb.totalMinutes = (taskInDb.totalMinutes || 0) + harvestMins;
+      taskInDb.lastAddMinutes = harvestMins;
+      taskInDb.totalUpdatedAt = Date.now();
+    }
+
+    var startDt = new Date(anchorStartTime);
+    var startStr = startDt.getHours().toString().padStart(2, '0') + ':' + startDt.getMinutes().toString().padStart(2, '0');
+    var now = new Date();
+    var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    if (startStr !== timeStr) timeStr = startStr + ' - ' + timeStr;
+
+    dailyLog.unshift({
+      id: Date.now(),
+      title: taskInDb.title,
+      icon: taskInDb.icon || (typeof getSmartIcon === 'function' ? getSmartIcon(taskInDb) : ''),
+      timeStr: timeStr,
+      date: typeof getAnchorDate === 'function' ? getAnchorDate().toDateString() : new Date().toDateString(),
+      done: false,
+      taskId: taskInDb.id,
+      bookmarkSnapshot: taskInDb.bookmarkText || '',
+      noteSnapshot: taskInDb.noteText || '',
+      lastAddMinutes: harvestMins
+    });
+
+    if (typeof save === 'function') save();
+    if (typeof renderLog === 'function') renderLog();
+    if (typeof renderHistory === 'function') renderHistory();
+    if (typeof showToast === 'function') showToast('🐾 已记录一次勇敢的尝试');
+  }
+
+  async function changeTask() {
+    if (window.isChangingTask) return;
+    window.isChangingTask = true;
+    try {
+      if (trailerTimer) { clearInterval(trailerTimer); trailerTimer = null; }
+      // 1. 退出沉浸模式
+      exitImmersiveMode();
+
+      var discardedTaskId = (typeof currentTask !== 'undefined' && currentTask) ? currentTask.id : null;
+
+      // 2. 清单模式的退回逻辑（含最后一条的温柔逃生通道）
+      if (typeof activePlaylist !== 'undefined' && activePlaylist) {
+        if (!Array.isArray(activePlaylist.tasks)) activePlaylist.tasks = [];
+        if (activePlaylist.tasks.length > 0) {
+          var discardedText = currentTask ? currentTask.rawTaskText : null;
+          await tryHarvestOnAbandonAnchor();
+          clearAnchorLiveArmorFromWall();
+          currentStatus = 'idle';
+          var cardPl = document.getElementById('resultCard');
+          if (cardPl) {
+            cardPl.style.animation = 'none';
+            cardPl.style.opacity = 0;
+          }
+          setTimeout(function () {
+            if (typeof drawFromPlaylist === 'function') drawFromPlaylist();
+            if (discardedText) activePlaylist.tasks.push(discardedText);
+          }, 80);
+          if (typeof syncToCloud === 'function') syncToCloud(true);
+        } else {
+          var wannaQuit = window.confirm("清单只剩最后这一项了，确定要提前结束这条专注隧道吗？\n[确定] = 结束清单\n[取消] = 继续专注");
+          if (wannaQuit) {
+            await tryHarvestOnAbandonAnchor();
+            activePlaylist = null;
+            var selPl = document.getElementById('selPlaylist');
+            if (selPl) selPl.value = '';
+            if (typeof handlePlaylistChange === 'function') handlePlaylistChange();
+
+            if (typeof clearAnchorLiveArmorFromWall === 'function') {
+              clearAnchorLiveArmorFromWall();
+            } else {
+              currentTask = null;
+              currentStatus = 'idle';
+              anchorStartTime = null;
+              isTaskPaused = false;
+              pausedTimeElapsed = 0;
+              try { localStorage.removeItem(typeof KEY_LIVE_STATE !== 'undefined' ? KEY_LIVE_STATE : 'anchor_live_state_v69'); } catch (e) {}
+              if (typeof liveTimerId !== 'undefined' && liveTimerId) {
+                clearInterval(liveTimerId);
+                liveTimerId = null;
+              }
+              if (typeof window._anchorTimerId !== 'undefined' && window._anchorTimerId) {
+                clearInterval(window._anchorTimerId);
+                window._anchorTimerId = null;
+              }
+              var statusFb = document.getElementById('rStatus');
+              var ingFb = document.getElementById('rIngPulse');
+              var btnPauseFb = document.getElementById('btnPause');
+              if (statusFb) statusFb.style.display = 'none';
+              if (ingFb) ingFb.style.display = 'none';
+              if (btnPauseFb) {
+                btnPauseFb.style.display = 'none';
+                btnPauseFb.innerText = '⏸️ 暂停';
+              }
+            }
+            currentTask = null;
+            currentStatus = 'idle';
+            var cardQuit = document.getElementById('resultCard');
+            if (cardQuit) cardQuit.style.display = 'none';
+            if (typeof draw === 'function') draw();
+            if (typeof syncToCloud === 'function') syncToCloud(true);
+          }
+        }
+        return;
+      }
+
+      // 非清单模式下，可能需要记录一次「勇敢的尝试」足迹
+      if (!currentTask) {
+        if (typeof draw === 'function') draw(discardedTaskId);
+        return;
+      }
+
+      await tryHarvestOnAbandonAnchor();
+
+      // 清空当前状态，彻底擦除防丢装甲
+      currentTask = null;
+      currentStatus = 'idle';
+      clearAnchorLiveArmorFromWall();
+
+      if (typeof draw === 'function') draw(discardedTaskId);
+
+      // 物联网联动：状态重置时自动静默通知云端
+      if (typeof syncToCloud === 'function') syncToCloud(true);
+    } finally {
+      window.isChangingTask = false;
+    }
+  }
+
+  // 👉 v8.3.4 新增：任务暂停逻辑（时间偏移法）
+  function togglePauseTask() {
+    if (currentStatus !== 'anchor') return;
+    var btn = document.getElementById('btnPause');
+    var ingEl = document.getElementById('rIngPulse');
+
+    if (!isTaskPaused) {
+      isTaskPaused = true;
+      if (typeof liveTimerId !== 'undefined' && liveTimerId) clearInterval(liveTimerId);
+      pausedTimeElapsed = Math.floor((Date.now() - anchorStartTime) / 1000);
+      if (btn) btn.innerText = '▶️ 继续';
+      if (ingEl) {
+        ingEl.innerText = '⏸️ 已暂停 ' + (Math.floor(pausedTimeElapsed / 60)).toString().padStart(2, '0') + ':' + (pausedTimeElapsed % 60).toString().padStart(2, '0');
+        ingEl.style.animation = 'none';
+        ingEl.style.opacity = '0.6';
+      }
+      localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
+        task: currentTask,
+        startTime: anchorStartTime,
+        isPaused: true,
+        pausedElapsed: pausedTimeElapsed,
+        activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
+      }));
+    } else {
+      isTaskPaused = false;
+      if (btn) btn.innerText = '⏸️ 暂停';
+      anchorStartTime = Date.now() - (pausedTimeElapsed * 1000);
+      if (ingEl) {
+        ingEl.style.animation = 'anchorPulse 1.6s ease-in-out infinite';
+        ingEl.style.opacity = '1';
+      }
+      localStorage.setItem(KEY_LIVE_STATE, JSON.stringify({
+        task: currentTask,
+        startTime: anchorStartTime,
+        activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
+      }));
+      startLiveTimer();
+    }
   }
 
   function formatTrailerTime(seconds) {
@@ -4709,6 +4847,8 @@ window.toggleSettingTimer = function(checked) {
 
     if (btnStart) btnStart.style.display = 'none';
     if (btnChange) btnChange.style.display = 'none';
+    var btnPauseTr = document.getElementById('btnPause');
+    if (btnPauseTr) btnPauseTr.style.display = 'none';
     if (btnPrimary) btnPrimary.style.display = 'none';
     if (tz) tz.style.display = 'block';
     if (tc) tc.style.display = 'none';
@@ -4820,6 +4960,8 @@ window.toggleSettingTimer = function(checked) {
         if (statusEl) statusEl.style.display = 'none';
         if (ingEl) ingEl.style.display = 'none';
         if (btnChange) btnChange.style.display = 'none';
+        var btnPausePl = document.getElementById('btnPause');
+        if (btnPausePl) btnPausePl.style.display = 'none';
         if (btnPrimary) btnPrimary.style.display = 'none';
         if (btnMemory) btnMemory.style.display = 'none';
         currentTask = null;
@@ -6913,13 +7055,14 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
         if (typeof showToast === 'function') showToast('至少输入一个子任务哦'); 
         return; 
     }
-    if (editingPlaylistIndex > -1 && customPlaylists[editingPlaylistIndex]) {
+    var isEdit = editingPlaylistIndex > -1 && customPlaylists[editingPlaylistIndex];
+    var editedPlaylistIdx = isEdit ? editingPlaylistIndex : -1;
+    if (isEdit) {
       var pl = customPlaylists[editingPlaylistIndex];
       pl.title = titleRaw; pl.name = titleRaw; pl.icon = iconRaw;
       pl.projectId = projectIdVal;
       pl.items = newItems;
       pl.tasks = newItems.map(function(i){ return i.text; });
-      if (typeof showToast === 'function') showToast('✅ 清单已更新');
     } else {
       var newPl = {
         id: Date.now(), title: titleRaw, name: titleRaw, type: 'playlist',
@@ -6930,11 +7073,24 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
         projectId: projectIdVal
       };
       customPlaylists.unshift(newPl);
-      if (typeof showToast === 'function') showToast('✅ 清单已落盘');
     }
     hidePlaylistCreator();
+    if (typeof showToast === 'function') showToast(isEdit ? '📝 清单已更新' : '📦 清单/项目已建立');
+
+    // 👉 虫洞折跃：自动滚到 03 区并展开档案柜
+    setTimeout(function () {
+      var cabinetDetails = document.getElementById('cabinetDetails');
+      if (cabinetDetails) {
+        cabinetDetails.open = true;
+        cabinetDetails.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 200);
+
     savePlaylists();
     if (typeof renderCabinet === 'function') renderCabinet();
+    if (editedPlaylistIdx > -1 && typeof hotReloadPlaylistOverlayIfActive === 'function') {
+      hotReloadPlaylistOverlayIfActive(editedPlaylistIdx);
+    }
 
     // 👉 v8.1 空间折跃：保存完毕后，极其有仪式感地飞回 03 区展示成果
     if (typeof window.anchorSwiper !== 'undefined' && window.anchorSwiper) {
@@ -6947,6 +7103,31 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
             if (drawerActive.scrollIntoView) drawerActive.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, 450);
+  }
+
+  function hotReloadPlaylistOverlayIfActive(pIdx) {
+    if (typeof customPlaylists === 'undefined' || !customPlaylists[pIdx]) return;
+    if (typeof activePlaylist === 'undefined' || !activePlaylist || String(activePlaylist.id) !== String(customPlaylists[pIdx].id)) return;
+    var pl = customPlaylists[pIdx];
+    activePlaylist.name = pl.name;
+    activePlaylist.title = pl.title;
+    activePlaylist.icon = pl.icon;
+    activePlaylist.tasks = (pl.items || []).map(function (i) { return i && (i.text || i.title) ? (i.text || i.title) : ''; });
+    activePlaylist.items = pl.items;
+    var ovEl = document.getElementById('playlistOverlay');
+    if (ovEl && ovEl.style.display !== 'none' && typeof openPlaylistOverlay === 'function') {
+      openPlaylistOverlay(pl);
+    }
+  }
+
+  function updatePlaylistData(index, field, value) {
+    if (typeof customPlaylists === 'undefined' || !customPlaylists[index]) return;
+    customPlaylists[index][field] = value;
+    if (field === 'title') customPlaylists[index].name = value;
+    else if (field === 'name') customPlaylists[index].title = value;
+    if (typeof savePlaylists === 'function') savePlaylists();
+    // 👉 v8.3.4 实时热更新：如果修改的正是 01 区当前展开的清单，立刻刷新 01 区面板
+    if (typeof hotReloadPlaylistOverlayIfActive === 'function') hotReloadPlaylistOverlayIfActive(index);
   }
 
   function renderPlaylistDropdown() {
@@ -9479,6 +9660,32 @@ window.removePlTaskInput = function removePlTaskInput(idx) {
           activePl: (typeof activePlaylist !== 'undefined' ? activePlaylist : null)
         }));
       }
+
+      // 👉 v8.3.4 视觉同步：实时给 01 区的步骤文字加上/取消删除线和置灰效果
+      try {
+        var stepLabel = document.querySelector('label[for="plStep_' + taskIndex + '"]');
+        if (stepLabel) {
+          if (isChecked) {
+            stepLabel.style.textDecoration = 'line-through';
+            stepLabel.style.color = '#999';
+            stepLabel.style.fontStyle = 'normal';
+            stepLabel.style.opacity = '1';
+          } else {
+            var itLive = customPlaylists[pIdx].items && customPlaylists[pIdx].items[taskIndex];
+            if (itLive && itLive.skipped) {
+              stepLabel.style.textDecoration = 'line-through';
+              stepLabel.style.color = '#ef9a9a';
+              stepLabel.style.fontStyle = 'italic';
+              stepLabel.style.opacity = '0.8';
+            } else {
+              stepLabel.style.textDecoration = 'none';
+              stepLabel.style.color = 'inherit';
+              stepLabel.style.fontStyle = 'normal';
+              stepLabel.style.opacity = '1';
+            }
+          }
+        }
+      } catch (e) {}
     }
   }
 
@@ -10709,6 +10916,7 @@ window.snapCurrentRoom = function() {
   window.startPlaylist = startPlaylist;
   window.startTrailer = startTrailer;
   window.continueFromTrailer = continueFromTrailer;
+  window.togglePauseTask = togglePauseTask;
   window.finishTrailer = finishTrailer;
   window.cancelTrailer = cancelTrailer;
   window.pickTag = pickTag;
@@ -11760,7 +11968,27 @@ if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence))
       if (primaryBtn) primaryBtn.innerText = '已完成';
       if (resultCard) resultCard.style.display = 'block';
       if (btnChange) btnChange.style.display = 'inline-block';
-      if (typeof startLiveTimer === 'function') startLiveTimer();
+      var btnPauseRestore = document.getElementById('btnPause');
+      if (parsed.isPaused === true) {
+        isTaskPaused = true;
+        pausedTimeElapsed = typeof parsed.pausedElapsed === 'number' ? parsed.pausedElapsed : 0;
+        if (btnPauseRestore) {
+          btnPauseRestore.style.display = 'inline-block';
+          btnPauseRestore.innerText = '▶️ 继续';
+        }
+        if (ingEl) {
+          ingEl.innerText = '⏸️ 已暂停 ' + (Math.floor(pausedTimeElapsed / 60)).toString().padStart(2, '0') + ':' + (pausedTimeElapsed % 60).toString().padStart(2, '0');
+          ingEl.style.animation = 'none';
+          ingEl.style.opacity = '0.6';
+        }
+      } else {
+        isTaskPaused = false;
+        if (btnPauseRestore) {
+          btnPauseRestore.style.display = 'inline-block';
+          btnPauseRestore.innerText = '⏸️ 暂停';
+        }
+        if (typeof startLiveTimer === 'function') startLiveTimer();
+      }
     } catch (e) {}
   }
 
@@ -12525,6 +12753,8 @@ if (task.recurrence && ['daily', 'weekly', 'monthly'].includes(task.recurrence))
     window.deletePlaylistFromCold = deletePlaylistFromCold;
     window.sendPlaylistToStage = sendPlaylistToStage;
     window.editPlaylist = editPlaylist;
+    window.updatePlaylistData = updatePlaylistData;
+    window.hotReloadPlaylistOverlayIfActive = hotReloadPlaylistOverlayIfActive;
     window.handlePlaylistColdOrDelete = handlePlaylistColdOrDelete;
 
     window.restoreArchivedPlaylist = restoreArchivedPlaylist;
